@@ -6,7 +6,7 @@
 
     <groupId>kyleyannelli.discordbots.music</groupId>
     <artifactId>KMusicBot</artifactId>
-    <version>1.0</version>
+    <version>1.0.2</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -57,11 +57,6 @@
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
             <version>2.2.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
-            <version>2.18.0</version>
         </dependency>
         <dependency>
             <groupId>com.sedmelluq</groupId>
