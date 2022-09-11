@@ -1,8 +1,10 @@
 package DiscordApi;
 
+import Lavaplayer.LavaplayerAudioSource;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.util.logging.FallbackLoggerConfiguration;
 
 public class RunBot {
     public static void main(String[] args) {
@@ -16,10 +18,17 @@ public class RunBot {
                 .setAllNonPrivilegedIntents()
                 // start the bot :)
                 .login().join();
-        api.addServerJoinListener(event -> {
-            KCommands.listenForAllCommands(api);
-        });
-        // create SlashCommand /play
+        // listen for all commands
         KCommands.listenForAllCommands(api);
+        api.addServerJoinListener(event -> {
+            KCommands.isEphemeral.put(event.getServer().getId(), false);
+        });
+        api.addServerLeaveListener(event -> {
+            KCommands.isEphemeral.remove(event.getServer().getId());
+            if(LavaplayerAudioSource.getPlayerByServerId(event.getServer().getId()) != null) {
+                LavaplayerAudioSource.getPlayerByServerId(event.getServer().getId()).destroy();
+                LavaplayerAudioSource.removePlayerByServerId(event.getServer().getId());
+            }
+        });
     }
 }
