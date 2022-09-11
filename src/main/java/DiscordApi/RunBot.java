@@ -16,6 +16,9 @@ public class RunBot {
                 .setAllNonPrivilegedIntents()
                 // start the bot :)
                 .login().join();
+        api.addServerJoinListener(event -> {
+            KCommands.listenForAllCommands(api);
+        });
         // create SlashCommand /play
         KCommands.listenForAllCommands(api);
     }
