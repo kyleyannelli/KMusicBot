@@ -1,5 +1,5 @@
 # KMusicBot
-## Built with [Javacord](https://github.com/Javacord/Javacord) & [Lavaplayer](https://github.com/sedmelluq/lavaplayer)
+## Built on Maven with [Javacord](https://github.com/Javacord/Javacord) & [Lavaplayer](https://github.com/sedmelluq/lavaplayer)
 
 # Getting Started (Ubuntu & Mac OS)
 
