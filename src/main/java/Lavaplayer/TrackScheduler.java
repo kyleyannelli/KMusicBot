@@ -5,12 +5,17 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import org.javacord.api.DiscordApi;
 
 import java.util.*;
 
 public class TrackScheduler extends AudioEventAdapter {
     public ArrayList<AudioTrack> audioQueue = new ArrayList<>();
-    public TrackScheduler() {
+    public long serverId;
+    public DiscordApi api;
+    public TrackScheduler(long serverId, DiscordApi api) {
+        this.serverId = serverId;
+        this.api = api;
     }
 
     @Override
@@ -37,6 +42,17 @@ public class TrackScheduler extends AudioEventAdapter {
             AudioTrack nextTrack = iterator.next();
             audioQueue.remove(nextTrack);
             player.playTrack(nextTrack);
+            if(LavaplayerAudioSource.timers.get(serverId) != null) {
+                // start timer for 5 minutes
+                LavaplayerAudioSource.createDisconnectTimer(api, serverId, new Timer());
+            }
+            else {
+                // get the timer and reset it
+                Timer timer = LavaplayerAudioSource.timers.get(serverId);
+                timer.cancel();
+                timer.purge();
+                LavaplayerAudioSource.createDisconnectTimer(api, serverId, new Timer());
+            }
         }
     }
 

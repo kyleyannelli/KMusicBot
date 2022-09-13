@@ -4,7 +4,6 @@ import Lavaplayer.LavaplayerAudioSource;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
-import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandOption;
@@ -28,6 +27,7 @@ public class KCommands {
         listenForVolumeCommand(api);
         listenForSkipCommand(api);
         listenForToggleEphemeralCommand(api);
+        listenForShuffleCommand(api);
     }
     public static void listenForPlayCommand(DiscordApi api) {
         // create SlashCommand /play, = so the command information can be accessed prior
@@ -65,13 +65,13 @@ public class KCommands {
                                         // put the audio connection in the hashmap
                                         audioConnections.put(serverId, audioConnection);
                                         // set up the audio player (may already be setup this name is slightly misleading)
-                                        LavaplayerAudioSource.setupAudioPlayer(api, audioConnections.get(serverId), inputSong, event);
+                                        LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event);
                                     });
                                 }
                                 else {
                                     System.out.println("Bot is already connected to voice channel, playing song...");
                                     // bot is already connected to the voice channel and the audio connection is already in the hashmap
-                                    LavaplayerAudioSource.setupAudioPlayer(api, audioConnections.get(serverId), inputSong, event);
+                                    LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event);
                                 }
                             });
                             // if the user is not in a voice channel
@@ -300,6 +300,52 @@ public class KCommands {
                             event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                     .setContent(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()) ? "Ephemeral is now on!" : "Ephemeral is now off!")
                                     .send();
+                        });
+            }
+        });
+    }
+
+    public static void listenForShuffleCommand(DiscordApi api) {
+        // create SlashCommand /shuffle, = so the command information can be accessed prior
+        SlashCommand command = SlashCommand.with("shuffle", "Shuffle the queue")
+                .createGlobal(api).join();
+        // listen for command
+        api.addSlashCommandCreateListener(event -> {
+            // different commands, make sure the event is the one we are looking for
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                event.getInteraction()
+                        // this may take a while, so we need to defer the response
+                        // also get if it is ephemeral (private) or not
+                        .respondLater(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()))
+                        .thenAccept(interaction -> {
+                            // see if the user is in a voice channel, needs to be Atomic because it's used in a lambda
+                            AtomicBoolean isConnected = new AtomicBoolean(false);
+                            // get the user who used the command, get their voice channel, if it exists
+                            event.getSlashCommandInteraction().getUser().getConnectedVoiceChannel(event.getSlashCommandInteraction().getServer().get()).ifPresent(voiceChannel -> {
+                                isConnected.set(true);
+                                Long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                                // if the audio player is not null
+                                if(LavaplayerAudioSource.getPlayerByServerId(serverId) != null) {
+                                    // shuffle the queue
+                                    LavaplayerAudioSource.shuffleQueue(serverId);
+                                    // let em know
+                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                            .setContent("Shuffled!")
+                                            .send();
+                                } else {
+                                    // yell at them!
+                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                            .setContent("Nothing is currently playing!")
+                                            .send();
+                                }
+                            });
+                            // if the user is not in a voice channel
+                            if (!isConnected.get()) {
+                                // yell at them!
+                                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                        .setContent("You must be in a voice channel to use this command!")
+                                        .send();
+                            }
                         });
             }
         });

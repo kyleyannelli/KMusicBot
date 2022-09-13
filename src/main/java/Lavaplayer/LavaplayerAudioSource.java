@@ -1,5 +1,6 @@
 package Lavaplayer;
 
+import SpotifyApi.HandleSpotifyLink;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -13,7 +14,9 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.audio.AudioSource;
 import org.javacord.api.audio.AudioSourceBase;
+import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
+import se.michaelthelin.spotify.SpotifyApi;
 
 import java.util.*;
 
@@ -23,6 +26,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     private AudioFrame lastFrame;
     private static HashMap<Long, AudioPlayer> players = new HashMap<>();
     private static HashMap<Long, TrackScheduler> schedulers = new HashMap<>();
+    public static HashMap<Long, Timer> timers = new HashMap<>();
     /**
      * Creates a new lavaplayer audio source.
      *
@@ -36,6 +40,10 @@ public class LavaplayerAudioSource extends AudioSourceBase {
 
     public static void removePlayerByServerId(long id) {
         players.remove(id);
+    }
+
+    public static void shuffleQueue(Long serverId) {
+        Collections.shuffle(schedulers.get(serverId).audioQueue);
     }
 
     @Override
@@ -62,137 +70,86 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         return new LavaplayerAudioSource(getApi(), audioPlayer);
     }
 
-    public static void setupAudioPlayer(DiscordApi api, AudioConnection audioConnection, String url, SlashCommandCreateEvent event) {
+    public static void setupAudioPlayer(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event) {
+        if(timers.get(event.getSlashCommandInteraction().getServer().get().getId()) == null) {
+            // get server id
+            long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+            // start timer for 5 minutes
+            createDisconnectTimer(api, serverId, new Timer());
+        }
+        else {
+            // get the timer and reset it
+            Timer timer = timers.get(event.getSlashCommandInteraction().getServer().get().getId());
+            timer.cancel();
+            timer.purge();
+            // get server id
+            long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+            createDisconnectTimer(api, serverId, new Timer());
+        }
         // check if it's a YouTube link or search query
         AudioPlayerManager playerManager = createYouTubePlayerManager();
         if(url.startsWith("https://www.youtube.com/")) {
             // Create a player manager
-            long serverId;
+            entirelyLoadTrack(api, playerManager, audioConnection, event, url, false);
+        }
+        else if(url.startsWith("https://open.spotify.com/")) {
+            Collection<String> trackNames;
             try {
-                serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                trackNames = HandleSpotifyLink.getCollectionFromSpotifyLink(spotifyApi, url);
+                if(trackNames == null) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Not a playlist link\nIf you think this is an error, please contact <@806350925723205642>")
+                            .send();
+                }
+                else if(trackNames.size() == 0) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Not a playlist link\nIf you think this is an error, please contact <@806350925723205642>")
+                            .send();
+                }
             }
             catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
+                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                        .setContent("Not a playlist link\nIf you think this is an error, please contact <@806350925723205642>")
+                        .send();
                 return;
             }
-            audioConnection.setAudioSource(updatePlayerAndCreateAudioSource(api, playerManager, serverId));
-            // Load the track
-            playerManager.loadItem(url, new AudioLoadResultHandler() {
-                @Override
-                public void trackLoaded(AudioTrack track) {
-                    if(players.get(serverId).getPlayingTrack() == null) {
-                        players.get(serverId).playTrack(track);
-                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("***Now Playing:*** \n" + track.getInfo().title + "\n" + track.getInfo().uri)
-                                .send();
-                    } else {
-                        schedulers.get(serverId).queue(track);
-                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("***Queued:*** \n" + track.getInfo().title + "\n" + track.getInfo().uri)
-                                .send();
-                    }
+            try {
+                setAudioPlayer(api, audioConnection, playerManager, event);
+                long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                for(String trackName : trackNames) {
+                    playerManagerLoadTrack(playerManager, "ytsearch:" + trackName, event, serverId, false, true);
                 }
-
-                @Override
-                public void playlistLoaded(AudioPlaylist playlist) {
-                    if(players.get(serverId).getPlayingTrack() == null) {
-                        for(int i = 1; i < playlist.getTracks().size(); i++) {
-                            schedulers.get(serverId).queue(playlist.getTracks().get(i));
-                        }
-                        players.get(serverId).playTrack(playlist.getTracks().get(0));
-                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent(
-                                        "***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n" + playlist.getTracks().get(0).getInfo().uri + "\n" +
-                                        "***Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...*** \n" + url)
-                                .send();
-                    } else {
-                        for(AudioTrack track : playlist.getTracks()) {
-                            schedulers.get(serverId).queue(track);
-                        }
-                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent(
-                                                "***Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...*** \n" + url)
-                                .send();
-                    }
-                }
-
-                @Override
-                public void noMatches() {
-                    // Notify the user that we've got nothing
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Nothing found by " + url)
-                            .send();
-                }
-
-                @Override
-                public void loadFailed(FriendlyException exception) {
-                    // Notify the user that everything exploded
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Could not play: " + exception.getMessage())
-                            .send();
-                }
-            });
+                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                        .setContent("Added " + trackNames.size() + " tracks to the queue")
+                        .send();
+            }
+            catch (Exception e) {
+                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                        .setContent("An error occurred while adding the spotify tracks to the queue\nPlease try again.")
+                        .send();
+            }
         }
         else {
-            // Create a player manager
-            long serverId;
-            try {
-                serverId = event.getSlashCommandInteraction().getServer().get().getId();
-            }
-            catch (Exception e) {
-                System.out.println("Error: " + e.getMessage());
-                return;
-            }
-            audioConnection.setAudioSource(updatePlayerAndCreateAudioSource(api, playerManager, serverId));
-            // Load the track
-            playerManager.loadItem("ytsearch:" + url, new AudioLoadResultHandler() {
-                @Override
-                public void trackLoaded(AudioTrack track) {
-                    if(players.get(serverId).getPlayingTrack() == null) {
-                        players.get(serverId).playTrack(track);
-                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("***Now Playing:*** \n" + track.getInfo().title + "\n" + track.getInfo().uri)
-                                .send();
-                    } else {
-                        schedulers.get(serverId).queue(track);
-                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("***Queued:*** \n" + track.getInfo().title + "\n" + track.getInfo().uri)
-                                .send();
-                    }
-                }
-
-                @Override
-                public void playlistLoaded(AudioPlaylist playlist) {
-                    if(players.get(serverId).getPlayingTrack() == null) {
-                        players.get(serverId).playTrack(playlist.getTracks().get(0));
-                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n" + playlist.getTracks().get(0).getInfo().uri)
-                                .send();
-                    } else {
-                        schedulers.get(serverId).queue(playlist.getTracks().get(0));
-                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("***Queued:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n" + playlist.getTracks().get(0).getInfo().uri)
-                                .send();
-                    }
-                }
-
-                @Override
-                public void noMatches() {
-                    // Notify the user that we've got nothing
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Nothing found by " + url)
-                            .send();
-                }
-
-                @Override
-                public void loadFailed(FriendlyException exception) {
-                    // Notify the user that everything exploded
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Could not play: " + exception.getMessage())
-                            .send();
-                }
-            });
+            entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + url, true);
         }
+    }
+
+    public static void createDisconnectTimer(DiscordApi api, long serverId, Timer timer) {
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if(players.get(serverId).getPlayingTrack() == null) {
+                    Server server = api.getServerById(serverId).get();
+                    api.getYourself().getConnectedVoiceChannel(server).get().disconnect();
+                    removePlayerByServerId(serverId);
+                    timers.remove(serverId);
+                }
+                else {
+                    createDisconnectTimer(api, serverId, new Timer());
+                }
+            }
+        }, 300000);
+        timers.put(serverId, timer);
     }
 
     public static AudioPlayer getPlayerByServerId(Long serverId) {
@@ -202,7 +159,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     private static AudioSource updatePlayerAndCreateAudioSource(DiscordApi api, AudioPlayerManager playerManager, Long serverId) {
         if(!players.containsKey(serverId)) {
             players.put(serverId, playerManager.createPlayer());
-            schedulers.put(serverId, new TrackScheduler());
+            schedulers.put(serverId, new TrackScheduler(serverId, api));
             players.get(serverId).addListener(schedulers.get(serverId));
         }
 
@@ -215,5 +172,114 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
         playerManager.registerSourceManager(new YoutubeAudioSourceManager());
         return playerManager;
+    }
+
+    private static void playerManagerLoadTrack(AudioPlayerManager playerManager, String url, SlashCommandCreateEvent event, long serverId, boolean sendFollowupMessage, boolean isSearch) {
+        playerManager.loadItem(url, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                if(players.get(serverId).getPlayingTrack() == null) {
+                    players.get(serverId).playTrack(track);
+                    if(sendFollowupMessage) {
+                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                .setContent("***Now Playing:*** \n" + track.getInfo().title + "\n<" + track.getInfo().uri + ">")
+                                .send();
+                    }
+                } else {
+                    schedulers.get(serverId).queue(track);
+                    if(sendFollowupMessage) {
+                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                .setContent("***Queued:*** \n" + track.getInfo().title + "\n<" + track.getInfo().uri + ">")
+                                .send();
+                    }
+                }
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                if(players.get(serverId).getPlayingTrack() == null) {
+                    if(isSearch) {
+                        // play the first track
+                        players.get(serverId).playTrack(playlist.getTracks().get(0));
+                        if(sendFollowupMessage) {
+                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                    .setContent("***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">")
+                                    .send();
+                        }
+                    }
+                    else {
+                        for(int i = 1; i < playlist.getTracks().size(); i++) {
+                            schedulers.get(serverId).queue(playlist.getTracks().get(i));
+                        }
+                        players.get(serverId).playTrack(playlist.getTracks().get(0));
+                        if(sendFollowupMessage) {
+                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                    .setContent(
+                                            "***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">\n" + "***Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...*** \n" + url)
+                                    .send();
+                        }
+                    }
+                } else {
+                    if(isSearch) {
+                        // play the first track
+                        schedulers.get(serverId).queue(playlist.getTracks().get(0));
+                        if(sendFollowupMessage) {
+                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                    .setContent("***Queued:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">")
+                                    .send();
+                        }
+                    }
+                    else {
+                        for(AudioTrack track : playlist.getTracks()) {
+                            schedulers.get(serverId).queue(track);
+                        }
+                        if(sendFollowupMessage) {
+                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                    .setContent(
+                                            "***Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...*** \n" + url)
+                                    .send();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void noMatches() {
+                if(sendFollowupMessage) {
+                    // Notify the user that we've got nothing
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Nothing found by " + url)
+                            .send();
+                }
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                if(sendFollowupMessage) {
+                    // Notify the user that everything exploded
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Could not play: " + exception.getMessage())
+                            .send();
+                }
+            }
+        });
+    }
+
+    private static void entirelyLoadTrack(DiscordApi api, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event, String url, boolean isSearch) {
+        setAudioPlayer(api, audioConnection, playerManager, event);
+        // Load the track
+        playerManagerLoadTrack(playerManager, url, event, event.getSlashCommandInteraction().getServer().get().getId(), true, isSearch);
+    }
+
+    private static void setAudioPlayer(DiscordApi api, AudioConnection audioConnection, AudioPlayerManager playerManager, SlashCommandCreateEvent event) {
+        long serverId;
+        try {
+            serverId = event.getSlashCommandInteraction().getServer().get().getId();
+        }
+        catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return;
+        }
+        audioConnection.setAudioSource(updatePlayerAndCreateAudioSource(api, playerManager, serverId));
     }
 }
