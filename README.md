@@ -22,9 +22,11 @@
 1. git clone https://github.com/kyleyannelli/KMusicBot.git
 2. Create .env file in this directory
 3. Add line, DISCORD_BOT_TOKEN="$TOKEN" to your .env file. $TOKEN being your discord bot token.
-4. Install [OpenJDK 11](https://www.openlogic.com/openjdk-downloads)
-5. Install [Brew](https://brew.sh/)
-6. brew install maven
-7. Command line run, mvn install && mvn exec:java
+4. Add line, SPOTIFY_CLIENT_ID="$CLIENT_ID" to your .env file. $CLIENT_ID being your spotify api client id.
+5. Add line, SPOTIFY_SECRET_ID="$SECRET_ID" to your .env. $SECRET_ID being your spotify api secret.
+6. Install [OpenJDK 11](https://www.openlogic.com/openjdk-downloads)
+7. Install [Brew](https://brew.sh/)
+8. brew install maven
+9. Command line run, mvn install && mvn exec:java
 
 #### I do not plan on adding a guide for Windows.
