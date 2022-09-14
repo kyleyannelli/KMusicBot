@@ -1,6 +1,6 @@
 # KMusicBot
-[![CodeQL](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml)
 ## Built on Maven with [Javacord](https://github.com/Javacord/Javacord) & [Lavaplayer](https://github.com/sedmelluq/lavaplayer)
+[![CodeQL](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml)
 
 # Getting Started (Ubuntu & Mac OS)
 
