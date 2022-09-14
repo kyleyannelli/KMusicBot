@@ -18,8 +18,7 @@
 3. Add line, DISCORD_BOT_TOKEN="$TOKEN" to your .env file. $TOKEN being your discord bot token.
 4. Install [OpenJDK 11](https://www.openlogic.com/openjdk-downloads)
 5. Install [Brew](https://brew.sh/)
-6. apt install maven
-7. apt install openjdk-11-jre-headless
-8. Command line run, mvn install && mvn exec:java
+6. brew install maven
+7. Command line run, mvn install && mvn exec:java
 
 #### I do not plan on adding a guide for Windows.
