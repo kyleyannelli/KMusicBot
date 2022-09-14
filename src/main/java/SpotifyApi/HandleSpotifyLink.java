@@ -25,10 +25,27 @@ public class HandleSpotifyLink {
         // if it contains anything that is not a letter or number then return null
 //        if(!playlistId.matches("[a-zA-Z0-9]+")) return "Not a playlist link\nIf you think this is a mistake, please contact <@806350925723205642>";
         if(!playlistId.matches("[a-zA-Z0-9]+")) return null;
-        Playlist playlist = spotifyApi.getPlaylist(playlistId).build().execute();
         Collection<String> tracks = new ArrayList<>();
-        for(PlaylistTrack track : playlist.getTracks().getItems()) {
-            tracks.add(((Track) track.getTrack()).getArtists()[0].getName() + " " + track.getTrack().getName());
+        try {
+            Playlist playlist = spotifyApi.getPlaylist(playlistId).build().execute();
+            for(PlaylistTrack track : playlist.getTracks().getItems()) {
+                tracks.add(((Track) track.getTrack()).getArtists()[0].getName() + " " + track.getTrack().getName());
+            }
+        }
+        catch (Exception e) {
+            try {
+                // just incase some tracks were added and an error was thrown we dont want duplicates
+                tracks = new ArrayList<>();
+                // try refreshing the token
+                spotifyApi = ClientCreate.clientCredentials_Sync();
+                Playlist playlist = spotifyApi.getPlaylist(playlistId).build().execute();
+                for(PlaylistTrack track : playlist.getTracks().getItems()) {
+                    tracks.add(((Track) track.getTrack()).getArtists()[0].getName() + " " + track.getTrack().getName());
+                }
+            }
+            catch (Exception e2) {
+                return tracks;
+            }
         }
         return tracks;
     }

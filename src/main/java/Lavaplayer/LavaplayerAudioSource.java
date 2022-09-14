@@ -236,7 +236,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                         if(sendFollowupMessage) {
                             event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                     .setContent(
-                                            "***Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...*** \n" + url)
+                                            "***Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...*** \n<" + url + ">")
                                     .send();
                         }
                     }
@@ -248,7 +248,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                 if(sendFollowupMessage) {
                     // Notify the user that we've got nothing
                     event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Nothing found by " + url)
+                            .setContent("Nothing found by <" + url + ">")
                             .send();
                 }
             }
