@@ -3,14 +3,20 @@
 
 # Getting Started (Ubuntu & Mac OS)
 
+## Prerequisites
+- [Spotify Tokens](https://developer.spotify.com/dashboard/login)
+- [Discord Tokens](https://discord.com/developers/applications)
+
 ## Ubuntu
 1. git clone https://github.com/kyleyannelli/KMusicBot.git
 2. cd KMusicBot
 3. Create .env file in this directory
 4. Add line, DISCORD_BOT_TOKEN="$TOKEN" to your .env file. $TOKEN being your discord bot token.
-5. apt install maven
-6. apt install openjdk-11-jre-headless
-7. Command line run, mvn install && mvn exec:java
+5. Add line, SPOTIFY_CLIENT_ID="$CLIENT_ID" to your .env file. $CLIENT_ID being your spotify api client id.
+6. Add line, SPOTIFY_SECRET_ID="$SECRET_ID" to your .env. $SECRET_ID being your spotify api secret.
+7. apt install maven
+8. apt install openjdk-11-jre-headless
+9. Command line run, mvn install && mvn exec:java
 
 ## Mac OS
 1. git clone https://github.com/kyleyannelli/KMusicBot.git
