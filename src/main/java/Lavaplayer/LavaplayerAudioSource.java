@@ -282,4 +282,36 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         }
         audioConnection.setAudioSource(updatePlayerAndCreateAudioSource(api, playerManager, serverId));
     }
+
+    public static String getQueue(long serverId, long pageNumber) {
+        if(pageNumber < 1) {
+            pageNumber = 1;
+        }
+        pageNumber--;
+        // show 5 tracks per page
+        StringBuilder queue = new StringBuilder();
+        try {
+            int start = (int) (pageNumber * 5);
+            int end = (start + 5);
+            // if start is greater than queue size show last page
+            if(start > schedulers.get(serverId).audioQueue.size()) {
+                start = schedulers.get(serverId).audioQueue.size() - 5;
+                end = schedulers.get(serverId).audioQueue.size();
+            }
+            if(start > schedulers.get(serverId).audioQueue.size()) {
+                return "No tracks in queue.";
+            }
+            if(end > schedulers.get(serverId).audioQueue.size()) {
+                end = schedulers.get(serverId).audioQueue.size();
+            }
+            for(int i = start; i < end; i++) {
+                queue.append(i + 1).append(". ").append(schedulers.get(serverId).audioQueue.get(i).getInfo().title).append("\n");
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return "There was an error getting the queue.";
+        }
+        return queue.toString();
+    }
 }

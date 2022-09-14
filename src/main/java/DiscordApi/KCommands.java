@@ -28,7 +28,35 @@ public class KCommands {
         listenForSkipCommand(api);
         listenForToggleEphemeralCommand(api);
         listenForShuffleCommand(api);
+        listenForQueueCommand(api);
     }
+
+    public static void listenForQueueCommand(DiscordApi api) {
+        SlashCommand command = SlashCommand.with("queue", "Shows the current queue",
+                        // create option(s)
+                        Collections.singletonList(
+                                // create option /play <song>
+                                SlashCommandOption.create(SlashCommandOptionType.LONG, "page", "The number page to view, starting at 1", true)
+                        ))
+                // create option(s)
+                .createGlobal(api)
+                .join();
+
+        api.addSlashCommandCreateListener(event -> {
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                long pageNumber = event.getSlashCommandInteraction().getArguments().get(0).getLongValue().get();
+                long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                event.getInteraction()
+                        .respondLater(isEphemeral.get(serverId))
+                        .thenAccept(interaction -> {
+                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                    .setContent(LavaplayerAudioSource.getQueue(serverId, pageNumber))
+                                    .send();
+                        });
+            }
+        });
+    }
+
     public static void listenForPlayCommand(DiscordApi api) {
         // create SlashCommand /play, = so the command information can be accessed prior
         SlashCommand command = SlashCommand.with("play", "Play a song",
