@@ -8,4 +8,4 @@
 
 ## Reporting a Vulnerability
 
-Make a pull request, give a general title, further description in the description. Thanks.
+Make a pull request OR issue, give a general title, further description in the description. Thanks.
