@@ -47,19 +47,17 @@
         </repository>
     </repositories>
     <dependencies>
-        <!--    Master    -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.30</version>
+        </dependency>
         <dependency>
             <groupId>org.javacord</groupId>
             <artifactId>javacord</artifactId>
             <version>3.5.0</version>
             <type>pom</type>
         </dependency>
-        <!-- Snapshot -->
-<!--        <dependency>-->
-<!--            <groupId>com.github.Javacord</groupId>-->
-<!--            <artifactId>Javacord</artifactId>-->
-<!--            <version>cb27cbc787</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>io.github.cdimascio</groupId>
             <artifactId>dotenv-java</artifactId>
