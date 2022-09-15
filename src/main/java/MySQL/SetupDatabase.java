@@ -15,7 +15,7 @@ public class SetupDatabase {
         Connection conn;
         try {
             // get connection
-            conn = CustomConnection.getConnection(dB);
+            conn = CustomConnection.getConnection("");
         }
         catch (Exception e) {
             System.out.println("Error connecting to database");

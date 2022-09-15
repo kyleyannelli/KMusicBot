@@ -18,7 +18,7 @@ public class Users {
         Connection conn;
         try {
             // get connection
-            conn = CustomConnection.getConnection(dB);
+            conn = CustomConnection.getConnection("DISCORD_" + dB);
         }
         catch (Exception e) {
             System.out.println("Error connecting to database");
@@ -56,7 +56,7 @@ public class Users {
         Connection conn;
         try {
             // get connection
-            conn = CustomConnection.getConnection(dB);
+            conn = CustomConnection.getConnection("DISCORD_" + dB);
         }
         catch (Exception e) {
             System.out.println("Error connecting to database");
