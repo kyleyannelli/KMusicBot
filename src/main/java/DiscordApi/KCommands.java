@@ -1,6 +1,7 @@
 package DiscordApi;
 
 import Lavaplayer.LavaplayerAudioSource;
+import MySQL.SetupDatabase;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
@@ -18,6 +19,8 @@ public class KCommands {
     public static HashMap<Long, Boolean> isEphemeral = new HashMap<>();
     public static void listenForAllCommands(DiscordApi api) {
         for(Server server : api.getServers()) {
+            System.out.println("Server: " + server.getName());
+            SetupDatabase.setup(server.getIdAsString());
             // messages are public by default
             isEphemeral.put(server.getId(), false);
         }
