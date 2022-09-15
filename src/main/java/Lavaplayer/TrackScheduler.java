@@ -1,5 +1,6 @@
 package Lavaplayer;
 
+import MySQL.Songs;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -31,6 +32,8 @@ public class TrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         // A track started playing
+        Songs s = new Songs(track.getInfo().title, track.getInfo().author);
+        s.save("" + serverId);
     }
 
     @Override

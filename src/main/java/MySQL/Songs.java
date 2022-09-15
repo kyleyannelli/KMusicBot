@@ -6,12 +6,10 @@ import java.sql.PreparedStatement;
 public class Songs {
     private String title;
     private String author;
-    private long timeSpent;
 
-    public Songs(String title, String author, long timeSpent) {
+    public Songs(String title, String author) {
         this.title = title;
         this.author = author;
-        this.timeSpent = timeSpent;
     }
 
     public static void setupTable(String dB) {
@@ -68,13 +66,11 @@ public class Songs {
 
         try {
             // create prepared statement
-            PreparedStatement statement = conn.prepareStatement("INSERT INTO songs (title, author, time_spent) VALUES (?, ?, ?)");
+            PreparedStatement statement = conn.prepareStatement("INSERT INTO songs (title, author) VALUES (?, ?)");
             // max length of title is 100
             statement.setString(1, title.trim().substring(0, 100));
             // max length of author is 30
             statement.setString(2, author.trim().substring(0, 30));
-            // time spent is in milliseconds
-            statement.setLong(3, timeSpent);
             // execute statement
             statement.execute();
         }
