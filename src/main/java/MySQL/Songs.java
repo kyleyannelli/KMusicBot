@@ -67,10 +67,20 @@ public class Songs {
         try {
             // create prepared statement
             PreparedStatement statement = conn.prepareStatement("INSERT INTO songs (title, author) VALUES (?, ?)");
-            // max length of title is 100
-            statement.setString(1, title.trim().substring(0, 100));
-            // max length of author is 30
-            statement.setString(2, author.trim().substring(0, 30));
+            // max length of title is 100. if title is longer than 100, truncate it
+            if (title.trim().length() > 100) {
+                statement.setString(1, title.trim().substring(0, 100));
+            }
+            else {
+                statement.setString(1, title.trim());
+            }
+            // max length of author is 30. if author is longer than 30, truncate it
+            if (author.trim().length() > 30) {
+                statement.setString(2, author.trim().substring(0, 30));
+            }
+            else {
+                statement.setString(2, author.trim());
+            }
             // execute statement
             statement.execute();
         }
