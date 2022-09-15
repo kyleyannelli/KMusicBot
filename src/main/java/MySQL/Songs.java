@@ -27,10 +27,9 @@ public class Songs {
         // create table
         try {
             String sql = "CREATE TABLE IF NOT EXISTS songs ("
-                    + "id BIGINT NOT NULL AUTO_INCREMENT,"
                     + "title VARCHAR(100) NOT NULL,"
                     + "author VARCHAR(30) NOT NULL,"
-                    + "PRIMARY KEY (id, title, author)"
+                    + "PRIMARY KEY (title, author)"
                     + ")";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.executeUpdate();
