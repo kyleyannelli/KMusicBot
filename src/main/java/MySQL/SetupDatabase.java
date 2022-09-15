@@ -25,7 +25,7 @@ public class SetupDatabase {
 
         // create database
         try {
-            String sql = "CREATE DATABASE DISCORD_" + dB + "\n" +
+            String sql = "CREATE DATABASE IF NOT EXISTS DISCORD_" + dB + "\n" +
                     // support emojis with utf8mb4
                     "DEFAULT CHARSET = utf8mb4 DEFAULT COLLATE = utf8mb4_unicode_ci";
             PreparedStatement stmt = conn.prepareStatement(sql);
