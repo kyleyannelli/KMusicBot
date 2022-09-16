@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class Songs {
     private String title;
@@ -124,8 +125,17 @@ public class Songs {
             statement.setString(2, author);
             // execute statement
             statement.execute();
+            ResultSet rs = statement.getResultSet();
+            while(rs.next()) {
+                // get id
+                long id = rs.getLong("id");
+                // close connection
+                conn.close();
+                // return id
+                return id;
+            }
             // get id
-            return statement.getResultSet().getLong(1);
+            return -1;
         }
         catch (Exception e) {
             System.out.println("Error getting song id");

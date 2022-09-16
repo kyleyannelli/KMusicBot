@@ -13,6 +13,7 @@ public class Users {
         this.discordId = discordId;
         this.songId = songId;
         this.timeSpent = timeSpent;
+        this.serverDiscordId = serverDiscordId;
     }
 
     public long save(String dB) {
