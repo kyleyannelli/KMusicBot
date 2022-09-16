@@ -2,6 +2,7 @@ package MySQL;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class Users {
     private long discordId;
@@ -28,6 +29,7 @@ public class Users {
             return -1;
         }
         PreparedStatement stmt;
+        ResultSet rs;
         // save song
         try {
             String sql = "INSERT INTO users (discord_id, server_discord_id, song_id, time_spent) VALUES (?, ?, ?, ?)";
@@ -36,7 +38,6 @@ public class Users {
             stmt.setLong(2, serverDiscordId);
             stmt.setLong(3, songId);
             stmt.setLong(4, timeSpent);
-            stmt.executeUpdate();
         }
         catch (Exception e) {
             System.out.println("Error saving song");
@@ -46,6 +47,12 @@ public class Users {
 
         // close connection
         try {
+            // get user id where server_discord_id = serverDiscordId and discord_id = discordId and song_id = songId
+            String sql = "SELECT discord_id FROM users WHERE discord_id = ? AND server_discord_id = ? AND song_id = ?";
+            stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            stmt.setLong(1, discordId);
+            stmt.setLong(2, serverDiscordId);
+            stmt.setLong(3, songId);
             long id = stmt.getGeneratedKeys().getLong(1);
             conn.close();
             return id;
