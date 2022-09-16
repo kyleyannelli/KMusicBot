@@ -31,7 +31,7 @@ public class Users {
         // save song
         try {
             String sql = "INSERT INTO users (discord_id, server_discord_id, song_id, time_spent) VALUES (?, ?, ?, ?)";
-            stmt = conn.prepareStatement(sql);
+            stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             stmt.setLong(1, discordId);
             stmt.setLong(2, serverDiscordId);
             stmt.setLong(3, songId);
