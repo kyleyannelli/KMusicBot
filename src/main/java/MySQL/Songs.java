@@ -70,7 +70,7 @@ public class Songs {
         PreparedStatement statement;
         try {
             // create prepared statement
-            statement = conn.prepareStatement("INSERT INTO songs (title, author) VALUES (?, ?)");
+            statement = conn.prepareStatement("INSERT INTO songs (title, author) VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
             // max length of title is 100. if title is longer than 100, truncate it
             if (title.trim().length() > 100) {
                 statement.setString(1, title.trim().substring(0, 100));
@@ -119,7 +119,7 @@ public class Songs {
             Connection conn = CustomConnection.getConnection("DISCORD_" + dB);
 
             // create prepared statement
-            PreparedStatement statement = conn.prepareStatement("SELECT id FROM songs WHERE title = ? AND author = ?");
+            PreparedStatement statement = conn.prepareStatement("SELECT id FROM songs WHERE title = ? AND author = ?", PreparedStatement.RETURN_GENERATED_KEYS);
             statement.setString(1, title);
             statement.setString(2, author);
             // execute statement

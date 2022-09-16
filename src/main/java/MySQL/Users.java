@@ -77,7 +77,7 @@ public class Users {
                     + "    time_spent BIGINT NULL,\n"
                     + "    PRIMARY KEY (discord_id, server_discord_id, song_id)\n"
                     + ")";
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             stmt.executeUpdate();
         }
         catch (Exception e) {
@@ -112,7 +112,7 @@ public class Users {
         // save song
         try {
             String sql = "UPDATE users SET time_spent = time_spent + ? WHERE discord_id = ? AND server_discord_id = ? AND song_id = ?";
-            stmt = conn.prepareStatement(sql);
+            stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             stmt.setLong(1, timeSpent);
             stmt.setLong(2, discordId);
             stmt.setLong(3, dB);
