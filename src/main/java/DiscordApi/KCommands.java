@@ -327,6 +327,14 @@ public class KCommands {
                         // also get if it is ephemeral (private) or not
                         .respondLater(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()))
                         .thenAccept(interaction -> {
+                            // check if the user is an admin
+                            if(!UserHelper.isAdmin(event.getSlashCommandInteraction().getServer(), event.getSlashCommandInteraction().getUser())) {
+                                // yell at them!
+                                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                        .setContent("You must be an admin to use this command!")
+                                        .send();
+                                return;
+                            }
                             isEphemeral.put(event.getSlashCommandInteraction().getServer().get().getId(), !isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()));
                             event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                     .setContent(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()) ? "Ephemeral is now on!" : "Ephemeral is now off!")
