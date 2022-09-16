@@ -222,6 +222,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                         try {
                             Songs s = new Songs(playlist.getTracks().get(0).getInfo().title, playlist.getTracks().get(0).getInfo().author);
                             long songId = s.save("" + serverId);
+                            System.out.println("songId: " + songId);
                             Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
                             userId = user.save("" + serverId);
                             schedulers.get(serverId).userDiscordIdRequestedSongId.put(playlist.getTracks().get(0).getInfo().identifier, userId);
