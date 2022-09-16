@@ -90,9 +90,21 @@ public class Songs {
             statement.execute();
         }
         catch (Exception e) {
-            System.out.println("Error saving song");
-            e.printStackTrace();
-            return -1;
+            try {
+                // if song already exists, get id
+                statement = conn.prepareStatement("SELECT id FROM songs WHERE title = ? AND author = ?");
+                statement.setString(1, title);
+                statement.setString(2, author);
+                ResultSet rs = statement.executeQuery();
+                rs.next();
+                return rs.getLong("id");
+            }
+            catch (Exception e2) {
+                System.out.println("Error saving song");
+                e.printStackTrace();
+                e2.printStackTrace();
+                return -1;
+            }
         }
 
         try {
