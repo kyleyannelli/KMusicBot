@@ -40,9 +40,26 @@ public class Users {
             stmt.executeUpdate();
         }
         catch (Exception e) {
-            System.out.println("Error saving song");
-            e.printStackTrace();
-            return -1;
+            // close connection
+            try {
+                // get user id where server_discord_id = serverDiscordId and discord_id = discordId and song_id = songId
+                String sql = "SELECT discord_id FROM users WHERE discord_id = ? AND server_discord_id = ? AND song_id = ?";
+                stmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+                stmt.setLong(1, discordId);
+                stmt.setLong(2, serverDiscordId);
+                stmt.setLong(3, songId);
+                ResultSet rs = stmt.executeQuery();
+                rs.next();
+                long id = rs.getLong(1);
+                conn.close();
+                return id;
+            }
+            catch (Exception e2) {
+                System.out.println("Error closing connection");
+                e.printStackTrace();
+                e2.printStackTrace();
+                return -1;
+            }
         }
 
         // close connection
