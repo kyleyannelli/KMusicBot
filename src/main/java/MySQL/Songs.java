@@ -125,29 +125,37 @@ public class Songs {
     public static long getSongIdByTrack(AudioTrack track, long dB) {
         try {
             // get song id
-            String title = track.getInfo().title;
-            String author = track.getInfo().author;
+            String title = track.getInfo().title.trim();
+            String author = track.getInfo().author.trim();
 
             // get connection
             Connection conn = CustomConnection.getConnection("DISCORD_" + dB);
 
             // create prepared statement
             PreparedStatement statement = conn.prepareStatement("SELECT id FROM songs WHERE title = ? AND author = ?", PreparedStatement.RETURN_GENERATED_KEYS);
-            statement.setString(1, title);
-            statement.setString(2, author);
+            if (title.trim().length() > 100) {
+                statement.setString(1, title.trim().substring(0, 100));
+            }
+            else {
+                statement.setString(1, title.trim());
+            }
+            // max length of author is 30. if author is longer than 30, truncate it
+            if (author.trim().length() > 30) {
+                statement.setString(2, author.trim().substring(0, 30));
+            }
+            else {
+                statement.setString(2, author.trim());
+            }
             // execute statement
             statement.execute();
             ResultSet rs = statement.getResultSet();
-            while(rs.next()) {
-                // get id
-                long id = rs.getLong("id");
-                // close connection
-                conn.close();
-                // return id
-                return id;
-            }
+            rs.next();
             // get id
-            return -1;
+            long id = rs.getLong("id");
+            // close connection
+            conn.close();
+            // return id
+            return id;
         }
         catch (Exception e) {
             System.out.println("Error getting song id");
