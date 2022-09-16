@@ -73,7 +73,7 @@ public class Songs {
             // create prepared statement
             statement = conn.prepareStatement("INSERT INTO songs (title, author) VALUES (?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
             // max length of title is 100. if title is longer than 100, truncate it
-            if (title.trim().length() > 100) {
+            if(title.trim().length() > 100) {
                 statement.setString(1, title.trim().substring(0, 100));
             }
             else {
@@ -90,34 +90,32 @@ public class Songs {
             statement.execute();
         }
         catch (Exception e) {
-            try {
-                // if song already exists, get id
-                statement = conn.prepareStatement("SELECT id FROM songs WHERE title = ? AND author = ?");
-                statement.setString(1, title);
-                statement.setString(2, author);
-                ResultSet rs = statement.executeQuery();
-                rs.next();
-                return rs.getLong("id");
-            }
-            catch (Exception e2) {
-                System.out.println("Error saving song");
-                e.printStackTrace();
-                e2.printStackTrace();
-                return -1;
-            }
+            System.out.println("Error saving song");
+            e.printStackTrace();
+            return -1;
         }
 
         try {
-            // get id of song
-            long id = statement.getGeneratedKeys().getLong(1);
-            // close connection
-            conn.close();
-            // return id
+            // if song already exists, get id
+            statement = conn.prepareStatement("SELECT id FROM songs WHERE title = ? AND author = ?");
+            statement.setString(1, title);
+            statement.setString(2, author);
+            ResultSet rs = statement.executeQuery();
+            rs.next();
+            long id = rs.getLong("id");
+            try {
+                conn.close();
+            }
+            catch (Exception e) {
+                System.out.println("Error closing connection");
+                e.printStackTrace();
+                return -1;
+            }
             return id;
         }
-        catch (Exception e) {
-            System.out.println("Error closing connection");
-            e.printStackTrace();
+        catch (Exception e2) {
+            System.out.println("Error getting id");
+            e2.printStackTrace();
             return -1;
         }
     }
