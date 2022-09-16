@@ -69,7 +69,7 @@ public class Users {
             String sql = "CREATE TABLE IF NOT EXISTS users (\n"
                     + "    discord_id BIGINT NOT NULL,\n"
                     + "    song_id BIGINT NOT NULL,\n"
-                    + "    time_spent BIGINT NOT NULL,\n"
+                    + "    time_spent BIGINT NULL,\n"
                     + "    PRIMARY KEY (discord_id, song_id)\n"
                     + ")";
             PreparedStatement stmt = conn.prepareStatement(sql);
