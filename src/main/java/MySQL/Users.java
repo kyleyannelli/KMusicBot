@@ -29,7 +29,6 @@ public class Users {
             return -1;
         }
         PreparedStatement stmt;
-        ResultSet rs;
         // save song
         try {
             String sql = "INSERT INTO users (discord_id, server_discord_id, song_id, time_spent) VALUES (?, ?, ?, ?)";
@@ -38,6 +37,7 @@ public class Users {
             stmt.setLong(2, serverDiscordId);
             stmt.setLong(3, songId);
             stmt.setLong(4, timeSpent);
+            stmt.executeUpdate();
         }
         catch (Exception e) {
             System.out.println("Error saving song");
@@ -53,7 +53,8 @@ public class Users {
             stmt.setLong(1, discordId);
             stmt.setLong(2, serverDiscordId);
             stmt.setLong(3, songId);
-            long id = stmt.getGeneratedKeys().getLong(1);
+            ResultSet rs = stmt.executeQuery();
+            long id = rs.getLong(1);
             conn.close();
             return id;
         }
