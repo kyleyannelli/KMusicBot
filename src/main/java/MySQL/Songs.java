@@ -1,5 +1,7 @@
 package MySQL;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
@@ -53,7 +55,7 @@ public class Songs {
         }
     }
 
-    public void save(String dB) {
+    public long save(String dB) {
         Connection conn;
         try {
             // get connection
@@ -62,12 +64,13 @@ public class Songs {
         catch (Exception e) {
             System.out.println("Error connecting to database");
             e.printStackTrace();
-            return;
+            return -1;
         }
 
+        PreparedStatement statement;
         try {
             // create prepared statement
-            PreparedStatement statement = conn.prepareStatement("INSERT INTO songs (title, author) VALUES (?, ?)");
+            statement = conn.prepareStatement("INSERT INTO songs (title, author) VALUES (?, ?)");
             // max length of title is 100. if title is longer than 100, truncate it
             if (title.trim().length() > 100) {
                 statement.setString(1, title.trim().substring(0, 100));
@@ -88,17 +91,46 @@ public class Songs {
         catch (Exception e) {
             System.out.println("Error saving song");
             e.printStackTrace();
-            return;
+            return -1;
         }
 
         try {
+            // get id of song
+            long id = statement.getGeneratedKeys().getLong(1);
             // close connection
             conn.close();
+            // return id
+            return id;
         }
         catch (Exception e) {
             System.out.println("Error closing connection");
             e.printStackTrace();
-            return;
+            return -1;
+        }
+    }
+
+    public static long getSongIdByTrack(AudioTrack track, long dB) {
+        try {
+            // get song id
+            String title = track.getInfo().title;
+            String author = track.getInfo().author;
+
+            // get connection
+            Connection conn = CustomConnection.getConnection("DISCORD_" + dB);
+
+            // create prepared statement
+            PreparedStatement statement = conn.prepareStatement("SELECT id FROM songs WHERE title = ? AND author = ?");
+            statement.setString(1, title);
+            statement.setString(2, author);
+            // execute statement
+            statement.execute();
+            // get id
+            return statement.getResultSet().getLong(1);
+        }
+        catch (Exception e) {
+            System.out.println("Error getting song id");
+            e.printStackTrace();
+            return -1;
         }
     }
 }
