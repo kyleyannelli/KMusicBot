@@ -54,6 +54,7 @@ public class Users {
             stmt.setLong(2, serverDiscordId);
             stmt.setLong(3, songId);
             ResultSet rs = stmt.executeQuery();
+            rs.next();
             long id = rs.getLong(1);
             conn.close();
             return id;
