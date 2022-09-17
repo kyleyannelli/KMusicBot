@@ -257,7 +257,6 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                             long songId = s.save("" + serverId);
                             Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
                             userId = user.save("" + serverId);
-                            ArrayList<String> aS;
                             schedulers.get(serverId).userDiscordIdRequestedSongId.put(playlist.getTracks().get(0).getInfo().identifier, userId);
                         }
                         catch (Exception e) {
