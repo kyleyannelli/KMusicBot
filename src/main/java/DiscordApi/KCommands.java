@@ -25,6 +25,7 @@ public class KCommands {
             isEphemeral.put(server.getId(), false);
         }
         listenForPlayCommand(api);
+        listenForPauseCommand(api);
         listenForStopCommand(api);
         listenForNowPlayingCommand(api);
         listenForVolumeCommand(api);
@@ -371,6 +372,55 @@ public class KCommands {
                                     event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                             .setContent("Shuffled!")
                                             .send();
+                                } else {
+                                    // yell at them!
+                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                            .setContent("Nothing is currently playing!")
+                                            .send();
+                                }
+                            });
+                            // if the user is not in a voice channel
+                            if (!isConnected.get()) {
+                                // yell at them!
+                                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                        .setContent("You must be in a voice channel to use this command!")
+                                        .send();
+                            }
+                        });
+            }
+        });
+    }
+
+    public static void listenForPauseCommand(DiscordApi api) {
+        SlashCommand command = SlashCommand.with("pause", "Pause the current track")
+                .createGlobal(api).join();
+
+        api.addSlashCommandCreateListener(event -> {
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                event.getInteraction()
+                        .respondLater(isEphemeral.get(serverId))
+                        .thenAccept(interaction -> {
+                            // see if the user is in a voice channel, needs to be Atomic because it's used in a lambda
+                            AtomicBoolean isConnected = new AtomicBoolean(false);
+                            // get the user who used the command, get their voice channel, if it exists
+                            event.getSlashCommandInteraction().getUser().getConnectedVoiceChannel(event.getSlashCommandInteraction().getServer().get()).ifPresent(voiceChannel -> {
+                                isConnected.set(true);
+                                // if the audio player is not null
+                                if(LavaplayerAudioSource.getPlayerByServerId(serverId) != null) {
+                                    // pause or unpause (depending on current state)
+                                    if(!LavaplayerAudioSource.pause(serverId)) {
+                                        // let em know
+                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("Resumed! (music was already paused)")
+                                                .send();
+                                    }
+                                    else {
+                                        // let em know
+                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("Paused!")
+                                                .send();
+                                    }
                                 } else {
                                     // yell at them!
                                     event.getSlashCommandInteraction().createFollowupMessageBuilder()

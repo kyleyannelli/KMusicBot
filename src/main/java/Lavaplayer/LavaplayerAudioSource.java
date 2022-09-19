@@ -368,4 +368,15 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         }
         return queue.toString();
     }
+
+    public static boolean pause(long serverId) {
+        if(players.get(serverId).isPaused()) {
+            players.get(serverId).setPaused(false);
+            return false;
+        }
+        else {
+            players.get(serverId).setPaused(true);
+            return true;
+        }
+    }
 }
