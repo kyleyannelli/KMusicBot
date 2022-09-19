@@ -15,7 +15,7 @@ public class Songs {
         this.author = author;
     }
 
-    public static void setupTable(String dB) {
+    public static boolean setupTable(String dB) {
         Connection conn;
         try {
             // get connection
@@ -24,7 +24,7 @@ public class Songs {
         catch (Exception e) {
             System.out.println("Error connecting to database");
             e.printStackTrace();
-            return;
+            return false;
         }
 
         // create table
@@ -42,7 +42,7 @@ public class Songs {
         catch (Exception e) {
             System.out.println("Error creating table");
             e.printStackTrace();
-            return;
+            return false;
         }
 
         // close connection
@@ -52,8 +52,9 @@ public class Songs {
         catch (Exception e) {
             System.out.println("Error closing connection");
             e.printStackTrace();
-            return;
+            return false;
         }
+        return true;
     }
 
     public long save(String dB) {

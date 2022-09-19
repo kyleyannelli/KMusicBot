@@ -7,13 +7,19 @@ public class SetupTables {
         // Create tables
 
         // Songs
-        Songs.setupTable(dB);
-        // Print success message
-        System.out.println("Songs table created successfully");
+        if(Songs.setupTable(dB)) {
+            System.out.println("Songs table created");
+        }
+        else {
+            System.out.println("Error creating Songs table");
+        }
 
         // Users
-        Users.setupTable(dB);
-        // Print success message
-        System.out.println("Users table created successfully");
+        if(Users.setupTable(dB)) {
+            System.out.println("Users table created");
+        }
+        else {
+            System.out.println("Error creating Users table");
+        }
     }
 }

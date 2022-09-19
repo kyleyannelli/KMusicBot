@@ -83,7 +83,7 @@ public class Users {
         }
     }
 
-    public static void setupTable(String dB) {
+    public static boolean setupTable(String dB) {
         Connection conn;
         try {
             // get connection
@@ -92,7 +92,7 @@ public class Users {
         catch (Exception e) {
             System.out.println("Error connecting to database");
             e.printStackTrace();
-            return;
+            return false;
         }
 
         // create table
@@ -110,7 +110,7 @@ public class Users {
         catch (Exception e) {
             System.out.println("Error creating table");
             e.printStackTrace();
-            return;
+            return false;
         }
 
         // close connection
@@ -120,8 +120,9 @@ public class Users {
         catch (Exception e) {
             System.out.println("Error closing connection");
             e.printStackTrace();
-            return;
+            return false;
         }
+        return true;
     }
 
     public static void addToTimeSpent(long dB, long discordId, long songId, long timeSpent) {
