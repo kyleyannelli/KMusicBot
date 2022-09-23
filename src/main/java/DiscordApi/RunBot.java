@@ -24,6 +24,7 @@ public class RunBot {
         // listen for all commands
         KCommands.listenForAllCommands(api);
         api.addServerJoinListener(event -> KCommands.isEphemeral.put(event.getServer().getId(), false));
+        api.addServerJoinListener(event -> MySQL.SetupDatabase.setup(event.getServer().getIdAsString()));
         api.addServerLeaveListener(event -> {
             KCommands.isEphemeral.remove(event.getServer().getId());
             if(LavaplayerAudioSource.getPlayerByServerId(event.getServer().getId()) != null) {
