@@ -185,7 +185,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             public void trackLoaded(AudioTrack track) {
                 long userId;
                 try {
-                    Songs s = new Songs(track.getInfo().title, track.getInfo().author);
+                    Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
                     long songId = s.save("" + serverId);
                     Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
                     userId = user.save("" + serverId);
