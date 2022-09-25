@@ -8,11 +8,15 @@ import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
+import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class KCommands {
@@ -34,6 +38,84 @@ public class KCommands {
         listenForToggleEphemeralCommand(api);
         listenForShuffleCommand(api);
         listenForQueueCommand(api);
+        listenForSeekCommand(api);
+    }
+
+    public static void listenForSeekCommand(DiscordApi api) {
+        ArrayList<SlashCommandOption> options = new ArrayList<>();
+        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "seconds", "The amount of seconds"));
+        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "minutes", "The amount of minutes"));
+        options.add(SlashCommandOption.create(SlashCommandOptionType.LONG, "hours", "The amount of seconds"));
+
+        SlashCommand command = SlashCommand.with("seek", "Seek to a specific position in the currently playing song",
+                // create options
+                options).createGlobal(api).join();
+
+        api.addSlashCommandCreateListener(event -> {
+           if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+               long serverId = event.getInteraction().getServer().get().getId();
+               event.getInteraction().respondLater(isEphemeral.get(serverId)).thenAccept(slashEvent -> {
+                   if(userConnectedToVc(event)) {
+                       // total time in milliseconds
+                       long totalRequestedTime = 0;
+                       boolean minutes = false;
+                       boolean seconds = false;
+                       boolean hours = false;
+                       for(SlashCommandInteractionOption s : event.getSlashCommandInteraction().getArguments()) {
+                           if(minutes && seconds && hours) break;
+                           Optional<Long> value = s.getLongValue();
+                           if(value.isPresent()) {
+                               switch(s.getName()) {
+                                   case "seconds":
+                                       if(!seconds) totalRequestedTime += value.get() * 1000;
+                                       seconds = true;
+                                       break;
+                                   case "minutes":
+                                       if(!minutes) totalRequestedTime += value.get() * 60000;
+                                       minutes = true;
+                                       break;
+                                   case "hours":
+                                       if(!hours) totalRequestedTime += value.get() * (60 * 60000);
+                                       hours = true;
+                                       break;
+                               }
+                           }
+                       }
+                       AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
+                       long duration = player.getPlayingTrack().getDuration();
+                       if(player.getPlayingTrack() == null) {
+                           event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                   .setContent("Nothing is playing!")
+                                   .send();
+                           return;
+                       }
+                       if(duration < totalRequestedTime) {
+                           System.out.println("Requested " + totalRequestedTime + " of " + duration);
+                           event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                   .setContent("Request seek position is beyond the current songs duration!")
+                                   .send();
+                           return;
+                       }
+                       if(totalRequestedTime < 0) {
+                           event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                   .setContent("Requested seek position is below 0!")
+                                   .send();
+                           return;
+                       }
+                       player.getPlayingTrack().setPosition(totalRequestedTime);
+                       String durationString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(duration),
+                               TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
+                               TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration)));
+                       String requestedPosition = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalRequestedTime),
+                               TimeUnit.MILLISECONDS.toMinutes(totalRequestedTime) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalRequestedTime)),
+                               TimeUnit.MILLISECONDS.toSeconds(totalRequestedTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalRequestedTime)));
+                       event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                               .setContent("Seeking to " + requestedPosition + " **|** " + durationString)
+                               .send();
+                   }
+               });
+           }
+        });
     }
 
     public static void listenForQueueCommand(DiscordApi api) {
@@ -186,10 +268,19 @@ public class KCommands {
                                 Long serverId = event.getSlashCommandInteraction().getServer().get().getId();
                                 // if the audio player is not null
                                 AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
+                                long currentPosition = player.getPlayingTrack().getPosition();
+                                long totalDuration = player.getPlayingTrack().getDuration();
+                                String currentPositionHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(currentPosition),
+                                        TimeUnit.MILLISECONDS.toMinutes(currentPosition) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(currentPosition)),
+                                        TimeUnit.MILLISECONDS.toSeconds(currentPosition) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition)));
+                                String durationHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalDuration),
+                                        TimeUnit.MILLISECONDS.toMinutes(totalDuration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalDuration)),
+                                        TimeUnit.MILLISECONDS.toSeconds(totalDuration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalDuration)));
                                 if(player != null) {
                                     // let em know
                                     event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                            .setContent("***Currently Playing:***\n" + player.getPlayingTrack().getInfo().title + "\n" + player.getPlayingTrack().getInfo().uri)
+                                            .setContent("***Currently Playing:***\n" + player.getPlayingTrack().getInfo().title + "\n" + player.getPlayingTrack().getInfo().uri + "\n" +
+                                                    "" + currentPositionHHMMSS + " **|** " + durationHHMMSS)
                                             .send();
                                 } else {
                                     // yell at them!
