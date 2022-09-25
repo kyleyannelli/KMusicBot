@@ -1,5 +1,7 @@
 package Lavaplayer;
 
+import MySQL.Songs;
+import MySQL.Users;
 import SpotifyApi.HandleSpotifyLink;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -18,7 +20,10 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import se.michaelthelin.spotify.SpotifyApi;
 
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class LavaplayerAudioSource extends AudioSourceBase {
 
@@ -178,6 +183,18 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
+                long userId;
+                try {
+                    Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
+                    long songId = s.save("" + serverId);
+                    Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
+                    userId = user.save("" + serverId);
+                    schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Error while saving song to database, continuing...");
+                }
                 if(players.get(serverId).getPlayingTrack() == null) {
                     players.get(serverId).playTrack(track);
                     if(sendFollowupMessage) {
@@ -201,6 +218,19 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                     if(isSearch) {
                         // play the first track
                         players.get(serverId).playTrack(playlist.getTracks().get(0));
+                        long userId;
+                        try {
+                            Songs s = new Songs(playlist.getTracks().get(0).getInfo().title, playlist.getTracks().get(0).getInfo().author, playlist.getTracks().get(0).getInfo().uri);
+                            long songId = s.save("" + serverId);
+                            System.out.println("songId: " + songId);
+                            Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
+                            userId = user.save("" + serverId);
+                            schedulers.get(serverId).userDiscordIdRequestedSongId.put(playlist.getTracks().get(0).getInfo().identifier, userId);
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                            System.out.println("Error while saving song to database, continuing...");
+                        }
                         if(sendFollowupMessage) {
                             event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                     .setContent("***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">")
@@ -221,6 +251,18 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                     }
                 } else {
                     if(isSearch) {
+                        long userId;
+                        try {
+                            Songs s = new Songs(playlist.getTracks().get(0).getInfo().title, playlist.getTracks().get(0).getInfo().author, playlist.getTracks().get(0).getInfo().uri);
+                            long songId = s.save("" + serverId);
+                            Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
+                            userId = user.save("" + serverId);
+                            schedulers.get(serverId).userDiscordIdRequestedSongId.put(playlist.getTracks().get(0).getInfo().identifier, userId);
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                            System.out.println("Error while saving song to database, continuing...");
+                        }
                         // play the first track
                         schedulers.get(serverId).queue(playlist.getTracks().get(0));
                         if(sendFollowupMessage) {
@@ -231,6 +273,18 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                     }
                     else {
                         for(AudioTrack track : playlist.getTracks()) {
+                            long userId;
+                            try {
+                                Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
+                                long songId = s.save("" + serverId);
+                                Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
+                                userId = user.save("" + serverId);
+                                schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
+                            }
+                            catch (Exception e) {
+                                e.printStackTrace();
+                                System.out.println("Error while saving song to database, continuing...");
+                            }
                             schedulers.get(serverId).queue(track);
                         }
                         if(sendFollowupMessage) {
@@ -313,5 +367,48 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             return "There was an error getting the queue.";
         }
         return queue.toString();
+    }
+
+    public static boolean pause(long serverId) {
+        if(players.get(serverId).isPaused()) {
+            players.get(serverId).setPaused(false);
+            return false;
+        }
+        else {
+            players.get(serverId).setPaused(true);
+            return true;
+        }
+    }
+
+    public static boolean clearQueue(long serverId) {
+        try {
+            schedulers.get(serverId).audioQueue.clear();
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+    /**
+     * Returns 0 if it replays the current track, 1 if it plays the previous, and -1 if it failed...
+     */
+    public static int replay(long serverId) {
+        try {
+            AudioTrack nowPlaying = players.get(serverId).getPlayingTrack();
+            if(nowPlaying.getPosition() > (1000 * 10)) {
+                players.get(serverId).getPlayingTrack().setPosition(0L);
+                players.get(serverId).setPaused(false);
+                return 0;
+            }
+            else {
+                players.get(serverId).playTrack(schedulers.get(serverId).lastTrack.makeClone());
+                players.get(serverId).setPaused(false);
+                return 1;
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
     }
 }
