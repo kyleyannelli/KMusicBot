@@ -39,6 +39,63 @@ public class KCommands {
         listenForShuffleCommand(api);
         listenForQueueCommand(api);
         listenForSeekCommand(api);
+        listenForClearCommand(api);
+        listenForReplayCommand(api);
+    }
+
+    public static void listenForReplayCommand(DiscordApi api) {
+        SlashCommand command = SlashCommand.with("previous", "Replays the current song, or the previous song").createGlobal(api).join();
+
+        api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
+            if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
+                long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
+                slashCommandCreateEvent.getInteraction()
+                        .respondLater(isEphemeral.get(serverId))
+                        .thenAccept(interactionAcceptance -> {
+                           if(userConnectedToVc(slashCommandCreateEvent)) {
+                               int result = LavaplayerAudioSource.replay(serverId);
+                               switch(result) {
+                                   case -1:
+                                       slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                               .setContent("Failed to replay!").send();
+                                       break;
+                                   case 0:
+                                       slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                               .setContent("Replaying the current track...").send();
+                                       break;
+                                   case 1:
+                                       slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                               .setContent("Playing the previous track...").send();
+                                       break;
+                               }
+                           }
+                        });
+            }
+        });
+    }
+
+    public static void listenForClearCommand(DiscordApi api) {
+        SlashCommand command = SlashCommand.with("clear", "Clears the entire queue").createGlobal(api).join();
+
+        api.addSlashCommandCreateListener(event -> {
+           if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+               long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+               event.getInteraction()
+                       .respondLater(isEphemeral.get(serverId))
+                       .thenAccept(interactionAcceptance -> {
+                          if(userConnectedToVc(event)) {
+                              if(LavaplayerAudioSource.clearQueue(serverId)) {
+                                  event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                          .setContent("Queue cleared!").send();
+                              }
+                              else {
+                                  event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                          .setContent("Queue couldn't clear :(").send();
+                              }
+                          }
+                       });
+           }
+        });
     }
 
     public static void listenForSeekCommand(DiscordApi api) {

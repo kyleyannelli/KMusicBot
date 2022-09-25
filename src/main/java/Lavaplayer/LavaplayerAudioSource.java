@@ -379,4 +379,36 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             return true;
         }
     }
+
+    public static boolean clearQueue(long serverId) {
+        try {
+            schedulers.get(serverId).audioQueue.clear();
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+    /**
+     * Returns 0 if it replays the current track, 1 if it plays the previous, and -1 if it failed...
+     */
+    public static int replay(long serverId) {
+        try {
+            AudioTrack nowPlaying = players.get(serverId).getPlayingTrack();
+            if(nowPlaying.getPosition() > (1000 * 10)) {
+                players.get(serverId).getPlayingTrack().setPosition(0L);
+                players.get(serverId).setPaused(false);
+                return 0;
+            }
+            else {
+                players.get(serverId).playTrack(schedulers.get(serverId).lastTrack.makeClone());
+                players.get(serverId).setPaused(false);
+                return 1;
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
+    }
 }

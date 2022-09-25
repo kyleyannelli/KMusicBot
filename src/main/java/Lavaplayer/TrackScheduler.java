@@ -17,6 +17,7 @@ public class TrackScheduler extends AudioEventAdapter {
     public HashMap<String, Long> userDiscordIdRequestedSongId = new HashMap<>();
     public ArrayList<AudioTrack> audioQueue = new ArrayList<>();
     public long serverId;
+    public AudioTrack lastTrack;
     public DiscordApi api;
     public TrackScheduler(long serverId, DiscordApi api) {
         this.serverId = serverId;
@@ -37,6 +38,7 @@ public class TrackScheduler extends AudioEventAdapter {
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         // A track started playing
         lastSongStartTime = Instant.now().getEpochSecond();
+        if(lastTrack == null) lastTrack = track.makeClone();
     }
 
     @Override
@@ -70,6 +72,7 @@ public class TrackScheduler extends AudioEventAdapter {
                 LavaplayerAudioSource.createDisconnectTimer(api, serverId, new Timer());
             }
         }
+        lastTrack = track.makeClone();
     }
 
     @Override
