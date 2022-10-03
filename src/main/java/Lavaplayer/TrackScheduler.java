@@ -109,4 +109,11 @@ public class TrackScheduler extends AudioEventAdapter {
     public void queue(AudioTrack track) {
         audioQueue.add(track);
     }
+
+    public void queueNext(AudioTrack track) {
+        ArrayList<AudioTrack> newAudioQueue = new ArrayList<>();
+        newAudioQueue.add(track);
+        newAudioQueue.addAll(audioQueue);
+        audioQueue = newAudioQueue;
+    }
 }

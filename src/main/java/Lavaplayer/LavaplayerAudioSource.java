@@ -75,7 +75,11 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         return new LavaplayerAudioSource(getApi(), audioPlayer);
     }
 
-    public static void setupAudioPlayer(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event) {
+    public static void playNext(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event) {
+        setupAudioPlayer(api, spotifyApi, audioConnection, url, event, true);
+    }
+
+    public static void setupAudioPlayer(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event, boolean next) {
         if(timers.get(event.getSlashCommandInteraction().getServer().get().getId()) == null) {
             // get server id
             long serverId = event.getSlashCommandInteraction().getServer().get().getId();
@@ -95,7 +99,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         AudioPlayerManager playerManager = createYouTubePlayerManager();
         if(url.startsWith("https://www.youtube.com/")) {
             // Create a player manager
-            entirelyLoadTrack(api, playerManager, audioConnection, event, url, false);
+            entirelyLoadTrack(api, playerManager, audioConnection, event, url, false, next);
         }
         else if(url.startsWith("https://open.spotify.com/")) {
             Collection<String> trackNames;
@@ -122,7 +126,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                 setAudioPlayer(api, audioConnection, playerManager, event);
                 long serverId = event.getSlashCommandInteraction().getServer().get().getId();
                 for(String trackName : trackNames) {
-                    playerManagerLoadTrack(playerManager, "ytsearch:" + trackName, event, serverId, false, true);
+                    playerManagerLoadTrack(playerManager, "ytsearch:" + trackName, event, serverId, false, true, next);
                 }
                 event.getSlashCommandInteraction().createFollowupMessageBuilder()
                         .setContent("Added " + trackNames.size() + " tracks to the queue")
@@ -135,7 +139,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             }
         }
         else {
-            entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + url, true);
+            entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + url, true, next);
         }
     }
 
@@ -179,7 +183,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         return playerManager;
     }
 
-    private static void playerManagerLoadTrack(AudioPlayerManager playerManager, String url, SlashCommandCreateEvent event, long serverId, boolean sendFollowupMessage, boolean isSearch) {
+    private static void playerManagerLoadTrack(AudioPlayerManager playerManager, String url, SlashCommandCreateEvent event, long serverId, boolean sendFollowupMessage, boolean isSearch, boolean next) {
         playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
@@ -203,7 +207,8 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                                 .send();
                     }
                 } else {
-                    schedulers.get(serverId).queue(track);
+                    if(next) schedulers.get(serverId).queueNext(track);
+                    else schedulers.get(serverId).queue(track);
                     if(sendFollowupMessage) {
                         event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                 .setContent("***Queued:*** \n" + track.getInfo().title + "\n<" + track.getInfo().uri + ">")
@@ -239,7 +244,8 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                     }
                     else {
                         for(int i = 1; i < playlist.getTracks().size(); i++) {
-                            schedulers.get(serverId).queue(playlist.getTracks().get(i));
+                            if(next) schedulers.get(serverId).queueNext(playlist.getTracks().get(i));
+                            else schedulers.get(serverId).queue(playlist.getTracks().get(i));
                         }
                         players.get(serverId).playTrack(playlist.getTracks().get(0));
                         if(sendFollowupMessage) {
@@ -264,7 +270,8 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                             System.out.println("Error while saving song to database, continuing...");
                         }
                         // play the first track
-                        schedulers.get(serverId).queue(playlist.getTracks().get(0));
+                        if(next) schedulers.get(serverId).queueNext(playlist.getTracks().get(0));
+                        else schedulers.get(serverId).queue(playlist.getTracks().get(0));
                         if(sendFollowupMessage) {
                             event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                     .setContent("***Queued:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">")
@@ -285,7 +292,8 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                                 e.printStackTrace();
                                 System.out.println("Error while saving song to database, continuing...");
                             }
-                            schedulers.get(serverId).queue(track);
+                            if(next) schedulers.get(serverId).queueNext(track);
+                            else schedulers.get(serverId).queue(track);
                         }
                         if(sendFollowupMessage) {
                             event.getSlashCommandInteraction().createFollowupMessageBuilder()
@@ -319,10 +327,10 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         });
     }
 
-    private static void entirelyLoadTrack(DiscordApi api, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event, String url, boolean isSearch) {
+    private static void entirelyLoadTrack(DiscordApi api, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event, String url, boolean isSearch, boolean next) {
         setAudioPlayer(api, audioConnection, playerManager, event);
         // Load the track
-        playerManagerLoadTrack(playerManager, url, event, event.getSlashCommandInteraction().getServer().get().getId(), true, isSearch);
+        playerManagerLoadTrack(playerManager, url, event, event.getSlashCommandInteraction().getServer().get().getId(), true, isSearch, next);
     }
 
     private static void setAudioPlayer(DiscordApi api, AudioConnection audioConnection, AudioPlayerManager playerManager, SlashCommandCreateEvent event) {

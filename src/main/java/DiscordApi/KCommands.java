@@ -41,6 +41,33 @@ public class KCommands {
         listenForSeekCommand(api);
         listenForClearCommand(api);
         listenForReplayCommand(api);
+        listenForPlayNextCommand(api);
+    }
+
+    public static void listenForPlayNextCommand(DiscordApi api) {
+        // create SlashCommand /play, = so the command information can be accessed prior
+        SlashCommand command = SlashCommand.with("playnext", "Plays a song, but puts it at the front of the queue",
+                        // create option(s)
+                        Collections.singletonList(
+                                // create option /play <song>
+                                SlashCommandOption.create(SlashCommandOptionType.STRING, "song", "The song to play", true)
+                        ))
+                .createGlobal(api).join();
+
+        api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
+           if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
+               long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
+               slashCommandCreateEvent.getInteraction()
+                       .respondLater(isEphemeral.get(serverId))
+                       .thenAccept(interactionAcceptance -> {
+                          if(userConnectedToVc(slashCommandCreateEvent)) {
+                              String inputSong = slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getStringValue().get();
+                              // set up the audio player (may already be setup this name is slightly misleading)
+                              LavaplayerAudioSource.playNext(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, slashCommandCreateEvent);
+                          }
+                       });
+           }
+        });
     }
 
     public static void listenForReplayCommand(DiscordApi api) {
@@ -235,13 +262,13 @@ public class KCommands {
                                         // put the audio connection in the hashmap
                                         audioConnections.put(serverId, audioConnection);
                                         // set up the audio player (may already be setup this name is slightly misleading)
-                                        LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event);
+                                        LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event, false);
                                     });
                                 }
                                 else {
                                     System.out.println("Bot is already connected to voice channel, playing song...");
                                     // bot is already connected to the voice channel and the audio connection is already in the hashmap
-                                    LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event);
+                                    LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event, false);
                                 }
                             });
                             // if the user is not in a voice channel

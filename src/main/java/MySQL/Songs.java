@@ -139,6 +139,11 @@ public class Songs {
             ResultSet rs = statement.executeQuery();
             rs.next();
             long id = rs.getLong("id");
+            // update uri
+            statement = conn.prepareStatement("UPDATE songs SET uri = ? WHERE id = ?");
+            statement.setString(1, uri);
+            statement.setLong(2, id);
+            statement.execute();
             try {
                 conn.close();
             }
