@@ -75,6 +75,26 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         return new LavaplayerAudioSource(getApi(), audioPlayer);
     }
 
+    /**
+     * returns 0 on success, 1 on queue position too large, -1 on unknown error
+     * @param serverId
+     * @param position
+     * @return
+     */
+    public static int playNow(long serverId, long position) {
+        try {
+            if(Integer.MAX_VALUE < position) return 1;
+            AudioTrack track = schedulers.get(serverId).audioQueue.get((int) position).makeClone();
+            players.get(serverId).playTrack(track);
+            players.remove((int) position);
+            return 0;
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage() + "POSITION AS INT " + (int) position + " POSITION AS LONG " + position);
+            return -1;
+        }
+    }
+
     public static void playNext(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event) {
         setupAudioPlayer(api, spotifyApi, audioConnection, url, event, true);
     }

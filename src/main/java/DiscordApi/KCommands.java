@@ -42,6 +42,45 @@ public class KCommands {
         listenForClearCommand(api);
         listenForReplayCommand(api);
         listenForPlayNextCommand(api);
+        listenForPlayNowCommand(api);
+    }
+
+    public static void listenForPlayNowCommand(DiscordApi api) {
+        // create SlashCommand /play, = so the command information can be accessed prior
+        SlashCommand command = SlashCommand.with("playnow", "Plays a song specified by the queue number. It will be removed from the queue upon playing.",
+                        // create option(s)
+                        Collections.singletonList(
+                                // create option /play <song>
+                                SlashCommandOption.create(SlashCommandOptionType.LONG, "number", "The song to play based on its number in the queue", true)
+                        ))
+                .createGlobal(api).join();
+
+        api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
+            if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
+                long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
+                slashCommandCreateEvent.getInteraction()
+                        .respondLater(isEphemeral.get(serverId))
+                        .thenAccept(interactionAcceptance -> {
+                            if(userConnectedToVc(slashCommandCreateEvent)) {
+                                long position = slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getLongValue().get();
+                                switch(LavaplayerAudioSource.playNow(serverId, --position)) {
+                                    case 0:
+                                        slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("Playing track in queue position " + ++position).send();
+                                        break;
+                                    case -1:
+                                        slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("An unknown error occurred.").send();
+                                        break;
+                                    case 1:
+                                        slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("The selected position, " + ++position + ", is out of bounds").send();
+                                        break;
+                                }
+                            }
+                        });
+            }
+        });
     }
 
     public static void listenForPlayNextCommand(DiscordApi api) {

@@ -88,6 +88,7 @@ public class TrackScheduler extends AudioEventAdapter {
             System.out.println("Error adding time spent");
             e.printStackTrace();
         }
+        System.out.println(exception.getMessage());
     }
 
     @Override
