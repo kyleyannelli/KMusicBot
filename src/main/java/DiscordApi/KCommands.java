@@ -387,30 +387,38 @@ public class KCommands {
                         // also get if it is ephemeral (private) or not
                         .respondLater(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()))
                         .thenAccept(interaction -> {
-                            if(userConnectedToVc(event)) {
-                                Long serverId = event.getSlashCommandInteraction().getServer().get().getId();
-                                // if the audio player is not null
-                                AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
-                                long currentPosition = player.getPlayingTrack().getPosition();
-                                long totalDuration = player.getPlayingTrack().getDuration();
-                                String currentPositionHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(currentPosition),
-                                        TimeUnit.MILLISECONDS.toMinutes(currentPosition) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(currentPosition)),
-                                        TimeUnit.MILLISECONDS.toSeconds(currentPosition) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition)));
-                                String durationHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalDuration),
-                                        TimeUnit.MILLISECONDS.toMinutes(totalDuration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalDuration)),
-                                        TimeUnit.MILLISECONDS.toSeconds(totalDuration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalDuration)));
-                                if(player != null) {
-                                    // let em know
-                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                            .setContent("***Currently Playing:***\n" + player.getPlayingTrack().getInfo().title + "\n" + player.getPlayingTrack().getInfo().uri + "\n" +
-                                                    "" + currentPositionHHMMSS + " **|** " + durationHHMMSS)
-                                            .send();
-                                } else {
-                                    // yell at them!
-                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                            .setContent("Nothing is currently playing!")
-                                            .send();
+                            try {
+                                if(userConnectedToVc(event)) {
+                                    Long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                                    // if the audio player is not null
+                                    AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
+                                    long currentPosition = player.getPlayingTrack().getPosition();
+                                    long totalDuration = player.getPlayingTrack().getDuration();
+                                    String currentPositionHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(currentPosition),
+                                            TimeUnit.MILLISECONDS.toMinutes(currentPosition) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(currentPosition)),
+                                            TimeUnit.MILLISECONDS.toSeconds(currentPosition) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition)));
+                                    String durationHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalDuration),
+                                            TimeUnit.MILLISECONDS.toMinutes(totalDuration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalDuration)),
+                                            TimeUnit.MILLISECONDS.toSeconds(totalDuration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalDuration)));
+                                    if(player != null) {
+                                        // let em know
+                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("***Currently Playing:***\n" + player.getPlayingTrack().getInfo().title + "\n" + player.getPlayingTrack().getInfo().uri + "\n" +
+                                                        "" + currentPositionHHMMSS + " **|** " + durationHHMMSS)
+                                                .send();
+                                    } else {
+                                        // yell at them!
+                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("Nothing is currently playing!")
+                                                .send();
+                                    }
                                 }
+                            }
+                            catch (Exception e) {
+                                // yell at them!
+                                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                        .setContent("Nothing is currently playing!")
+                                        .send();
                             }
                         });
             }

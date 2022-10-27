@@ -32,6 +32,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     private static HashMap<Long, AudioPlayer> players = new HashMap<>();
     private static HashMap<Long, TrackScheduler> schedulers = new HashMap<>();
     public static HashMap<Long, Timer> timers = new HashMap<>();
+    public static long lastTrackLoadTime;
     /**
      * Creates a new lavaplayer audio source.
      *
