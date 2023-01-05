@@ -35,7 +35,8 @@
 9. Add line, DB_USER_PASSWORD="$DB_USER_PASSWORD" to your .env. $DB_USER_PASSWORD being your database user password.
 10. Install [OpenJDK 11](https://www.openlogic.com/openjdk-downloads)
 11. Install [Brew](https://brew.sh/)
-12. brew install maven
-13. Command line run, mvn install && mvn exec:java
+12. brew install openjdk@11
+13. brew install maven
+14. Command line run, mvn install && mvn exec:java
 
 #### I do not plan on adding a guide for Windows.
