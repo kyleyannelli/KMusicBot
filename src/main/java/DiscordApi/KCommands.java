@@ -404,7 +404,7 @@ public class KCommands {
                                         // let em know
                                         event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                                 .setContent("***Currently Playing:***\n" + player.getPlayingTrack().getInfo().title + "\n" + player.getPlayingTrack().getInfo().uri + "\n" +
-                                                        "" + currentPositionHHMMSS + " **|** " + durationHHMMSS)
+                                                        currentPositionHHMMSS + " **|** " + durationHHMMSS)
                                                 .send();
                                     } else {
                                         // yell at them!

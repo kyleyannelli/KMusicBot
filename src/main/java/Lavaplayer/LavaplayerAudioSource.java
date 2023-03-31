@@ -210,10 +210,11 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             public void trackLoaded(AudioTrack track) {
                 long userId;
                 try {
+                    String serverIdString = Long.toString(serverId);
                     Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
-                    long songId = s.save("" + serverId);
+                    long songId = s.save(serverIdString);
                     Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
-                    userId = user.save("" + serverId);
+                    userId = user.save(serverIdString);
                     schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
                 }
                 catch (Exception e) {
@@ -246,11 +247,12 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                         players.get(serverId).playTrack(playlist.getTracks().get(0));
                         long userId;
                         try {
+                            String serverIdString = Long.toString(serverId);
                             Songs s = new Songs(playlist.getTracks().get(0).getInfo().title, playlist.getTracks().get(0).getInfo().author, playlist.getTracks().get(0).getInfo().uri);
-                            long songId = s.save("" + serverId);
+                            long songId = s.save(serverIdString);
                             System.out.println("songId: " + songId);
                             Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
-                            userId = user.save("" + serverId);
+                            userId = user.save(serverIdString);
                             schedulers.get(serverId).userDiscordIdRequestedSongId.put(playlist.getTracks().get(0).getInfo().identifier, userId);
                         }
                         catch (Exception e) {
@@ -280,10 +282,11 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                     if(isSearch) {
                         long userId;
                         try {
+                            String serverIdString = Long.toString(serverId);
                             Songs s = new Songs(playlist.getTracks().get(0).getInfo().title, playlist.getTracks().get(0).getInfo().author, playlist.getTracks().get(0).getInfo().uri);
-                            long songId = s.save("" + serverId);
+                            long songId = s.save(serverIdString);
                             Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
-                            userId = user.save("" + serverId);
+                            userId = user.save(serverIdString);
                             schedulers.get(serverId).userDiscordIdRequestedSongId.put(playlist.getTracks().get(0).getInfo().identifier, userId);
                         }
                         catch (Exception e) {
@@ -303,10 +306,11 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                         for(AudioTrack track : playlist.getTracks()) {
                             long userId;
                             try {
+                                String serverIdString = Long.toString(serverId);
                                 Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
-                                long songId = s.save("" + serverId);
+                                long songId = s.save(serverIdString);
                                 Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
-                                userId = user.save("" + serverId);
+                                userId = user.save(serverIdString);
                                 schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
                             }
                             catch (Exception e) {
