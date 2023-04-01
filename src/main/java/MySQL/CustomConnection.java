@@ -5,7 +5,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
-public abstract class CustomConnection {
+public class CustomConnection {
     private static final Dotenv dotenv = Dotenv.load();
     private static final String URL = dotenv.get("DB_URL");
     private static final String USER = dotenv.get("DB_USER");
