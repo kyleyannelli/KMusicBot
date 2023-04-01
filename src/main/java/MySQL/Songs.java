@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class Songs {
     private String title;
@@ -44,6 +45,7 @@ public class Songs {
                     + "PRIMARY KEY (id),"
                     + "UNIQUE (title, author)"
                     + ")";
+            assert conn != null;
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.executeUpdate();
         }
@@ -77,22 +79,11 @@ public class Songs {
 
         PreparedStatement statement;
         try {
+            assert conn != null;
             // create prepared statement
             statement = conn.prepareStatement("INSERT INTO songs (title, author, uri) VALUES (?, ?, ?)", PreparedStatement.RETURN_GENERATED_KEYS);
             // max length of title is 100. if title is longer than 100, truncate it
-            if(title.trim().length() > 100) {
-                statement.setString(1, title.trim().substring(0, 100));
-            }
-            else {
-                statement.setString(1, title.trim());
-            }
-            // max length of author is 30. if author is longer than 30, truncate it
-            if (author.trim().length() > 30) {
-                statement.setString(2, author.trim().substring(0, 30));
-            }
-            else {
-                statement.setString(2, author.trim());
-            }
+            trimStatementAuthorOrTitle(statement, author, title);
             // max length of uri is 255. if uri is longer than 255, truncate it
             if (uri.trim().length() > 255) {
                 statement.setString(3, uri.trim().substring(0, 255));
@@ -168,22 +159,10 @@ public class Songs {
 
             // get connection
             Connection conn = CustomConnection.getConnection("DISCORD_" + dB);
-
+            assert conn != null;
             // create prepared statement
             PreparedStatement statement = conn.prepareStatement("SELECT id FROM songs WHERE title = ? AND author = ?", PreparedStatement.RETURN_GENERATED_KEYS);
-            if (title.trim().length() > 100) {
-                statement.setString(1, title.trim().substring(0, 100));
-            }
-            else {
-                statement.setString(1, title.trim());
-            }
-            // max length of author is 30. if author is longer than 30, truncate it
-            if (author.trim().length() > 30) {
-                statement.setString(2, author.trim().substring(0, 30));
-            }
-            else {
-                statement.setString(2, author.trim());
-            }
+            trimStatementAuthorOrTitle(statement, author, title);
             // execute statement
             statement.execute();
             ResultSet rs = statement.getResultSet();
@@ -199,6 +178,22 @@ public class Songs {
             System.out.println("Error getting song id");
             e.printStackTrace();
             return -1;
+        }
+    }
+
+    private static void trimStatementAuthorOrTitle(PreparedStatement statement, String author, String title) throws SQLException {
+        if (title.trim().length() > 100) {
+            statement.setString(1, title.trim().substring(0, 100));
+        }
+        else {
+            statement.setString(1, title.trim());
+        }
+        // max length of author is 30. if author is longer than 30, truncate it
+        if (author.trim().length() > 30) {
+            statement.setString(2, author.trim().substring(0, 30));
+        }
+        else {
+            statement.setString(2, author.trim());
         }
     }
 }
