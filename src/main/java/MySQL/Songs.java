@@ -60,7 +60,6 @@ public class Songs {
         catch (Exception e) {
             System.out.println("Error closing connection");
             e.printStackTrace();
-            return;
         }
     }
 

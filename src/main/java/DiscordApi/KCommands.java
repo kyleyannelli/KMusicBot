@@ -516,24 +516,32 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                event.getInteraction()
-                        // this may take a while, so we need to defer the response
-                        // also get if it is ephemeral (private) or not
-                        .respondLater(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()))
-                        .thenAccept(interaction -> {
-                            // check if the user is an admin
-                            if(!UserHelper.isAdmin(event.getSlashCommandInteraction().getServer(), event.getSlashCommandInteraction().getUser())) {
-                                // yell at them!
+                if(event.getSlashCommandInteraction().getServer().isPresent()) {
+                    Server currentServer = event.getSlashCommandInteraction().getServer().get();
+                    event.getInteraction()
+                            // this may take a while, so we need to defer the response
+                            // also get if it is ephemeral (private) or not
+                            .respondLater(isEphemeral.get(currentServer.getId()))
+                            .thenAccept(interaction -> {
+                                // check if the user is an admin
+                                if(!UserHelper.isAdmin(currentServer, event.getSlashCommandInteraction().getUser())) {
+                                    // yell at them!
+                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                            .setContent("You must be an admin to use this command!")
+                                            .send();
+                                    return;
+                                }
+                                isEphemeral.put(event.getSlashCommandInteraction().getServer().get().getId(), !isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()));
                                 event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                        .setContent("You must be an admin to use this command!")
+                                        .setContent(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()) ? "Ephemeral is now on!" : "Ephemeral is now off!")
                                         .send();
-                                return;
-                            }
-                            isEphemeral.put(event.getSlashCommandInteraction().getServer().get().getId(), !isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()));
-                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                    .setContent(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()) ? "Ephemeral is now on!" : "Ephemeral is now off!")
-                                    .send();
-                        });
+                            });
+                }
+                else {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("There was an error while getting information on the server the command was send in.")
+                            .send();
+                }
             }
         });
     }

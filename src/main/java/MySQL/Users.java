@@ -120,7 +120,6 @@ public class Users {
         catch (Exception e) {
             System.out.println("Error closing connection");
             e.printStackTrace();
-            return;
         }
     }
 
@@ -159,7 +158,6 @@ public class Users {
         catch (Exception e) {
             System.out.println("Error closing connection");
             e.printStackTrace();
-            return;
         }
     }
 }

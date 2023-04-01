@@ -44,7 +44,6 @@ public class SetupDatabase {
         catch (Exception e) {
             System.out.println("Error closing connection");
             e.printStackTrace();
-            return;
         }
     }
 }
