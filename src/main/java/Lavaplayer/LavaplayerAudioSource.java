@@ -143,6 +143,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             try {
                 setAudioPlayer(api, audioConnection, playerManager, event);
                 long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                assert trackNames != null;
                 for(String trackName : trackNames) {
                     playerManagerLoadTrack(playerManager, "ytsearch:" + trackName, event, serverId, false, true, next);
                 }

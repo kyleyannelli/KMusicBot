@@ -38,6 +38,7 @@ public class HandleSpotifyLink {
                 tracks = new ArrayList<>();
                 // try refreshing the token
                 spotifyApi = ClientCreate.clientCredentials_Sync();
+                assert spotifyApi != null;
                 Playlist playlist = spotifyApi.getPlaylist(playlistId).build().execute();
                 for(PlaylistTrack track : playlist.getTracks().getItems()) {
                     tracks.add(((Track) track.getTrack()).getArtists()[0].getName() + " " + track.getTrack().getName());
