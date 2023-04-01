@@ -20,10 +20,7 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import se.michaelthelin.spotify.SpotifyApi;
 
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class LavaplayerAudioSource extends AudioSourceBase {
 

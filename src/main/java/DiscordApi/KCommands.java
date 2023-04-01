@@ -68,13 +68,13 @@ public class KCommands {
                                         slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
                                                 .setContent("Playing track in queue position " + ++position).send();
                                         break;
-                                    case -1:
-                                        slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                                .setContent("An unknown error occurred.").send();
-                                        break;
                                     case 1:
                                         slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
                                                 .setContent("The selected position, " + ++position + ", is out of bounds").send();
+                                        break;
+                                    default:
+                                        slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("An unknown error occurred.").send();
                                         break;
                                 }
                             }
@@ -132,6 +132,10 @@ public class KCommands {
                                    case 1:
                                        slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
                                                .setContent("Playing the previous track...").send();
+                                       break;
+                                   default:
+                                       slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                               .setContent("An unknown error occurred...").send();
                                        break;
                                }
                            }
@@ -201,6 +205,11 @@ public class KCommands {
                                        if(!hours) totalRequestedTime += value.get() * (60 * 60000);
                                        hours = true;
                                        break;
+                                   default:
+                                       event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                               .setContent("Please double check the parameters input as " + s.getName() + " is not supported for this command")
+                                               .send();
+                                       return;
                                }
                            }
                        }
@@ -400,18 +409,11 @@ public class KCommands {
                                     String durationHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalDuration),
                                             TimeUnit.MILLISECONDS.toMinutes(totalDuration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalDuration)),
                                             TimeUnit.MILLISECONDS.toSeconds(totalDuration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalDuration)));
-                                    if(player != null) {
-                                        // let em know
-                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                                .setContent("***Currently Playing:***\n" + player.getPlayingTrack().getInfo().title + "\n" + player.getPlayingTrack().getInfo().uri + "\n" +
-                                                        currentPositionHHMMSS + " **|** " + durationHHMMSS)
-                                                .send();
-                                    } else {
-                                        // yell at them!
-                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                                .setContent("Nothing is currently playing!")
-                                                .send();
-                                    }
+                                    // let em know
+                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                            .setContent("***Currently Playing:***\n" + player.getPlayingTrack().getInfo().title + "\n" + player.getPlayingTrack().getInfo().uri + "\n" +
+                                                    currentPositionHHMMSS + " **|** " + durationHHMMSS)
+                                            .send();
                                 }
                             }
                             catch (Exception e) {
