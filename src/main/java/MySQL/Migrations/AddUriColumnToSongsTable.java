@@ -22,6 +22,7 @@ public class AddUriColumnToSongsTable {
         try {
             // check if column exists by SHOW COLUMNS
             String sql = "SHOW COLUMNS FROM songs LIKE 'uri'";
+            assert conn != null;
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             if(rs.next()) {
@@ -66,6 +67,7 @@ public class AddUriColumnToSongsTable {
         try {
             // check if column exists by SHOW COLUMNS
             String sql = "SHOW COLUMNS FROM songs LIKE 'uri'";
+            assert conn != null;
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             if(!rs.next()) {
