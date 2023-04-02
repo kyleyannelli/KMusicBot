@@ -26,10 +26,10 @@ public class LavaplayerAudioSource extends AudioSourceBase {
 
     private final AudioPlayer audioPlayer;
     private AudioFrame lastFrame;
-    private static HashMap<Long, AudioPlayer> players = new HashMap<>();
-    private static HashMap<Long, TrackScheduler> schedulers = new HashMap<>();
+    private static final HashMap<Long, AudioPlayer> players = new HashMap<>();
+    private static final HashMap<Long, TrackScheduler> schedulers = new HashMap<>();
     public static HashMap<Long, Timer> timers = new HashMap<>();
-    public static long lastTrackLoadTime;
+
     /**
      * Creates a new lavaplayer audio source.
      *
@@ -75,20 +75,20 @@ public class LavaplayerAudioSource extends AudioSourceBase {
 
     /**
      * returns 0 on success, 1 on queue position too large, -1 on unknown error
-     * @param serverId
-     * @param position
-     * @return
+     * @param serverId, id of the discord server
+     * @param position, position in the current queue for said discord server
+     * @return gives result of playnow as it may not always be applicable. This could turn into a boolean...
      */
     public static int playNow(long serverId, int position) {
+        long positionL = Long.parseLong(Integer.toString(position));
         try {
-            if(Integer.MAX_VALUE < position) return 1;
             AudioTrack track = schedulers.get(serverId).audioQueue.get(position).makeClone();
             players.get(serverId).playTrack(track);
-            players.remove(position);
+            players.remove(positionL);
             return 0;
         }
         catch (Exception e) {
-            System.out.println(e.getMessage() + "POSITION AS INT " + (int) position + " POSITION AS LONG " + position);
+            System.out.println(e.getMessage() + "POSITION AS INT " + position + " POSITION AS LONG " + positionL);
             return -1;
         }
     }
@@ -98,6 +98,13 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     }
 
     public static void setupAudioPlayer(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event, boolean next) {
+        if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                    .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                            "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                    .send();
+            return;
+        }
         if(timers.get(event.getSlashCommandInteraction().getServer().get().getId()) == null) {
             // get server id
             long serverId = event.getSlashCommandInteraction().getServer().get().getId();
@@ -166,13 +173,16 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if(players.get(serverId).getPlayingTrack() == null) {
+                if(players.get(serverId).getPlayingTrack() == null &&
+                        api.getServerById(serverId).isPresent()) {
                     Server server = api.getServerById(serverId).get();
-                    api.getYourself().getConnectedVoiceChannel(server).get().disconnect();
-                    removePlayerByServerId(serverId);
-                    timers.remove(serverId);
+                    if(api.getYourself().getConnectedVoiceChannel(server).isPresent()) {
+                        api.getYourself().getConnectedVoiceChannel(server).get().disconnect();
+                        removePlayerByServerId(serverId);
+                        timers.remove(serverId);
+                    }
                 }
-                else {
+                else if(api.getServerById(serverId).isPresent()){
                     createDisconnectTimer(api, serverId, new Timer());
                 }
             }
@@ -206,19 +216,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                long userId;
-                try {
-                    String serverIdString = Long.toString(serverId);
-                    Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
-                    long songId = s.save(serverIdString);
-                    Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
-                    userId = user.save(serverIdString);
-                    schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("Error while saving song to database, continuing...");
-                }
+                saveSong(track, serverId, event);
                 if(players.get(serverId).getPlayingTrack() == null) {
                     players.get(serverId).playTrack(track);
                     if(sendFollowupMessage) {
@@ -302,19 +300,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                     }
                     else {
                         for(AudioTrack track : playlist.getTracks()) {
-                            long userId;
-                            try {
-                                String serverIdString = Long.toString(serverId);
-                                Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
-                                long songId = s.save(serverIdString);
-                                Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
-                                userId = user.save(serverIdString);
-                                schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
-                            }
-                            catch (Exception e) {
-                                e.printStackTrace();
-                                System.out.println("Error while saving song to database, continuing...");
-                            }
+                            saveSong(track, serverId, event);
                             if(next) schedulers.get(serverId).queueNext(track);
                             else schedulers.get(serverId).queue(track);
                         }
@@ -350,21 +336,45 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         });
     }
 
+    private static void saveSong(AudioTrack track, long serverId, SlashCommandCreateEvent event) {
+        long userId;
+        try {
+            String serverIdString = Long.toString(serverId);
+            Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
+            long songId = s.save(serverIdString);
+            Users user = new Users(event.getSlashCommandInteraction().getUser().getId(), serverId, songId, 0);
+            userId = user.save(serverIdString);
+            schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error while saving song to database, continuing...");
+        }
+    }
+
     private static void entirelyLoadTrack(DiscordApi api, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event, String url, boolean isSearch, boolean next) {
         setAudioPlayer(api, audioConnection, playerManager, event);
+        if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                    .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                            "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                    .send();
+            return;
+        }
         // Load the track
         playerManagerLoadTrack(playerManager, url, event, event.getSlashCommandInteraction().getServer().get().getId(), true, isSearch, next);
     }
 
     private static void setAudioPlayer(DiscordApi api, AudioConnection audioConnection, AudioPlayerManager playerManager, SlashCommandCreateEvent event) {
         long serverId;
-        try {
-            serverId = event.getSlashCommandInteraction().getServer().get().getId();
-        }
-        catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+        if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                    .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                            "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                    .send();
             return;
         }
+        serverId = event.getSlashCommandInteraction().getServer().get().getId();
         audioConnection.setAudioSource(updatePlayerAndCreateAudioSource(api, playerManager, serverId));
     }
 
