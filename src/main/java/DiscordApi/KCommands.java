@@ -62,7 +62,7 @@ public class KCommands {
                         .respondLater(isEphemeral.get(serverId))
                         .thenAccept(interactionAcceptance -> {
                             if(userConnectedToVc(slashCommandCreateEvent)) {
-                                long position = slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getLongValue().get();
+                                int position = Math.toIntExact(slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getLongValue().get());
                                 switch(LavaplayerAudioSource.playNow(serverId, --position)) {
                                     case 0:
                                         slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()

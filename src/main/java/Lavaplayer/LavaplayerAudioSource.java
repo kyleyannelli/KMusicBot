@@ -79,12 +79,12 @@ public class LavaplayerAudioSource extends AudioSourceBase {
      * @param position
      * @return
      */
-    public static int playNow(long serverId, long position) {
+    public static int playNow(long serverId, int position) {
         try {
             if(Integer.MAX_VALUE < position) return 1;
-            AudioTrack track = schedulers.get(serverId).audioQueue.get((int) position).makeClone();
+            AudioTrack track = schedulers.get(serverId).audioQueue.get(position).makeClone();
             players.get(serverId).playTrack(track);
-            players.remove((int) position);
+            players.remove(position);
             return 0;
         }
         catch (Exception e) {
