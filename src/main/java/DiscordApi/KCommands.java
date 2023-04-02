@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class KCommands {
-    private static HashMap<Long, AudioConnection> audioConnections = new HashMap<>();
+    private static final HashMap<Long, AudioConnection> audioConnections = new HashMap<>();
     public static HashMap<Long, Boolean> isEphemeral = new HashMap<>();
     public static void listenForAllCommands(DiscordApi api) {
         for(Server server : api.getServers()) {
@@ -270,12 +270,8 @@ public class KCommands {
                            return;
                        }
                        player.getPlayingTrack().setPosition(totalRequestedTime);
-                       String durationString = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(duration),
-                               TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
-                               TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration)));
-                       String requestedPosition = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalRequestedTime),
-                               TimeUnit.MILLISECONDS.toMinutes(totalRequestedTime) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalRequestedTime)),
-                               TimeUnit.MILLISECONDS.toSeconds(totalRequestedTime) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalRequestedTime)));
+                       String durationString = createTimestampString(duration);
+                       String requestedPosition = createTimestampString(totalRequestedTime);
                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                .setContent("Seeking to " + requestedPosition + " **|** " + durationString)
                                .send();
@@ -288,6 +284,12 @@ public class KCommands {
                        .send();
            }
         });
+    }
+
+    private static String createTimestampString(long duration) {
+        return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(duration),
+                TimeUnit.MILLISECONDS.toMinutes(duration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(duration)),
+                TimeUnit.MILLISECONDS.toSeconds(duration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(duration)));
     }
 
     public static void listenForQueueCommand(DiscordApi api) {
@@ -471,12 +473,8 @@ public class KCommands {
                                     AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
                                     long currentPosition = player.getPlayingTrack().getPosition();
                                     long totalDuration = player.getPlayingTrack().getDuration();
-                                    String currentPositionHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(currentPosition),
-                                            TimeUnit.MILLISECONDS.toMinutes(currentPosition) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(currentPosition)),
-                                            TimeUnit.MILLISECONDS.toSeconds(currentPosition) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(currentPosition)));
-                                    String durationHHMMSS = String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(totalDuration),
-                                            TimeUnit.MILLISECONDS.toMinutes(totalDuration) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(totalDuration)),
-                                            TimeUnit.MILLISECONDS.toSeconds(totalDuration) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalDuration)));
+                                    String currentPositionHHMMSS = createTimestampString(currentPosition);
+                                    String durationHHMMSS = createTimestampString(totalDuration);
                                     // let em know
                                     event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                             .setContent("***Currently Playing:***\n" + player.getPlayingTrack().getInfo().title + "\n" + player.getPlayingTrack().getInfo().uri + "\n" +
