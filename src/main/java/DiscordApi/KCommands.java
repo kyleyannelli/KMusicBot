@@ -99,10 +99,16 @@ public class KCommands {
                slashCommandCreateEvent.getInteraction()
                        .respondLater(isEphemeral.get(serverId))
                        .thenAccept(interactionAcceptance -> {
-                          if(userConnectedToVc(slashCommandCreateEvent)) {
+                          if(userConnectedToVc(slashCommandCreateEvent) && slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getStringValue().isPresent()) {
                               String inputSong = slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getStringValue().get();
                               // set up the audio player (may already be setup this name is slightly misleading)
                               LavaplayerAudioSource.playNext(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, slashCommandCreateEvent);
+                          } else if(userConnectedToVc(slashCommandCreateEvent)) {
+                              slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                      .setContent("Error playing, no \"song\" argument present.");
+                          } else {
+                              slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                      .setContent("You are not connected to a voice channel!");
                           }
                        });
            }
