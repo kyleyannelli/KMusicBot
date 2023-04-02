@@ -339,16 +339,27 @@ public class KCommands {
         // listen for command
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
-            if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                    event.getSlashCommandInteraction().getArguments().get(0).getStringValue().isPresent() &&
-                    event.getSlashCommandInteraction().getServer().isPresent()) {
-                // get the song name... this looks disgusting
-                String inputSong = event.getSlashCommandInteraction().getArguments().get(0).getStringValue().get();
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
                         .respondLater(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()))
                         .thenAccept(interaction -> {
+                            if(event.getSlashCommandInteraction().getArguments().get(0).getStringValue().isEmpty()) {
+                                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                        .setContent("Error playing, no \"song\" argument present.")
+                                        .send();
+                                return;
+                            }
+                            if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+                                event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                                        .send();
+                                return;
+                            }
+                            // get the song name... this looks disgusting
+                            String inputSong = event.getSlashCommandInteraction().getArguments().get(0).getStringValue().get();
                             // see if the user is in a voice channel, needs to be Atomic because it's used in a lambda
                             AtomicBoolean isConnected = new AtomicBoolean(false);
                             // get the user who used the command, get their voice channel, if it exists, get the audio connection
@@ -380,16 +391,6 @@ public class KCommands {
                                         .send();
                             }
                         });
-            } else if(event.getSlashCommandInteraction().getServer().isPresent()) {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Error playing, no \"song\" argument present.")
-                        .send();
-            }
-            else {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
             }
         });
     }
