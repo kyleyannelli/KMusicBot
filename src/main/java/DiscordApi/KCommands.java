@@ -12,6 +12,7 @@ import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,16 +57,22 @@ public class KCommands {
                 .createGlobal(api).join();
 
         api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
-            if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId() &&
-                    slashCommandCreateEvent.getSlashCommandInteraction().getServer().isPresent()) {
+            if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
+                if (slashCommandCreateEvent.getSlashCommandInteraction().getServer().isEmpty()) {
+                    slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                    return;
+                }
                 long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
                 slashCommandCreateEvent.getInteraction()
                         .respondLater(isEphemeral.get(serverId))
                         .thenAccept(interactionAcceptance -> {
-                            if(userConnectedToVc(slashCommandCreateEvent) &&
+                            if (userConnectedToVc(slashCommandCreateEvent) &&
                                     slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getLongValue().isPresent()) {
                                 int position = Math.toIntExact(slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getLongValue().get());
-                                switch(LavaplayerAudioSource.playNow(serverId, --position)) {
+                                switch (LavaplayerAudioSource.playNow(serverId, --position)) {
                                     case 0:
                                         slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
                                                 .setContent("Playing track in queue position " + ++position).send();
@@ -84,11 +91,6 @@ public class KCommands {
                                         .setContent("Error playing, no \"position\" argument present.");
                             }
                         });
-            } else {
-                slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
             }
         });
     }
@@ -104,8 +106,14 @@ public class KCommands {
                 .createGlobal(api).join();
 
         api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
-           if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId() &&
-                   slashCommandCreateEvent.getSlashCommandInteraction().getServer().isPresent()) {
+           if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
+               if(slashCommandCreateEvent.getSlashCommandInteraction().getServer().isEmpty()) {
+                   slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                           .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                   "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                           .send();
+                   return;
+               }
                long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
                slashCommandCreateEvent.getInteraction()
                        .respondLater(isEphemeral.get(serverId))
@@ -122,11 +130,6 @@ public class KCommands {
                                       .setContent("You are not connected to a voice channel!");
                           }
                        });
-           } else {
-               slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
-                       .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                               "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                       .send();
            }
         });
     }
@@ -135,8 +138,14 @@ public class KCommands {
         SlashCommand command = SlashCommand.with("previous", "Replays the current song, or the previous song").createGlobal(api).join();
 
         api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
-            if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId() &&
-                    slashCommandCreateEvent.getSlashCommandInteraction().getServer().isPresent()) {
+            if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
+                if(slashCommandCreateEvent.getSlashCommandInteraction().getServer().isEmpty()) {
+                    slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                    return;
+                }
                 long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
                 slashCommandCreateEvent.getInteraction()
                         .respondLater(isEphemeral.get(serverId))
@@ -163,11 +172,6 @@ public class KCommands {
                                }
                            }
                         });
-            } else {
-                slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
             }
         });
     }
@@ -176,8 +180,13 @@ public class KCommands {
         SlashCommand command = SlashCommand.with("clear", "Clears the entire queue").createGlobal(api).join();
 
         api.addSlashCommandCreateListener(event -> {
-           if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                   event.getSlashCommandInteraction().getServer().isPresent()) {
+           if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+               if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+                   event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                           .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                   "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                           .send();
+               }
                long serverId = event.getSlashCommandInteraction().getServer().get().getId();
                event.getInteraction()
                        .respondLater(isEphemeral.get(serverId))
@@ -193,11 +202,6 @@ public class KCommands {
                               }
                           }
                        });
-           } else {
-               event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                       .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                               "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                       .send();
            }
         });
     }
@@ -213,8 +217,14 @@ public class KCommands {
                 options).createGlobal(api).join();
 
         api.addSlashCommandCreateListener(event -> {
-           if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                   event.getInteraction().getServer().isPresent()) {
+           if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+               if(event.getInteraction().getServer().isEmpty()) {
+                   event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                           .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                   "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                           .send();
+                   return;
+               }
                long serverId = event.getInteraction().getServer().get().getId();
                event.getInteraction().respondLater(isEphemeral.get(serverId)).thenAccept(slashEvent -> {
                    if(userConnectedToVc(event)) {
@@ -277,11 +287,6 @@ public class KCommands {
                                .send();
                    }
                });
-           } else {
-               event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                       .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                               "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                       .send();
            }
         });
     }
@@ -304,25 +309,26 @@ public class KCommands {
                 .join();
 
         api.addSlashCommandCreateListener(event -> {
-            if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                    event.getSlashCommandInteraction().getServer().isPresent() &&
-                    event.getSlashCommandInteraction().getArguments().get(0).getLongValue().isPresent()) {
-                long pageNumber = event.getSlashCommandInteraction().getArguments().get(0).getLongValue().get();
-                long serverId = event.getSlashCommandInteraction().getServer().get().getId();
-                event.getInteraction()
-                        .respondLater(isEphemeral.get(serverId))
-                        .thenAccept(interaction -> event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent(LavaplayerAudioSource.getQueue(serverId, pageNumber))
-                                .send());
-            } else if(event.getSlashCommandInteraction().getServer().isPresent()) {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Not all arguments are present in the command. Please double check.")
-                        .send();
-            } else {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                if(event.getSlashCommandInteraction().getServer().isPresent() &&
+                        event.getSlashCommandInteraction().getArguments().get(0).getLongValue().isPresent()) {
+                    long pageNumber = event.getSlashCommandInteraction().getArguments().get(0).getLongValue().get();
+                    long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                    event.getInteraction()
+                            .respondLater(isEphemeral.get(serverId))
+                            .thenAccept(interaction -> event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                    .setContent(LavaplayerAudioSource.getQueue(serverId, pageNumber))
+                                    .send());
+                } else if(event.getSlashCommandInteraction().getServer().isPresent()) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Not all arguments are present in the command. Please double check.")
+                            .send();
+                } else {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                }
             }
         });
     }
@@ -401,8 +407,14 @@ public class KCommands {
         // listen for command
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
-            if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                    event.getSlashCommandInteraction().getServer().isPresent()) {
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                    return;
+                }
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
@@ -444,11 +456,6 @@ public class KCommands {
                                         .send();
                             }
                         });
-            } else {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
             }
         });
     }
@@ -460,8 +467,14 @@ public class KCommands {
         // listen for command
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
-            if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                    event.getSlashCommandInteraction().getServer().isPresent()) {
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                    return;
+                }
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
@@ -490,11 +503,6 @@ public class KCommands {
                                         .send();
                             }
                         });
-            } else {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
             }
         });
     }
@@ -509,48 +517,49 @@ public class KCommands {
         // listen for command
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
-            if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                    event.getSlashCommandInteraction().getArguments().get(0).getDecimalValue().isPresent() &&
-                    event.getSlashCommandInteraction().getServer().isPresent()) {
-                /*
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                if(event.getSlashCommandInteraction().getArguments().get(0).getDecimalValue().isPresent() &&
+                        event.getSlashCommandInteraction().getServer().isPresent()) {
+                    /*
                   @TODO: use integer instead of decimal
                  */
-                // i don't like this, but it works
-                String inputVolume = event.getSlashCommandInteraction().getArguments().get(0).getDecimalValue().get().toString();
-                int volume = Integer.parseInt(inputVolume.substring(0, inputVolume.indexOf(".")));
-                event.getInteraction()
-                        // this may take a while, so we need to defer the response
-                        // also get if it is ephemeral (private) or not
-                        .respondLater(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()))
-                        .thenAccept(interaction -> {
-                            if(userConnectedToVc(event)) {
-                                Long serverId = event.getSlashCommandInteraction().getServer().get().getId();
-                                // if the audio player is not null
-                                AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
-                                if(player != null) {
-                                    // set the volume
-                                    player.setVolume(volume);
-                                    // let em know
-                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                            .setContent("Volume set to " + volume + "!")
-                                            .send();
-                                } else {
-                                    // yell at them!
-                                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                            .setContent("Nothing is currently playing!")
-                                            .send();
+                    // i don't like this, but it works
+                    String inputVolume = event.getSlashCommandInteraction().getArguments().get(0).getDecimalValue().get().toString();
+                    int volume = Integer.parseInt(inputVolume.substring(0, inputVolume.indexOf(".")));
+                    event.getInteraction()
+                            // this may take a while, so we need to defer the response
+                            // also get if it is ephemeral (private) or not
+                            .respondLater(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()))
+                            .thenAccept(interaction -> {
+                                if(userConnectedToVc(event)) {
+                                    Long serverId = event.getSlashCommandInteraction().getServer().get().getId();
+                                    // if the audio player is not null
+                                    AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
+                                    if(player != null) {
+                                        // set the volume
+                                        player.setVolume(volume);
+                                        // let em know
+                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("Volume set to " + volume + "!")
+                                                .send();
+                                    } else {
+                                        // yell at them!
+                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                                                .setContent("Nothing is currently playing!")
+                                                .send();
+                                    }
                                 }
-                            }
-                        });
-            } else if(event.getSlashCommandInteraction().getServer().isPresent()) {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Level argument not present in command...")
-                        .send();
-            } else {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
+                            });
+                } else if(event.getSlashCommandInteraction().getServer().isPresent()) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Level argument not present in command...")
+                            .send();
+                } else {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                }
             }
         });
     }
@@ -562,8 +571,14 @@ public class KCommands {
         // listen for command
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
-            if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                    event.getSlashCommandInteraction().getServer().isPresent()) {
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                    return;
+                }
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
@@ -588,11 +603,6 @@ public class KCommands {
                                 }
                             }
                         });
-            } else {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
             }
         });
     }
@@ -642,8 +652,14 @@ public class KCommands {
         // listen for command
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
-            if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                    event.getSlashCommandInteraction().getServer().isPresent()) {
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                    return;
+                }
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
@@ -667,11 +683,6 @@ public class KCommands {
                                 }
                             }
                         });
-            } else {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
             }
         });
     }
@@ -681,8 +692,14 @@ public class KCommands {
                 .createGlobal(api).join();
 
         api.addSlashCommandCreateListener(event -> {
-            if(command.getId() == event.getSlashCommandInteraction().getCommandId() &&
-                    event.getSlashCommandInteraction().getServer().isPresent()) {
+            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
+                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
+                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                    return;
+                }
                 long serverId = event.getSlashCommandInteraction().getServer().get().getId();
                 event.getInteraction()
                         .respondLater(isEphemeral.get(serverId))
@@ -711,11 +728,6 @@ public class KCommands {
                                 }
                             }
                         });
-            } else {
-                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                        .send();
             }
         });
     }
