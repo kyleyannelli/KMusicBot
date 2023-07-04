@@ -21,14 +21,15 @@ import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import se.michaelthelin.spotify.SpotifyApi;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LavaplayerAudioSource extends AudioSourceBase {
 
     private final AudioPlayer audioPlayer;
     private AudioFrame lastFrame;
-    private static final HashMap<Long, AudioPlayer> players = new HashMap<>();
-    private static final HashMap<Long, TrackScheduler> schedulers = new HashMap<>();
-    public static HashMap<Long, Timer> timers = new HashMap<>();
+    private static final ConcurrentHashMap<Long, AudioPlayer> players = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, TrackScheduler> schedulers = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Long, Timer> timers = new ConcurrentHashMap<>();
 
     /**
      * Creates a new lavaplayer audio source.
