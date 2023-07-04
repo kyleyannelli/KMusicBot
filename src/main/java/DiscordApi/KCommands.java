@@ -22,6 +22,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class KCommands {
     private static final HashMap<Long, AudioConnection> audioConnections = new HashMap<>();
     public static HashMap<Long, Boolean> isEphemeral = new HashMap<>();
+
+    private static long playNowCommandId = -1;
+
     public static void listenForAllCommands(DiscordApi api) {
         for(Server server : api.getServers()) {
             System.out.println("Server: " + server.getName());
@@ -29,6 +32,10 @@ public class KCommands {
             // messages are public by default
             isEphemeral.put(server.getId(), false);
         }
+        // handle playnow command stuff
+        playNowCommandId = createGlobalPlayNowCommand(api);
+        listenForPlayNowCommand(api, playNowCommandId);
+
         listenForPlayCommand(api);
         listenForPauseCommand(api);
         listenForStopCommand(api);
@@ -42,10 +49,20 @@ public class KCommands {
         listenForClearCommand(api);
         listenForReplayCommand(api);
         listenForPlayNextCommand(api);
-        listenForPlayNowCommand(api);
     }
 
-    public static void listenForPlayNowCommand(DiscordApi api) {
+    private static boolean serverIsntPresentSendMsg(SlashCommandCreateEvent slashCommandCreateEvent) {
+            if(slashCommandCreateEvent.getSlashCommandInteraction().getServer().isEmpty()) {
+                        slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
+                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
+                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
+                            .send();
+                    return true;
+                }
+        return false;
+    }
+
+    public static long createGlobalPlayNowCommand(DiscordApi api) {
         // create SlashCommand /play, = so the command information can be accessed prior
         SlashCommand command = SlashCommand.with("playnow", "Plays a song specified by the queue number. It will be removed from the queue upon playing.",
                         // create option(s)
@@ -54,21 +71,19 @@ public class KCommands {
                                 SlashCommandOption.create(SlashCommandOptionType.LONG, "number", "The song to play based on its number in the queue", true)
                         ))
                 .createGlobal(api).join();
+        return command.getId();
+    }
 
+    public static void listenForPlayNowCommand(DiscordApi api, long commandId) {
         api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
-            if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
-                if (slashCommandCreateEvent.getSlashCommandInteraction().getServer().isEmpty()) {
-                    slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                            .send();
-                    return;
-                }
+            if(commandId == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
+                if(serverIsntPresentSendMsg(slashCommandCreateEvent)) return; 
+
                 long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
                 slashCommandCreateEvent.getInteraction()
                         .respondLater(isEphemeral.get(serverId))
                         .thenAccept(interactionAcceptance -> {
-                            if (userConnectedToVc(slashCommandCreateEvent) &&
+                            if(userConnectedToVc(slashCommandCreateEvent) &&
                                     slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getLongValue().isPresent()) {
                                 int position = Math.toIntExact(slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getLongValue().get());
                                 switch (LavaplayerAudioSource.playNow(serverId, --position)) {
@@ -106,13 +121,8 @@ public class KCommands {
 
         api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
            if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
-               if(slashCommandCreateEvent.getSlashCommandInteraction().getServer().isEmpty()) {
-                   slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
-                           .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                   "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                           .send();
-                   return;
-               }
+               if(serverIsntPresentSendMsg(slashCommandCreateEvent)) return; 
+
                long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
                slashCommandCreateEvent.getInteraction()
                        .respondLater(isEphemeral.get(serverId))
@@ -138,13 +148,8 @@ public class KCommands {
 
         api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
             if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
-                if(slashCommandCreateEvent.getSlashCommandInteraction().getServer().isEmpty()) {
-                    slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                            .send();
-                    return;
-                }
+                if(serverIsntPresentSendMsg(slashCommandCreateEvent)) return;
+
                 long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
                 slashCommandCreateEvent.getInteraction()
                         .respondLater(isEphemeral.get(serverId))
@@ -180,12 +185,8 @@ public class KCommands {
 
         api.addSlashCommandCreateListener(event -> {
            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-               if(event.getSlashCommandInteraction().getServer().isEmpty()) {
-                   event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                           .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                   "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                           .send();
-               }
+               if(serverIsntPresentSendMsg(event)) return;
+
                long serverId = event.getSlashCommandInteraction().getServer().get().getId();
                event.getInteraction()
                        .respondLater(isEphemeral.get(serverId))
@@ -217,13 +218,8 @@ public class KCommands {
 
         api.addSlashCommandCreateListener(event -> {
            if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-               if(event.getInteraction().getServer().isEmpty()) {
-                   event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                           .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                   "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                           .send();
-                   return;
-               }
+               if(serverIsntPresentSendMsg(event)) return; 
+
                long serverId = event.getInteraction().getServer().get().getId();
                event.getInteraction().respondLater(isEphemeral.get(serverId)).thenAccept(slashEvent -> {
                    if(userConnectedToVc(event)) {
@@ -356,13 +352,8 @@ public class KCommands {
                                         .send();
                                 return;
                             }
-                            if(event.getSlashCommandInteraction().getServer().isEmpty()) {
-                                event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                        .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                                "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                                        .send();
-                                return;
-                            }
+                            if(serverIsntPresentSendMsg(event)) return; 
+
                             // get the song name... this looks disgusting
                             String inputSong = event.getSlashCommandInteraction().getArguments().get(0).getStringValue().get();
                             // see if the user is in a voice channel, needs to be Atomic because it's used in a lambda
@@ -407,13 +398,8 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                            .send();
-                    return;
-                }
+                if(serverIsntPresentSendMsg(event)) return; 
+
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
@@ -467,13 +453,8 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                            .send();
-                    return;
-                }
+                if(serverIsntPresentSendMsg(event)) return; 
+
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
@@ -571,13 +552,8 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                            .send();
-                    return;
-                }
+                if(serverIsntPresentSendMsg(event)) return; 
+
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
@@ -652,13 +628,8 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                            .send();
-                    return;
-                }
+                if(serverIsntPresentSendMsg(event)) return; 
+
                 event.getInteraction()
                         // this may take a while, so we need to defer the response
                         // also get if it is ephemeral (private) or not
@@ -692,13 +663,8 @@ public class KCommands {
 
         api.addSlashCommandCreateListener(event -> {
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(event.getSlashCommandInteraction().getServer().isEmpty()) {
-                    event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                                    "open an issue at https://github.com/kyleyannelli/KMusicBot/")
-                            .send();
-                    return;
-                }
+                if(serverIsntPresentSendMsg(event)) return; 
+
                 long serverId = event.getSlashCommandInteraction().getServer().get().getId();
                 event.getInteraction()
                         .respondLater(isEphemeral.get(serverId))
