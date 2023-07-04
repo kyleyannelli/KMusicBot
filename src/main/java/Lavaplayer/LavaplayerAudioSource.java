@@ -100,7 +100,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     public static void setupAudioPlayer(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event, boolean next) {
         if(event.getSlashCommandInteraction().getServer().isEmpty()) {
             sendMessageStc("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                    "open an issue at https://github.com/kyleyannelli/KMusicBot/", Optional.empty(), event);
+                    "open an issue at https://github.com/kyleyannelli/KMusicBot/", event);
             return;
         }
         if(timers.get(event.getSlashCommandInteraction().getServer().get().getId()) == null) {
@@ -130,18 +130,18 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                 trackNames = HandleSpotifyLink.getCollectionFromSpotifyLink(spotifyApi, url);
                 if(trackNames == null) {
                     sendMessageStc("Not a playlist link\nIf you think this is an error, please contact <@806350925723205642>",
-                            Optional.of(event.getSlashCommandInteraction().getServer().get().getId()),
+                            event.getSlashCommandInteraction().getServer().get().getId(),
                             event);
                 }
                 else if(trackNames.size() == 0) {
                     sendMessageStc("Not a playlist link\nIf you think this is an error, please contact <@806350925723205642>",
-                            Optional.of(event.getSlashCommandInteraction().getServer().get().getId()),
+                            event.getSlashCommandInteraction().getServer().get().getId(),
                             event);
                 }
             }
             catch (Exception e) {
                 sendMessageStc("Not a playlist link\nIf you think this is an error, please contact <@806350925723205642>",
-                        Optional.of(event.getSlashCommandInteraction().getServer().get().getId()),
+                        event.getSlashCommandInteraction().getServer().get().getId(),
                         event);
                 return;
             }
@@ -153,12 +153,12 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                     playerManagerLoadTrack(playerManager, "ytsearch:" + trackName, event, serverId, false, true, next);
                 }
                 LavaplayerAudioSource.sendMessageStc( "Added " + trackNames.size() + " tracks to the queue",
-                        Optional.of(serverId),
+                        serverId,
                         event);
             }
             catch (Exception e) {
                 sendMessageStc("An error occurred while adding the spotify tracks to the queue\nPlease try again.",
-                        Optional.of(event.getSlashCommandInteraction().getServer().get().getId()),
+                        event.getSlashCommandInteraction().getServer().get().getId(),
                         event);
             }
         }
@@ -218,13 +218,13 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                 if(players.get(serverId).getPlayingTrack() == null) {
                     players.get(serverId).playTrack(track);
                     if(sendFollowupMessage) {
-                        sendMessageStc("***Now Playing:*** \n" + track.getInfo().title + "\n<" + track.getInfo().uri + ">" , Optional.of(serverId), event);
+                        sendMessageStc("***Now Playing:*** \n" + track.getInfo().title + "\n<" + track.getInfo().uri + ">" , serverId, event);
                     }
                 } else {
                     if(next) schedulers.get(serverId).queueNext(track);
                     else schedulers.get(serverId).queue(track);
                     if(sendFollowupMessage) {
-                        sendMessageStc("***Queued:*** \n" + track.getInfo().title + "\n<" + track.getInfo().uri + ">" , Optional.of(serverId), event);
+                        sendMessageStc("***Queued:*** \n" + track.getInfo().title + "\n<" + track.getInfo().uri + ">" , serverId, event);
                     }
                 }
             }
@@ -250,7 +250,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                             System.out.println("Error while saving song to database, continuing...");
                         }
                         if(sendFollowupMessage) {
-                            sendMessageStc("***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">", Optional.of(serverId), event);
+                            sendMessageStc("***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">", serverId, event);
                         }
                     }
                     else {
@@ -260,7 +260,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                         }
                         players.get(serverId).playTrack(playlist.getTracks().get(0));
                         if(sendFollowupMessage) {
-                            sendMessageStc("***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">\n" + "***Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...*** \n" + url, Optional.of(serverId), event);
+                            sendMessageStc("***Now Playing:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">\n" + "***Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...*** \n" + url, serverId, event);
                         }
                     }
                 } else {
@@ -282,7 +282,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                         if(next) schedulers.get(serverId).queueNext(playlist.getTracks().get(0));
                         else schedulers.get(serverId).queue(playlist.getTracks().get(0));
                         if(sendFollowupMessage) {
-                            sendMessageStc("***Queued:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">", Optional.of(serverId), event);
+                            sendMessageStc("***Queued:*** \n" + playlist.getTracks().get(0).getInfo().title + "\n<" + playlist.getTracks().get(0).getInfo().uri + ">", serverId, event);
                         }
                     }
                     else {
@@ -292,7 +292,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                             else schedulers.get(serverId).queue(track);
                         }
                         if(sendFollowupMessage) {
-                            sendMessageStc("Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...", Optional.of(serverId), event);
+                            sendMessageStc("Queued " + (schedulers.get(serverId).audioQueue.size() - 1) + " Tracks...", serverId, event);
                         }
                     }
                 }
@@ -302,7 +302,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             public void noMatches() {
                 if(sendFollowupMessage) {
                     // Notify the user that we've got nothing
-                    sendMessageStc("Nothing found by <" + url + ">", Optional.of(serverId), event);
+                    sendMessageStc("Nothing found by <" + url + ">", serverId, event);
                 }
             }
 
@@ -310,7 +310,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             public void loadFailed(FriendlyException exception) {
                 if(sendFollowupMessage) {
                     // Notify the user that everything exploded
-                    sendMessageStc("Could not play: " + exception.getMessage(), Optional.of(serverId), event);
+                    sendMessageStc("Could not play: " + exception.getMessage(), serverId, event);
                 }
             }
         });
@@ -336,7 +336,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         setAudioPlayer(api, audioConnection, playerManager, event);
         if(event.getSlashCommandInteraction().getServer().isEmpty()) {
             sendMessageStc("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                    "open an issue at https://github.com/kyleyannelli/KMusicBot/", Optional.empty(), event);
+                    "open an issue at https://github.com/kyleyannelli/KMusicBot/", event);
             return;
         }
         // Load the track
@@ -347,7 +347,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         long serverId;
         if(event.getSlashCommandInteraction().getServer().isEmpty()) {
             sendMessageStc("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
-                    "open an issue at https://github.com/kyleyannelli/KMusicBot/", Optional.empty(), event);
+                    "open an issue at https://github.com/kyleyannelli/KMusicBot/", event);
             return;
         }
         serverId = event.getSlashCommandInteraction().getServer().get().getId();
@@ -437,38 +437,17 @@ public class LavaplayerAudioSource extends AudioSourceBase {
      * @param serverId Server ID of the server the message is being sent to.
      * @param event SlashCommandCreateEvent so the function can actually send the message.
      */
-    private void sendMessage(String msgContent, Optional<Long> serverId, SlashCommandCreateEvent event) {
-        if(serverId.isPresent() && players.get(serverId.get()).isPaused()) {
-            event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                    .setContent(msgContent + "\n***I'm paused! To unpause type /pause***")
-                    .send();
-
-        } else {
-            event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                    .setContent(msgContent)
-                    .send();
+    public static void sendMessageStc(String msgContent, long serverId, SlashCommandCreateEvent event) {
+        if(players.containsKey(serverId) && players.get(serverId).isPaused()) {
+            msgContent += "\n***I'm paused! To unpause type /pause***";
         }
+        sendMessageStc(msgContent, event);
     }
 
-    /**
-     * Messages should always include the pause message if the bot is paused. To avoid nesting, func is used.
-     *  Just uses the followup message builder on slash command interaction!
-     *  Requires the player to be in the players hashmap.
-     * @param msgContent Content of the message. Just use your regular message, the pause message will be added if needed.
-     * @param serverId Server ID of the server the message is being sent to.
-     * @param event SlashCommandCreateEvent so the function can actually send the message.
-     */
-    public static void sendMessageStc(String msgContent, Optional<Long> serverId, SlashCommandCreateEvent event) {
-        if(serverId.isPresent() && players.get(serverId.get()).isPaused()) {
-            event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                    .setContent(msgContent + "\n***I'm paused! To unpause type /pause***")
-                    .send();
-
-        } else {
-            event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                    .setContent(msgContent)
-                    .send();
-        }
+    public static void sendMessageStc(String msgContent, SlashCommandCreateEvent event) {
+        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                .setContent(msgContent)
+                .send();
     }
 }
 
