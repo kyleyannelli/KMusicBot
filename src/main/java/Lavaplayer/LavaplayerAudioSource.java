@@ -22,6 +22,9 @@ import se.michaelthelin.spotify.SpotifyApi;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+import SpotifyApi.RadioSongsHandler;
 
 public class LavaplayerAudioSource extends AudioSourceBase {
 
@@ -29,6 +32,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     private AudioFrame lastFrame;
     private static final ConcurrentHashMap<Long, AudioPlayer> players = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Long, TrackScheduler> schedulers = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, ArrayList<String>> searchedSongs = new ConcurrentHashMap<>();
     public static ConcurrentHashMap<Long, Timer> timers = new ConcurrentHashMap<>();
 
     /**
@@ -98,6 +102,82 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         setupAudioPlayer(api, spotifyApi, audioConnection, url, event, true);
     }
 
+    private static void loadRecommendedTracksAsync(DiscordApi api, SpotifyApi spotifyApi, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event) {
+        // Create a new thread to load the tracks asynchronously
+        Thread trackLoaderThread = new Thread(() -> {
+            // Retrieve audio queue from the server
+            ArrayList<AudioTrack> audioQueue = schedulers.get(event.getSlashCommandInteraction().getServer().get().getId()).audioQueue;
+
+            // Calculate the total duration of all songs in the queue
+            AtomicLong totalDuration = new AtomicLong();
+            audioQueue.forEach(song -> totalDuration.addAndGet(song.getDuration()));
+            System.out.println("Total duration: " + totalDuration.get());
+            // If the total duration of the audio queue is more than 900 OR queue size is between 4 and 15 (both inclusive)
+            if(totalDuration.get() > 900 || (audioQueue.size() >= 4 && audioQueue.size() <= 15)) {
+                // Process the songs from searched songs list
+                ArrayList<String> trackNames = processSearchedSongs(event, audioQueue);
+
+                // Try to generate recommendations from Spotify
+                try {
+                    String[] recommendedTracks = RadioSongsHandler.generateRecommendationsFromList(spotifyApi, trackNames);
+
+                    // If there are no recommended tracks, return
+                    if(recommendedTracks == null) return;
+
+                    // Add recommended tracks to queue via YouTube
+                    for(String track : recommendedTracks) {
+                        Thread.sleep(1000);
+                        entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + track, true, false);
+                    }
+                } catch (Exception e) {
+                    return;
+                }
+            }
+        });
+
+        // Start the track loader thread
+        trackLoaderThread.start();
+    }
+
+    private static ArrayList<String> processSearchedSongs(SlashCommandCreateEvent event, ArrayList<AudioTrack> audioQueue) {
+        ArrayList<String> trackNames = new ArrayList<>();
+        ArrayList<String> searchedSongsList = searchedSongs.get(event.getSlashCommandInteraction().getServer().get().getId());
+
+        for(Object song : searchedSongsList) {
+            String songStr = song.toString();
+            if(songStr.startsWith("https://www.youtube") || songStr.startsWith("https://youtu.be") || songStr.startsWith("https://youtube")) {
+                // If it's a YouTube URL, check if it's already in the queue
+                for(AudioTrack track : audioQueue) {
+                    if(track.getInfo().uri.equals(songStr)) {
+                        trackNames.add(track.getInfo().title);
+                    }
+                }
+            } else {
+                // If it's not a YouTube URL, simply add it to trackNames
+                trackNames.add(songStr);
+            }
+        }
+        return trackNames;
+    }
+
+    private static void handleSongSearchTracking(long serverId, String newSearchQuery) {
+        ArrayList<String> searchedSongsList;
+        if(searchedSongs.containsKey(serverId)) {
+            searchedSongsList = searchedSongs.get(serverId);
+        }
+        else {
+            searchedSongsList = new ArrayList<>();
+        }
+        // if list is 10 or more remove the first element
+        if(searchedSongsList.size() >= 10) {
+            searchedSongsList.remove(0);
+        }
+        // add the new search to the list
+        searchedSongsList.add(newSearchQuery);
+        // put the list back into the map
+        searchedSongs.put(serverId, searchedSongsList);
+    }
+
     public static void setupAudioPlayer(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event, boolean next) {
         if(event.getSlashCommandInteraction().getServer().isEmpty()) {
             sendMessageStc("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
@@ -121,6 +201,10 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         }
         // check if it's a YouTube link or search query
         AudioPlayerManager playerManager = createYouTubePlayerManager();
+        handleSongSearchTracking(event.getSlashCommandInteraction().getServer().get().getId(), url);
+        if(schedulers.containsKey(event.getSlashCommandInteraction().getServer().get().getId())) {
+            loadRecommendedTracksAsync(api, spotifyApi, playerManager, audioConnection, event);
+        }
         if(url.startsWith("https://www.youtube.com/")) {
             // Create a player manager
             entirelyLoadTrack(api, playerManager, audioConnection, event, url, false, next);
