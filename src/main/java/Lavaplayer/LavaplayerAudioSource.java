@@ -22,7 +22,9 @@ import se.michaelthelin.spotify.SpotifyApi;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.Executors;
 
 import SpotifyApi.RadioSongsHandler;
 
@@ -33,6 +35,8 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     private static final ConcurrentHashMap<Long, AudioPlayer> players = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Long, TrackScheduler> schedulers = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Long, ArrayList<String>> searchedSongs = new ConcurrentHashMap<>();
+    private static final ExecutorService execServ = Executors.newFixedThreadPool(1); 
+
     public static ConcurrentHashMap<Long, Timer> timers = new ConcurrentHashMap<>();
 
     /**
@@ -102,41 +106,35 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         setupAudioPlayer(api, spotifyApi, audioConnection, url, event, true);
     }
 
-    private static void loadRecommendedTracksAsync(DiscordApi api, SpotifyApi spotifyApi, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event) {
-        // Create a new thread to load the tracks asynchronously
-        Thread trackLoaderThread = new Thread(() -> {
-            // Retrieve audio queue from the server
-            ArrayList<AudioTrack> audioQueue = schedulers.get(event.getSlashCommandInteraction().getServer().get().getId()).audioQueue;
+    private static void loadRecommendedTracks(DiscordApi api, SpotifyApi spotifyApi, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event) {
+        // Retrieve audio queue from the server
+        ArrayList<AudioTrack> audioQueue = schedulers.get(event.getSlashCommandInteraction().getServer().get().getId()).audioQueue;
 
-            // Calculate the total duration of all songs in the queue
-            AtomicLong totalDuration = new AtomicLong();
-            audioQueue.forEach(song -> totalDuration.addAndGet(song.getDuration()));
-            System.out.println("Total duration: " + totalDuration.get());
-            // If the total duration of the audio queue is more than 900 OR queue size is between 4 and 15 (both inclusive)
-            if(totalDuration.get() > 900 || (audioQueue.size() >= 4 && audioQueue.size() <= 15)) {
-                // Process the songs from searched songs list
-                ArrayList<String> trackNames = processSearchedSongs(event, audioQueue);
+        // Calculate the total duration of all songs in the queue
+        AtomicLong totalDuration = new AtomicLong();
+        audioQueue.forEach(song -> totalDuration.addAndGet(song.getDuration()));
+        System.out.println("Total duration: " + totalDuration.get());
+        // If the total duration of the audio queue is more than 900 OR queue size is between 4 and 15 (both inclusive)
+        if(totalDuration.get() > 900 || (audioQueue.size() >= 4 && audioQueue.size() <= 15)) {
+            // Process the songs from searched songs list
+            ArrayList<String> trackNames = processSearchedSongs(event, audioQueue);
 
-                // Try to generate recommendations from Spotify
-                try {
-                    String[] recommendedTracks = RadioSongsHandler.generateRecommendationsFromList(spotifyApi, trackNames);
+            // Try to generate recommendations from Spotify
+            try {
+                String[] recommendedTracks = RadioSongsHandler.generateRecommendationsFromList(spotifyApi, trackNames);
 
-                    // If there are no recommended tracks, return
-                    if(recommendedTracks == null) return;
+                // If there are no recommended tracks, return
+                if(recommendedTracks == null) return;
 
-                    // Add recommended tracks to queue via YouTube
-                    for(String track : recommendedTracks) {
-                        Thread.sleep(1000);
-                        entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + track, true, false);
-                    }
-                } catch (Exception e) {
-                    return;
+                // Add recommended tracks to queue via YouTube
+                for(String track : recommendedTracks) {
+                    Thread.sleep(1000);
+                    entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + track, true, false);
                 }
+            } catch (Exception e) {
+                return;
             }
-        });
-
-        // Start the track loader thread
-        trackLoaderThread.start();
+        }
     }
 
     private static ArrayList<String> processSearchedSongs(SlashCommandCreateEvent event, ArrayList<AudioTrack> audioQueue) {
@@ -203,7 +201,8 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         AudioPlayerManager playerManager = createYouTubePlayerManager();
         handleSongSearchTracking(event.getSlashCommandInteraction().getServer().get().getId(), url);
         if(schedulers.containsKey(event.getSlashCommandInteraction().getServer().get().getId())) {
-            loadRecommendedTracksAsync(api, spotifyApi, playerManager, audioConnection, event);
+            // submit this to the thread service, this should be limited due to rate limiting and posibility of too many overlaps
+            execServ.submit(() -> loadRecommendedTracks(api, spotifyApi, playerManager, audioConnection, event));
         }
         if(url.startsWith("https://www.youtube.com/")) {
             // Create a player manager
@@ -264,7 +263,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                         removePlayerByServerId(serverId);
                         timers.remove(serverId);
                     }
-                }
+                        }
                 else if(api.getServerById(serverId).isPresent()){
                     createDisconnectTimer(api, serverId, new Timer());
                 }
@@ -531,8 +530,8 @@ public class LavaplayerAudioSource extends AudioSourceBase {
 
     public static void sendMessageStc(String msgContent, SlashCommandCreateEvent event) {
         event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                .setContent(msgContent)
-                .send();
+            .setContent(msgContent)
+            .send();
     }
 }
 
