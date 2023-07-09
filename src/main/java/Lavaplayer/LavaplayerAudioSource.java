@@ -16,7 +16,10 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.audio.AudioSource;
 import org.javacord.api.audio.AudioSourceBase;
+import org.javacord.api.entity.channel.ServerVoiceChannel;
+import org.javacord.api.entity.channel.VoiceChannel;
 import org.javacord.api.entity.server.Server;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import se.michaelthelin.spotify.SpotifyApi;
 
@@ -24,7 +27,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LavaplayerAudioSource extends AudioSourceBase {
-
+    private static final int DISCONNECT_DELAY_SECONDS = 300000; // 300000 seconds aka 5 minutes 
     private final AudioPlayer audioPlayer;
     private AudioFrame lastFrame;
     private static final ConcurrentHashMap<Long, AudioPlayer> players = new ConcurrentHashMap<>();
@@ -168,25 +171,67 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         }
     }
 
+    /**
+     * Creates a disconnect timer for the specified server in a Discord API.
+     * The timer tracks the number of users in the voice channel and disconnects the bot
+     *  if it is the only user or if it is not playing any tracks for a certain duration.
+     *
+     * @param api      The Discord API instance.
+     * @param serverId The ID of the server.
+     * @param timer    The timer instance for scheduling the disconnect check.
+     *
+     * @see <a href="https://git.kyleyannelli.com/kyle/KMusicBot/issues/13">Issue #13</a> Better AFK / Disconnect 
+     *
+     * @author <a href="https://git.kyleyannelli.com/Nansess">Nansess</a> (modified idea)
+     */
     public static void createDisconnectTimer(DiscordApi api, long serverId, Timer timer) {
+        api.addServerVoiceChannelMemberLeaveListener(event -> {
+            ServerVoiceChannel channel = event.getChannel();
+
+            boolean isAllBots = channel.getConnectedUsers().stream().allMatch(User::isBot);
+           
+            if(!isAllBots) return;
+            disconnectBot(api, serverId);
+        });
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if(players.get(serverId).getPlayingTrack() == null &&
-                        api.getServerById(serverId).isPresent()) {
-                    Server server = api.getServerById(serverId).get();
-                    if(api.getYourself().getConnectedVoiceChannel(server).isPresent()) {
-                        api.getYourself().getConnectedVoiceChannel(server).get().disconnect();
-                        removePlayerByServerId(serverId);
-                        timers.remove(serverId);
-                    }
-                }
-                else if(api.getServerById(serverId).isPresent()){
-                    createDisconnectTimer(api, serverId, new Timer());
-                }
+               if(api.getServerById(serverId).isPresent()) {
+                   Server server = api.getServerById(serverId).get();
+                   Optional<ServerVoiceChannel> voiceChannel = api.getYourself().getConnectedVoiceChannel(server);
+
+                   if(players.get(serverId).getPlayingTrack() == null && voiceChannel.isPresent()) {
+                       // log bot isn't playing anything so it is disconnecting
+                       disconnectBot(api, serverId);
+                   }
+                   else {
+                       // check again in DISCONNECT_DELAY_SECONDS
+                       createDisconnectTimer(api, serverId, new Timer());
+                   }
+               }
             }
-        }, 300000);
+        }, DISCONNECT_DELAY_SECONDS);
         timers.put(serverId, timer);
+    }
+
+    private static void disconnectBot(DiscordApi api, long serverId) {
+        Optional<Server> server = api.getServerById(serverId); 
+        if(server.isEmpty()) {
+            // log server was empty, thus unable to disconnect
+            return;
+        }
+
+        Optional<ServerVoiceChannel> voiceChannel = api.getYourself().getConnectedVoiceChannel(server.get());
+        if(voiceChannel.isEmpty()) {
+            // log the voice channel doesnt exist
+            return;
+        }
+
+        // finally actually do all the disconnect stuff
+        voiceChannel.get().disconnect();
+        removePlayerByServerId(serverId);
+        timers.remove(serverId);
+        // log successful disconnect
     }
 
     public static AudioPlayer getPlayerByServerId(Long serverId) {
