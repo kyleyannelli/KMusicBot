@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class KCommands {
     private static final HashMap<Long, AudioConnection> audioConnections = new HashMap<>();
     public static HashMap<Long, Boolean> isEphemeral = new HashMap<>();
+
+    private static final long playNowCommandId = -1;
     public static void listenForAllCommands(DiscordApi api) {
         for(Server server : api.getServers()) {
             System.out.println("Server: " + server.getName());
@@ -31,6 +33,10 @@ public class KCommands {
             // messages are public by default
             isEphemeral.put(server.getId(), false);
         }
+
+        // handle playnow command stuff
+        playNowCommandId = createGlobalPlayNowCommand(api);
+        listenForPlayNowCommand(api, playNowCommandId);
 
         api.addServerVoiceChannelMemberLeaveListener(event -> {
             ServerVoiceChannel channel = event.getChannel();
