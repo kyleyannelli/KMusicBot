@@ -186,14 +186,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
      * @author <a href="https://git.kyleyannelli.com/Nansess">Nansess</a> (modified idea)
      */
     public static void createDisconnectTimer(DiscordApi api, long serverId, Timer timer) {
-        api.addServerVoiceChannelMemberLeaveListener(event -> {
-            ServerVoiceChannel channel = event.getChannel();
 
-            boolean isAllBots = channel.getConnectedUsers().stream().allMatch(User::isBot);
-           
-            if(!isAllBots) return;
-            disconnectBot(api, serverId);
-        });
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -215,7 +208,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         timers.put(serverId, timer);
     }
 
-    private static void disconnectBot(DiscordApi api, long serverId) {
+    public static void disconnectBot(DiscordApi api, long serverId) {
         Optional<Server> server = api.getServerById(serverId); 
         if(server.isEmpty()) {
             // log server was empty, thus unable to disconnect

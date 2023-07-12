@@ -5,14 +5,15 @@ import MySQL.SetupDatabase;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
+import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +31,16 @@ public class KCommands {
             // messages are public by default
             isEphemeral.put(server.getId(), false);
         }
+
+        api.addServerVoiceChannelMemberLeaveListener(event -> {
+            ServerVoiceChannel channel = event.getChannel();
+
+            boolean isAllBots = channel.getConnectedUsers().stream().allMatch(User::isBot);
+           
+            if(!isAllBots) return;
+            LavaplayerAudioSource.disconnectBot(api, channel.getServer().getId());
+        });
+
         listenForPlayCommand(api);
         listenForPauseCommand(api);
         listenForStopCommand(api);
