@@ -14,30 +14,39 @@ import SpotifyApi.RadioSongsHandler;
 import se.michaelthelin.spotify.SpotifyApi;
 
 public class RecommenderProcessor {
+
     private final ExecutorService executorService;
 
     // Spotify and Discord API objects are persistent the entire application life time
     private final DiscordApi discordApi;
     private final SpotifyApi spotifyApi;
 
+    private final RecommenderRequester recommenderRequester;
+
     public RecommenderProcessor(DiscordApi discordApi, SpotifyApi spotifyApi, int maxThreads) {
         this.executorService = Executors.newFixedThreadPool(maxThreads);
 
         this.discordApi = discordApi;
         this.spotifyApi = spotifyApi;
+
+        this.recommenderRequester = new RecommenderRequester();
     }
 
     public void shutdown() {
-        executorService.shutdown();
+        // first shutdown this executorService
+        this.executorService.shutdown();
         try {
-            if(!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
+            if(!this.executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                this.executorService.shutdownNow();
             }
         }
         catch(InterruptedException interruptedException) {
-            executorService.shutdownNow();
+            this.executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
+
+        // now shutdown the recommenderRequester
+        recommenderRequester.shutdown();
     }
 
     public ArrayList<String> determineSongsFromYoutube(RecommenderSession session) {

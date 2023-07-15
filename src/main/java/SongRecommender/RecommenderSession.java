@@ -21,15 +21,15 @@ public class RecommenderSession {
 	// 	the processor handles all sessions via an executor service
 	private final RecommenderProcessor recommenderProcessor;
 
-    // AudioConnection should be persistent the entire time the bot is connected to voice channel
-    //  Connect is new session, disconnect should "kill" session
-    private final AudioConnection audioConnection;
+	// AudioConnection should be persistent the entire time the bot is connected to voice channel
+	//  Connect is new session, disconnect should "kill" session
+	private final AudioConnection audioConnection;
 
 	private ArrayList<AudioTrack> audioQueue; // audio queue for the voice channel session
 
 	public RecommenderSession(AudioConnection audioConnection, RecommenderProcessor recommenderProcessor) {
 		this.recommenderProcessor = recommenderProcessor;
-        this.audioConnection = audioConnection;
+		this.audioConnection = audioConnection;
 	}
 
 
@@ -41,16 +41,16 @@ public class RecommenderSession {
 		return new ArrayList<AudioTrack>();
 	}
 
-    private void loadRecommendedTracks(DiscordApi api, SpotifyApi spotifyApi, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event) {
-        if(canQueueSongs()) {
-            // Process the songs from searched songs list
-            ArrayList<String> trackNames = recommenderProcessor.determineSongsFromYoutube(this);
+	private void loadRecommendedTracks(DiscordApi api, SpotifyApi spotifyApi, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event) {
+		if(canQueueSongs()) {
+			// Process the songs from searched songs list
+			ArrayList<String> trackNames = recommenderProcessor.determineSongsFromYoutube(this);
 			String[] recommendationsFromSpotify = recommenderProcessor.getRecommendationsFromSpotify(trackNames);
-        }
-    }
+		}
+	}
 
 	private boolean canQueueSongs() {
-        // Calculate the total duration of all songs in the queue
+		// Calculate the total duration of all songs in the queue
 		AtomicLong totalDuration = new AtomicLong();
 		// for each AudioTrack (song) in the queue add their duration
 		audioQueue.forEach(song -> totalDuration.addAndGet(song.getDuration()));
