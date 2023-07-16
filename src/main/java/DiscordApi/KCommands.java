@@ -39,8 +39,6 @@ public class KCommands {
             // messages are public by default
             isEphemeral.put(server.getId(), false);
         }
-        // put processor in lavaplayer
-        LavaplayerAudioSource.recommenderProcessor = recommenderProcessor;
         // handle playnow command stuff
         playNowCommandId = createGlobalPlayNowCommand(api);
         listenForPlayNowCommand(api, playNowCommandId);

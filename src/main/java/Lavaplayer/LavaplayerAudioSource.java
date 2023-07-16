@@ -5,6 +5,7 @@ import MySQL.Users;
 import SongRecommender.RecommenderProcessor;
 import SongRecommender.RecommenderSession;
 import SpotifyApi.HandleSpotifyLink;
+import com.mysql.cj.log.Log;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -274,17 +275,15 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                // User ID for automatically loaded tracks will just be 808
-                saveSong(track, serverId, 808);
-                if(players.get(serverId).getPlayingTrack() == null) {
-                    players.get(serverId).playTrack(track);
-                } else {
-                    schedulers.get(serverId).queue(track);
-                }
+                loadSingleTrack(track);
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
+                // just load the first track for now
+                if(playlist.getTracks().get(0) != null) {
+                    loadSingleTrack(playlist.getTracks().get(0));
+                }
             }
 
             @Override
@@ -295,6 +294,16 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             @Override
             public void loadFailed(FriendlyException exception) {
                Logger.info("Failed to load " + url);
+            }
+
+            public void loadSingleTrack(AudioTrack track) {
+                // User ID for automatically loaded tracks will just be 808
+                saveSong(track, serverId, 808);
+                if(players.get(serverId).getPlayingTrack() == null) {
+                    players.get(serverId).playTrack(track);
+                } else {
+                    schedulers.get(serverId).queue(track);
+                }
             }
         });
     }

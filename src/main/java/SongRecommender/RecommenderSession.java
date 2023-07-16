@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import Lavaplayer.LavaplayerAudioSource;
+import org.tinylog.Logger;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -11,7 +12,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.random.RandomGenerator;
 
 public class RecommenderSession {
 	private final int MINIMUM_AUTO_QUEUE_DURATION_SECONDS = 900; // 900 seconds == 15 minutes
@@ -19,6 +19,7 @@ public class RecommenderSession {
 	private final int MAXIMUM_QUEUE_SIZE = 15; // at the most 15 songs are queued
 	private final int YOUTUBE_SEARCH_SLEEP_DURATION_MS = 500;
 	private final int AUTO_QUEUE_RATE = 5; // unit in minutes
+	private final int INITIAL_AUTO_QUEUE_DELAY = 1; // unit in minutes
 
 	// there should only be one recommender processor per application.
 	// 	the processor handles all sessions via an executor service
@@ -36,12 +37,16 @@ public class RecommenderSession {
 		this.recommenderProcessor = recommenderProcessor;
 		this.searchedSongs = new ArrayList<>();
 
-		this.id = Random.from(RandomGenerator.getDefault()).nextLong();
+		long lowerBound = 12345678L;
+		long upperBound = 99999999L;
+		Random random = new Random();
+		this.id = lowerBound + (random.nextLong() * (upperBound - lowerBound + 1));
+		Logger.info("Created id " + this.id + " for session!");
 		this.associatedServerId = associatedServerId;
 		
 		// every AUTO_QUEUE_RATE minutes autoqueue
 		this.scheduler = Executors.newSingleThreadScheduledExecutor();
-		this.scheduler.scheduleAtFixedRate(() -> loadRecommendedTracks(), 0, AUTO_QUEUE_RATE, TimeUnit.MINUTES);
+		this.scheduler.scheduleAtFixedRate(() -> loadRecommendedTracks(), INITIAL_AUTO_QUEUE_DELAY, AUTO_QUEUE_RATE, TimeUnit.MINUTES);
 	}
 
 	public void addSearchToSearchedSongs(String searchQuery) {
@@ -80,6 +85,10 @@ public class RecommenderSession {
 
 	public void shutdown() {
 		this.scheduler.shutdownNow();
+	}
+
+	public long getAssociatedServerId() {
+		return associatedServerId;
 	}
 
 	private void loadRecommendedTracks() {

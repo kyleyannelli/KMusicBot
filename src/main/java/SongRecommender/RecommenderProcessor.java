@@ -64,9 +64,14 @@ public class RecommenderProcessor {
                 session.addRecommendationsToQueue(spotifyRecommendations);
             }
             catch(InterruptedException interruptedException) {
-
                 Logger.error(interruptedException, "Failed to automatically add tracks to queue due to interrupt");
             }
+
+            // setup logging info
+            String infoText = "Added recommendations: ";
+            for(String recommendation : spotifyRecommendations) infoText += "\n\t" + recommendation;
+            infoText += "\nTo the queue of " + session.getSessionId() + " belonging to server " + session.getAssociatedServerId();
+            Logger.info(infoText);
         };
 
         submitTask(session.getSessionId(), runnable);
