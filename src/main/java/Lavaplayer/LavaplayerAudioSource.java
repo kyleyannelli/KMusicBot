@@ -2,7 +2,10 @@ package Lavaplayer;
 
 import MySQL.Songs;
 import MySQL.Users;
+import SongRecommender.RecommenderProcessor;
+import SongRecommender.RecommenderSession;
 import SpotifyApi.HandleSpotifyLink;
+import com.mysql.cj.log.Log;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -21,19 +24,23 @@ import org.javacord.api.entity.channel.VoiceChannel;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
+import org.tinylog.Logger;
+
 import se.michaelthelin.spotify.SpotifyApi;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LavaplayerAudioSource extends AudioSourceBase {
-    private static final int DISCONNECT_DELAY_SECONDS = 300000; // 300000 seconds aka 5 minutes 
+    private static final int DISCONNECT_DELAY_SECONDS = 300000; // 300000 seconds aka 5 minutes
     private final AudioPlayer audioPlayer;
     private AudioFrame lastFrame;
     private static final ConcurrentHashMap<Long, AudioPlayer> players = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Long, TrackScheduler> schedulers = new ConcurrentHashMap<>();
-    public static ConcurrentHashMap<Long, Timer> timers = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, RecommenderSession> recommenderSessions = new ConcurrentHashMap<>();
 
+    public static ConcurrentHashMap<Long, Timer> timers = new ConcurrentHashMap<>();
+    public static RecommenderProcessor recommenderProcessor;
     /**
      * Creates a new lavaplayer audio source.
      *
@@ -101,6 +108,30 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         setupAudioPlayer(api, spotifyApi, audioConnection, url, event, true);
     }
 
+    private static void handleSongSearchTracking(long serverId, String newSearchQuery) {
+        RecommenderSession currentSession = null;
+
+        // get or create recommender session from map
+        if(recommenderSessions.containsKey(serverId)) {
+            currentSession = recommenderSessions.get(serverId);
+        }
+        else {
+            currentSession = new RecommenderSession(recommenderProcessor, serverId);
+            recommenderSessions.put(serverId, currentSession);
+        }
+
+        currentSession.addSearchToSearchedSongs(newSearchQuery);
+    }
+
+    public static void removeRecommenderSessionByServerId(long serverId) {
+        if(recommenderSessions.containsKey(serverId)) {
+            // ensure tasks do not run past their intended lifetime
+            recommenderSessions.get(serverId).shutdown();
+            recommenderSessions.get(serverId).cancelAllOperations();
+            recommenderSessions.remove(serverId);
+        }
+    }
+
     public static void setupAudioPlayer(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event, boolean next) {
         if(event.getSlashCommandInteraction().getServer().isEmpty()) {
             sendMessageStc("Server not present in interaction, this shouldn't happen, but if it keeps doing it " +
@@ -122,8 +153,12 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             long serverId = event.getSlashCommandInteraction().getServer().get().getId();
             createDisconnectTimer(api, serverId, new Timer());
         }
-        // check if it's a YouTube link or search query
         AudioPlayerManager playerManager = createYouTubePlayerManager();
+
+        // handle RecommenderSession
+        handleSongSearchTracking(event.getSlashCommandInteraction().getServer().get().getId(), url);
+
+        // check if it's a YouTube link or search query
         if(url.startsWith("https://www.youtube.com/")) {
             // Create a player manager
             entirelyLoadTrack(api, playerManager, audioConnection, event, url, false, next);
@@ -169,6 +204,11 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         else {
             entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + url, true, next);
         }
+
+        // make sure audioQueue is up to date for session
+        long serverId = event.getInteraction().getServer().get().getId();
+        RecommenderSession currentSession = recommenderSessions.get(serverId);
+        currentSession.setAudioQueue(schedulers.get(serverId).audioQueue);
     }
 
     /**
@@ -180,7 +220,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
      * @param serverId The ID of the server.
      * @param timer    The timer instance for scheduling the disconnect check.
      *
-     * @see <a href="https://git.kyleyannelli.com/kyle/KMusicBot/issues/13">Issue #13</a> Better AFK / Disconnect 
+     * @see <a href="https://git.kyleyannelli.com/kyle/KMusicBot/issues/13">Issue #13</a> Better AFK / Disconnect
      *
      * @author <a href="https://git.kyleyannelli.com/Nansess">Nansess</a> (modified idea)
      */
@@ -208,7 +248,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     }
 
     public static void disconnectBot(DiscordApi api, long serverId) {
-        Optional<Server> server = api.getServerById(serverId); 
+        Optional<Server> server = api.getServerById(serverId);
         if(server.isEmpty()) {
             // log server was empty, thus unable to disconnect
             return;
@@ -231,6 +271,50 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         return players.get(serverId);
     }
 
+    public static void playerManagerSilentlyLoadTrack(AudioPlayerManager playerManager, String url, long serverId) {
+        playerManager.loadItem(url, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                loadSingleTrack(track);
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                // just load the first track for now
+                if(playlist.getTracks().get(0) != null) {
+                    loadSingleTrack(playlist.getTracks().get(0));
+                }
+            }
+
+            @Override
+            public void noMatches() {
+                Logger.info("No matches found for " + url);
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+               Logger.info("Failed to load " + url);
+            }
+
+            public void loadSingleTrack(AudioTrack track) {
+                // User ID for automatically loaded tracks will just be 808
+                saveSong(track, serverId, 808);
+                if(players.get(serverId).getPlayingTrack() == null) {
+                    players.get(serverId).playTrack(track);
+                } else {
+                    schedulers.get(serverId).queue(track);
+                }
+            }
+        });
+    }
+
+    public static AudioPlayerManager createYouTubePlayerManager() {
+        // Create a player manager
+        AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
+        return playerManager;
+    }
+
     private static AudioSource updatePlayerAndCreateAudioSource(DiscordApi api, AudioPlayerManager playerManager, Long serverId) {
         if(!players.containsKey(serverId)) {
             players.put(serverId, playerManager.createPlayer());
@@ -242,12 +326,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         return new LavaplayerAudioSource(api, players.get(serverId));
     }
 
-    private static AudioPlayerManager createYouTubePlayerManager() {
-        // Create a player manager
-        AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
-        return playerManager;
-    }
+
 
     private static void playerManagerLoadTrack(AudioPlayerManager playerManager, String url, SlashCommandCreateEvent event, long serverId, boolean sendFollowupMessage, boolean isSearch, boolean next) {
         playerManager.loadItem(url, new AudioLoadResultHandler() {
@@ -353,6 +432,21 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                 }
             }
         });
+    }
+
+    private static void saveSong(AudioTrack track, long serverId, long userId) {
+        try {
+            String serverIdString = Long.toString(serverId);
+            Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
+            long songId = s.save(serverIdString);
+            Users user = new Users(userId, serverId, songId, 0);
+            userId = user.save(serverIdString);
+            schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error while saving song to database, continuing...");
+        }
     }
 
     private static void saveSong(AudioTrack track, long serverId, SlashCommandCreateEvent event) {
@@ -485,8 +579,8 @@ public class LavaplayerAudioSource extends AudioSourceBase {
 
     public static void sendMessageStc(String msgContent, SlashCommandCreateEvent event) {
         event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                .setContent(msgContent)
-                .send();
+            .setContent(msgContent)
+            .send();
     }
 }
 
