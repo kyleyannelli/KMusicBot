@@ -2,12 +2,17 @@ package SongRecommender;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
 import org.javacord.api.DiscordApi;
+import org.tinylog.Logger;
 
+import com.mysql.cj.xdevapi.SessionImpl;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import SpotifyApi.RadioSongsHandler;
@@ -23,13 +28,16 @@ public class RecommenderProcessor {
 
     private final RecommenderRequester recommenderRequester;
 
+    private final ConcurrentHashMap<Long, List<FutureTask<Void>>> queuedTasksMap;
+
     public RecommenderProcessor(DiscordApi discordApi, SpotifyApi spotifyApi, int maxThreads) {
         this.executorService = Executors.newFixedThreadPool(maxThreads);
 
         this.discordApi = discordApi;
         this.spotifyApi = spotifyApi;
 
-        this.recommenderRequester = new RecommenderRequester();
+        this.recommenderRequester = new RecommenderRequester(spotifyApi);
+        this.queuedTasksMap = new ConcurrentHashMap<>();
     }
 
     public void shutdown() {
@@ -49,7 +57,62 @@ public class RecommenderProcessor {
         recommenderRequester.shutdown();
     }
 
-    public ArrayList<String> determineSongsFromYoutube(RecommenderSession session) {
+    public void addRecommendedSongsFromSpotify(RecommenderSession session) {
+        Runnable runnable = () -> {
+            String[] spotifyRecommendations = getRecommendationsFromSpotify(session);
+            try {
+                session.addRecommendationsToQueue(spotifyRecommendations);
+            }
+            catch(InterruptedException interruptedException) {
+
+                Logger.error(interruptedException, "Failed to automatically add tracks to queue due to interrupt");
+            }
+        };
+
+        submitTask(session.getSessionId(), runnable);
+    }
+
+    public void cancelTasksBySessionId(long sessionId) {
+        List<FutureTask<Void>> taskList = queuedTasksMap.get(sessionId);
+
+        for(FutureTask<Void> fT : taskList) {
+            fT.cancel(true);
+        }
+
+        queuedTasksMap.remove(sessionId);
+    }
+
+    private void submitTask(long sessionId, Runnable task) {
+        FutureTask<Void> futureTask = new FutureTask<>(task, null) {
+            /**
+             * Override the done method to remove itself from the list once completed
+             */
+            @Override
+            protected void done() {
+                List<FutureTask<Void>> taskList = queuedTasksMap.get(sessionId);
+                if(taskList != null) {
+                    taskList.remove(this);
+                }
+            }
+        };
+        executorService.submit(futureTask);
+
+        List<FutureTask<Void>> sessionTasks = new ArrayList<>();
+        if(queuedTasksMap.containsKey(sessionId)) {
+            sessionTasks = queuedTasksMap.get(sessionId);
+        }
+        else {
+            queuedTasksMap.put(sessionId, sessionTasks);
+        }
+        sessionTasks.add(futureTask);
+    }
+
+    private String[] getRecommendationsFromSpotify(RecommenderSession session) {
+        ArrayList<String> songsFromYoutube = determineSongsFromYoutube(session);
+        return recommenderRequester.getSongsFromSpotify(songsFromYoutube).getRecommendedSongs();
+    }
+
+    private ArrayList<String> determineSongsFromYoutube(RecommenderSession session) {
         ArrayList<String> trackNames = new ArrayList<>();
 
         for(Object song : session.getSearchedSongs()) {
@@ -70,17 +133,4 @@ public class RecommenderProcessor {
         return trackNames;
     }
 
-    public String[] getRecommendationsFromSpotify(List<String> songs) { 
-        try {
-            String[] recommendedTracks = RadioSongsHandler.generateRecommendationsFromList(spotifyApi, songs);
-
-            if(recommendedTracks == null || recommendedTracks.length == 0) return new String[0];
-
-            return recommendedTracks;
-        }
-        catch(Exception e) {
-            // log reason
-            return new String[0];
-        }
-    }
 }

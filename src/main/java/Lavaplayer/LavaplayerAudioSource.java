@@ -2,6 +2,8 @@ package Lavaplayer;
 
 import MySQL.Songs;
 import MySQL.Users;
+import SongRecommender.RecommenderProcessor;
+import SongRecommender.RecommenderSession;
 import SpotifyApi.HandleSpotifyLink;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -18,15 +20,12 @@ import org.javacord.api.audio.AudioSource;
 import org.javacord.api.audio.AudioSourceBase;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
+import org.tinylog.Logger;
+
 import se.michaelthelin.spotify.SpotifyApi;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.Executors;
-
-import SpotifyApi.RadioSongsHandler;
 
 public class LavaplayerAudioSource extends AudioSourceBase {
 
@@ -34,11 +33,10 @@ public class LavaplayerAudioSource extends AudioSourceBase {
     private AudioFrame lastFrame;
     private static final ConcurrentHashMap<Long, AudioPlayer> players = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Long, TrackScheduler> schedulers = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Long, ArrayList<String>> searchedSongs = new ConcurrentHashMap<>();
-    private static final ExecutorService execServ = Executors.newFixedThreadPool(1); 
+    private static final ConcurrentHashMap<Long, RecommenderSession> recommenderSessions = new ConcurrentHashMap<>();
 
     public static ConcurrentHashMap<Long, Timer> timers = new ConcurrentHashMap<>();
-
+    public static RecommenderProcessor recommenderProcessor;
     /**
      * Creates a new lavaplayer audio source.
      *
@@ -106,74 +104,28 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         setupAudioPlayer(api, spotifyApi, audioConnection, url, event, true);
     }
 
-    private static void loadRecommendedTracks(DiscordApi api, SpotifyApi spotifyApi, AudioPlayerManager playerManager, AudioConnection audioConnection, SlashCommandCreateEvent event) {
-        // Retrieve audio queue from the server
-        ArrayList<AudioTrack> audioQueue = schedulers.get(event.getSlashCommandInteraction().getServer().get().getId()).audioQueue;
-
-        // Calculate the total duration of all songs in the queue
-        AtomicLong totalDuration = new AtomicLong();
-        audioQueue.forEach(song -> totalDuration.addAndGet(song.getDuration()));
-        System.out.println("Total duration: " + totalDuration.get());
-        // If the total duration of the audio queue is more than 900 OR queue size is between 4 and 15 (both inclusive)
-        if(totalDuration.get() > 900 || (audioQueue.size() >= 4 && audioQueue.size() <= 15)) {
-            // Process the songs from searched songs list
-            ArrayList<String> trackNames = processSearchedSongs(event, audioQueue);
-
-            // Try to generate recommendations from Spotify
-            try {
-                String[] recommendedTracks = RadioSongsHandler.generateRecommendationsFromList(spotifyApi, trackNames);
-
-                // If there are no recommended tracks, return
-                if(recommendedTracks == null) return;
-
-                // Add recommended tracks to queue via YouTube
-                for(String track : recommendedTracks) {
-                    Thread.sleep(1000);
-                    entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + track, true, false);
-                }
-            } catch (Exception e) {
-                return;
-            }
-        }
-    }
-
-    private static ArrayList<String> processSearchedSongs(SlashCommandCreateEvent event, ArrayList<AudioTrack> audioQueue) {
-        ArrayList<String> trackNames = new ArrayList<>();
-        ArrayList<String> searchedSongsList = searchedSongs.get(event.getSlashCommandInteraction().getServer().get().getId());
-
-        for(Object song : searchedSongsList) {
-            String songStr = song.toString();
-            if(songStr.startsWith("https://www.youtube") || songStr.startsWith("https://youtu.be") || songStr.startsWith("https://youtube")) {
-                // If it's a YouTube URL, check if it's already in the queue
-                for(AudioTrack track : audioQueue) {
-                    if(track.getInfo().uri.equals(songStr)) {
-                        trackNames.add(track.getInfo().title);
-                    }
-                }
-            } else {
-                // If it's not a YouTube URL, simply add it to trackNames
-                trackNames.add(songStr);
-            }
-        }
-        return trackNames;
-    }
-
     private static void handleSongSearchTracking(long serverId, String newSearchQuery) {
-        ArrayList<String> searchedSongsList;
-        if(searchedSongs.containsKey(serverId)) {
-            searchedSongsList = searchedSongs.get(serverId);
+        RecommenderSession currentSession = null;
+
+        // get or create recommender session from map
+        if(recommenderSessions.containsKey(serverId)) {
+            currentSession = recommenderSessions.get(serverId); 
         }
         else {
-            searchedSongsList = new ArrayList<>();
+            currentSession = new RecommenderSession(recommenderProcessor, serverId);
+            recommenderSessions.put(serverId, currentSession);
         }
-        // if list is 10 or more remove the first element
-        if(searchedSongsList.size() >= 10) {
-            searchedSongsList.remove(0);
+
+        currentSession.addSearchToSearchedSongs(newSearchQuery);
+    }
+
+    public static void removeRecommenderSessionByServerId(long serverId) {
+        if(recommenderSessions.containsKey(serverId)) {
+            // ensure tasks do not run past their intended lifetime
+            recommenderSessions.get(serverId).shutdown();
+            recommenderSessions.get(serverId).cancelAllOperations();
+            recommenderSessions.remove(serverId);
         }
-        // add the new search to the list
-        searchedSongsList.add(newSearchQuery);
-        // put the list back into the map
-        searchedSongs.put(serverId, searchedSongsList);
     }
 
     public static void setupAudioPlayer(DiscordApi api, SpotifyApi spotifyApi, AudioConnection audioConnection, String url, SlashCommandCreateEvent event, boolean next) {
@@ -197,13 +149,12 @@ public class LavaplayerAudioSource extends AudioSourceBase {
             long serverId = event.getSlashCommandInteraction().getServer().get().getId();
             createDisconnectTimer(api, serverId, new Timer());
         }
-        // check if it's a YouTube link or search query
         AudioPlayerManager playerManager = createYouTubePlayerManager();
+
+        // handle RecommenderSession
         handleSongSearchTracking(event.getSlashCommandInteraction().getServer().get().getId(), url);
-        if(schedulers.containsKey(event.getSlashCommandInteraction().getServer().get().getId())) {
-            // submit this to the thread service, this should be limited due to rate limiting and posibility of too many overlaps
-            execServ.submit(() -> loadRecommendedTracks(api, spotifyApi, playerManager, audioConnection, event));
-        }
+
+        // check if it's a YouTube link or search query
         if(url.startsWith("https://www.youtube.com/")) {
             // Create a player manager
             entirelyLoadTrack(api, playerManager, audioConnection, event, url, false, next);
@@ -249,6 +200,11 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         else {
             entirelyLoadTrack(api, playerManager, audioConnection, event, "ytsearch:" + url, true, next);
         }
+
+        // make sure audioQueue is up to date for session
+        long serverId = event.getInteraction().getServer().get().getId();
+        RecommenderSession currentSession = recommenderSessions.get(serverId);
+        currentSession.setAudioQueue(schedulers.get(serverId).audioQueue);
     }
 
     public static void createDisconnectTimer(DiscordApi api, long serverId, Timer timer) {
@@ -276,6 +232,42 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         return players.get(serverId);
     }
 
+    public static void playerManagerSilentlyLoadTrack(AudioPlayerManager playerManager, String url, long serverId) {
+        playerManager.loadItem(url, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                // User ID for automatically loaded tracks will just be 808
+                saveSong(track, serverId, 808);
+                if(players.get(serverId).getPlayingTrack() == null) {
+                    players.get(serverId).playTrack(track);
+                } else {
+                    schedulers.get(serverId).queue(track);
+                }
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+            }
+
+            @Override
+            public void noMatches() {
+                Logger.info("No matches found for " + url);
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+               Logger.info("Failed to load " + url); 
+            }
+        });
+    }
+
+    public static AudioPlayerManager createYouTubePlayerManager() {
+        // Create a player manager
+        AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
+        return playerManager;
+    }
+
     private static AudioSource updatePlayerAndCreateAudioSource(DiscordApi api, AudioPlayerManager playerManager, Long serverId) {
         if(!players.containsKey(serverId)) {
             players.put(serverId, playerManager.createPlayer());
@@ -287,12 +279,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
         return new LavaplayerAudioSource(api, players.get(serverId));
     }
 
-    private static AudioPlayerManager createYouTubePlayerManager() {
-        // Create a player manager
-        AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
-        return playerManager;
-    }
+
 
     private static void playerManagerLoadTrack(AudioPlayerManager playerManager, String url, SlashCommandCreateEvent event, long serverId, boolean sendFollowupMessage, boolean isSearch, boolean next) {
         playerManager.loadItem(url, new AudioLoadResultHandler() {
@@ -398,6 +385,21 @@ public class LavaplayerAudioSource extends AudioSourceBase {
                 }
             }
         });
+    }
+
+    private static void saveSong(AudioTrack track, long serverId, long userId) {
+        try {
+            String serverIdString = Long.toString(serverId);
+            Songs s = new Songs(track.getInfo().title, track.getInfo().author, track.getInfo().uri);
+            long songId = s.save(serverIdString);
+            Users user = new Users(userId, serverId, songId, 0);
+            userId = user.save(serverIdString);
+            schedulers.get(serverId).userDiscordIdRequestedSongId.put(track.getInfo().identifier, userId);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error while saving song to database, continuing...");
+        }
     }
 
     private static void saveSong(AudioTrack track, long serverId, SlashCommandCreateEvent event) {

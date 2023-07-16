@@ -2,7 +2,6 @@ package SpotifyApi;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,7 +12,13 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 
 public class RadioSongsHandler {
-	public static String[] getSongIdsFromList(SpotifyApi spotifyApi, List<String> listOfSongs) throws IOException, ParseException, SpotifyWebApiException, InterruptedException {
+	private final SpotifyApi spotifyApi;
+
+	public RadioSongsHandler(SpotifyApi spotifyApi) {
+		this.spotifyApi = spotifyApi;
+	}
+
+	public String[] getSongIdsFromList(List<String> listOfSongs) throws IOException, ParseException, SpotifyWebApiException, InterruptedException {
 		ArrayList<String> foundSongSpotifyIds = new ArrayList<>();
 		ObjectMapper objectMapper = new ObjectMapper();
 		for(String song : listOfSongs) {
@@ -28,10 +33,10 @@ public class RadioSongsHandler {
 		return foundSongSpotifyIds.toArray(new String[0]);
 	}
 
-	public static String[] generateRecommendationsFromList(SpotifyApi spotifyApi, List<String> listOfSongs) throws IOException, ParseException, SpotifyWebApiException {
+	public String[] generateRecommendationsFromList(List<String> listOfSongs) throws IOException, ParseException, SpotifyWebApiException {
 		String[] trackIds;
 		try {
-			trackIds = getSongIdsFromList(spotifyApi, listOfSongs);
+			trackIds = getSongIdsFromList(listOfSongs);
 		}
 		catch(Exception e) {
 			System.out.println("Error Getting Song IDs: " + e.getMessage());
@@ -60,17 +65,5 @@ public class RadioSongsHandler {
 		}
 
 		return trackTitlesAndArtists.toArray(new String[0]);
-	}
-
-	public static void main(String[] args) throws IOException, ParseException, SpotifyWebApiException, InterruptedException {
-		ArrayList<String> songsWhichWereQueued = new ArrayList<>();	
-		songsWhichWereQueued.add("Healing COMPUTER DATA");
-		songsWhichWereQueued.add("Nova MPH");
-		songsWhichWereQueued.add("Calico 1tbsp");
-		songsWhichWereQueued.add("Love reigns mall grab");
-
-		SpotifyApi api = ClientCreate.clientCredentials_Sync();
-
-		Arrays.stream(generateRecommendationsFromList(api, songsWhichWereQueued)).forEach(System.out::println);
 	}
 }

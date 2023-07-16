@@ -1,6 +1,7 @@
 package DiscordApi;
 
 import Lavaplayer.LavaplayerAudioSource;
+import SongRecommender.RecommenderProcessor;
 import SpotifyApi.ClientCreate;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.javacord.api.DiscordApi;
@@ -21,8 +22,14 @@ public class RunBot {
                 // start the bot :)
                 .login().join();
         spotifyApi = ClientCreate.clientCredentials_Sync();
+        RecommenderProcessor recommenderProcessor = new RecommenderProcessor(api, spotifyApi, 10);
         // listen for all commands
         KCommands.listenForAllCommands(api);
+        KCommands.addRecommenderProcessor(recommenderProcessor);
+        addListeners(api);
+    }
+    
+    public static void addListeners(DiscordApi api) {
         api.addServerJoinListener(event -> KCommands.isEphemeral.put(event.getServer().getId(), false));
         api.addServerJoinListener(event -> MySQL.SetupDatabase.setup(event.getServer().getIdAsString()));
         api.addServerLeaveListener(event -> {

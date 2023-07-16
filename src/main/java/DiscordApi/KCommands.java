@@ -2,6 +2,8 @@ package DiscordApi;
 
 import Lavaplayer.LavaplayerAudioSource;
 import MySQL.SetupDatabase;
+import SongRecommender.RecommenderProcessor;
+
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
@@ -25,6 +27,8 @@ public class KCommands {
 
     private static long playNowCommandId = -1;
 
+    private static RecommenderProcessor recommenderProcessor;
+
     public static void listenForAllCommands(DiscordApi api) {
         for(Server server : api.getServers()) {
             System.out.println("Server: " + server.getName());
@@ -32,6 +36,8 @@ public class KCommands {
             // messages are public by default
             isEphemeral.put(server.getId(), false);
         }
+        // put processor in lavaplayer
+        LavaplayerAudioSource.recommenderProcessor = recommenderProcessor;
         // handle playnow command stuff
         playNowCommandId = createGlobalPlayNowCommand(api);
         listenForPlayNowCommand(api, playNowCommandId);
@@ -60,6 +66,10 @@ public class KCommands {
             return true;
         }
         return false;
+    }
+
+    public static void addRecommenderProcessor(RecommenderProcessor rP) {
+        recommenderProcessor = rP;
     }
 
     public static long createGlobalPlayNowCommand(DiscordApi api) {
@@ -437,6 +447,8 @@ public class KCommands {
                             LavaplayerAudioSource.getPlayerByServerId(event.getSlashCommandInteraction().getServer().get().getId()).destroy();
                             // remove the player from the hashmap, this also removes the TrackScheduler
                             LavaplayerAudioSource.removePlayerByServerId(event.getSlashCommandInteraction().getServer().get().getId());
+                            // remove the session from the HashMap
+                            LavaplayerAudioSource.removeRecommenderSessionByServerId(event.getSlashCommandInteraction().getServer().get().getId());
                             // let em know
                             event.getSlashCommandInteraction().createFollowupMessageBuilder()
                                 .setContent("Disconnected from voice channel!")
