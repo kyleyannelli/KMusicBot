@@ -7,13 +7,16 @@ import SongRecommender.RecommenderProcessor;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
+import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.server.Server;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +44,15 @@ public class KCommands {
         // handle playnow command stuff
         playNowCommandId = createGlobalPlayNowCommand(api);
         listenForPlayNowCommand(api, playNowCommandId);
+
+        api.addServerVoiceChannelMemberLeaveListener(event -> {
+            ServerVoiceChannel channel = event.getChannel();
+
+            boolean isAllBots = channel.getConnectedUsers().stream().allMatch(User::isBot);
+
+            if(!isAllBots) return;
+            LavaplayerAudioSource.disconnectBot(api, channel.getServer().getId());
+        });
 
         listenForPlayCommand(api);
         listenForPauseCommand(api);
@@ -87,7 +99,7 @@ public class KCommands {
     public static void listenForPlayNowCommand(DiscordApi api, long commandId) {
         api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
             if(commandId == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
-                if(serverIsntPresentSendMsg(slashCommandCreateEvent)) return; 
+                if(serverIsntPresentSendMsg(slashCommandCreateEvent)) return;
 
                 long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
                 slashCommandCreateEvent.getInteraction()
@@ -131,7 +143,7 @@ public class KCommands {
 
         api.addSlashCommandCreateListener(slashCommandCreateEvent -> {
             if(command.getId() == slashCommandCreateEvent.getSlashCommandInteraction().getCommandId()) {
-                if(serverIsntPresentSendMsg(slashCommandCreateEvent)) return; 
+                if(serverIsntPresentSendMsg(slashCommandCreateEvent)) return;
 
                 long serverId = slashCommandCreateEvent.getSlashCommandInteraction().getServer().get().getId();
                 slashCommandCreateEvent.getInteraction()
@@ -232,7 +244,7 @@ public class KCommands {
 
         api.addSlashCommandCreateListener(event -> {
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(serverIsntPresentSendMsg(event)) return; 
+                if(serverIsntPresentSendMsg(event)) return;
 
                 long serverId = event.getInteraction().getServer().get().getId();
                 event.getInteraction().respondLater(isEphemeral.get(serverId)).thenAccept(slashEvent -> {
@@ -370,7 +382,7 @@ public class KCommands {
                                 .send();
                             return;
                         }
-                        if(serverIsntPresentSendMsg(event)) return; 
+                        if(serverIsntPresentSendMsg(event)) return;
                         handlePlayCommand(api, event);
                     });
             }
@@ -420,7 +432,7 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(serverIsntPresentSendMsg(event)) return; 
+                if(serverIsntPresentSendMsg(event)) return;
                 handleStopCommand(api, event);
             }
         });
@@ -480,7 +492,7 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(serverIsntPresentSendMsg(event)) return; 
+                if(serverIsntPresentSendMsg(event)) return;
                 handleNowPlayingCommand(event);
             }
         });
@@ -528,7 +540,7 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                handleVolumeCommand(event);                
+                handleVolumeCommand(event);
             }
         });
     }
@@ -586,7 +598,7 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(serverIsntPresentSendMsg(event)) return; 
+                if(serverIsntPresentSendMsg(event)) return;
 
                 event.getInteraction()
                     // this may take a while, so we need to defer the response
@@ -628,7 +640,7 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                handleToggleEphemeralCommand(event); 
+                handleToggleEphemeralCommand(event);
             }
         });
     }
@@ -670,14 +682,14 @@ public class KCommands {
         api.addSlashCommandCreateListener(event -> {
             // different commands, make sure the event is the one we are looking for
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(serverIsntPresentSendMsg(event)) return; 
+                if(serverIsntPresentSendMsg(event)) return;
 
                 event.getInteraction()
                     // this may take a while, so we need to defer the response
                     // also get if it is ephemeral (private) or not
                     .respondLater(isEphemeral.get(event.getSlashCommandInteraction().getServer().get().getId()))
                     .thenAccept(interaction -> {
-                        handleShuffleCommand(event); 
+                        handleShuffleCommand(event);
                     });
             }
         });
@@ -709,13 +721,13 @@ public class KCommands {
 
         api.addSlashCommandCreateListener(event -> {
             if(command.getId() == event.getSlashCommandInteraction().getCommandId()) {
-                if(serverIsntPresentSendMsg(event)) return; 
+                if(serverIsntPresentSendMsg(event)) return;
 
                 long serverId = event.getSlashCommandInteraction().getServer().get().getId();
                 event.getInteraction()
                     .respondLater(isEphemeral.get(serverId))
                     .thenAccept(interaction -> {
-                        handlePauseCommand(event, serverId); 
+                        handlePauseCommand(event, serverId);
                     });
             }
         });
