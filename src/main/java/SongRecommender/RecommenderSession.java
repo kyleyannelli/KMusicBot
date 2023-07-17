@@ -14,12 +14,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class RecommenderSession {
-	private final int MINIMUM_AUTO_QUEUE_DURATION_SECONDS = 900; // 900 seconds == 15 minutes
-	private final int MINIMUM_QUEUE_SIZE = 4; // at the least 4 songs must be queued
-	private final int MAXIMUM_QUEUE_SIZE = 25; // at the most 25 songs are queued
-	private final int YOUTUBE_SEARCH_SLEEP_DURATION_MS = 1000;
-	private final int AUTO_QUEUE_RATE = 5; // unit in minutes
-	private final int INITIAL_AUTO_QUEUE_DELAY = 1; // unit in minutes
+	private static final int MINIMUM_AUTO_QUEUE_DURATION_SECONDS = 900; // 900 seconds == 15 minutes
+	private static final int MINIMUM_QUEUE_SIZE = 4; // at the least 4 songs must be queued
+	private static final int MAXIMUM_QUEUE_SIZE = 25; // at the most 25 songs are queued
+	private static final int YOUTUBE_SEARCH_SLEEP_DURATION_MS = 1000;
+	private static final int AUTO_QUEUE_RATE = 5; // unit in minutes
+	private static final int INITIAL_AUTO_QUEUE_DELAY = 1; // unit in minutes
 
 	// there should only be one recommender processor per application.
 	// 	the processor handles all sessions via an executor service
