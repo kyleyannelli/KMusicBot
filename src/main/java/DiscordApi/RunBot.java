@@ -30,6 +30,12 @@ public class RunBot {
         // listen for all commands
         KCommands.listenForAllCommands(api);
         addListeners(api);
+
+        // make sure to properly handle a shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            recommenderProcessor.cancelAllTasks();
+            recommenderProcessor.shutdown();
+        }));
     }
     
     public static void addListeners(DiscordApi api) {

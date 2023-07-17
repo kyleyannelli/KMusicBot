@@ -2,6 +2,7 @@ package SongRecommender;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -85,6 +86,14 @@ public class RecommenderProcessor {
         }
 
         queuedTasksMap.remove(sessionId);
+    }
+
+    public void cancelAllTasks() {
+        for(Map.Entry<Long, List<FutureTask<Void>>> taskEntry : queuedTasksMap.entrySet()) {
+            for(FutureTask<Void> fT : taskEntry.getValue()) {
+                fT.cancel(true);
+            }
+        }
     }
 
     private void submitTask(long sessionId, Runnable task) {
