@@ -40,8 +40,10 @@ public class RecommenderSession {
 		long lowerBound = 12345678L;
 		long upperBound = 99999999L;
 		Random random = new Random();
-		this.id = lowerBound + (random.nextLong() * (upperBound - lowerBound + 1));
-		Logger.info("Created id " + this.id + " for session!");
+		this.id = lowerBound + (long)(random.nextDouble() * upperBound);
+
+		Logger.info("Created id " + this.id + " for session in server " + associatedServerId);
+
 		this.associatedServerId = associatedServerId;
 		
 		// every AUTO_QUEUE_RATE minutes autoqueue
