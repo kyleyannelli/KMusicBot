@@ -69,11 +69,16 @@ public class RecommenderProcessor {
                 Thread.currentThread().interrupt();
             }
 
-            // setup logging info
-            String infoText = "Added recommendations: ";
-            for(String recommendation : spotifyRecommendations) infoText += "\n\t" + recommendation;
-            infoText += "\nTo the queue of " + session.getSessionId() + " belonging to server " + session.getAssociatedServerId();
-            Logger.info(infoText);
+            if(spotifyRecommendations.length == 0) {
+                Logger.warn("Session " + session.getSessionId() + " belonging to server " + session.getAssociatedServerId() + " received a 0 length recommendation array. Spotify request likely failed!");
+            }
+            else {
+                // setup logging info
+                StringBuilder infoTextBuilder = new StringBuilder("Added recommendations: ");
+                for(String recommendation : spotifyRecommendations) infoTextBuilder.append("\n\t" + recommendation);
+                infoTextBuilder.append("\nTo the queue of " + session.getSessionId() + " belonging to server " + session.getAssociatedServerId());
+                Logger.info(infoTextBuilder.toString());
+            }
         };
 
         submitTask(session.getSessionId(), runnable);
