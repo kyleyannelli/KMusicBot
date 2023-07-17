@@ -74,9 +74,10 @@ public class RecommenderProcessor {
             }
             else {
                 // setup logging info
-                StringBuilder infoTextBuilder = new StringBuilder("Added recommendations: ");
-                for(String recommendation : spotifyRecommendations) infoTextBuilder.append("\n\t" + recommendation);
-                infoTextBuilder.append("\nTo the queue of " + session.getSessionId() + " belonging to server " + session.getAssociatedServerId());
+                StringBuilder infoTextBuilder = new StringBuilder();
+                infoTextBuilder.append("Added recommendations: ");
+                for(String recommendation : spotifyRecommendations) infoTextBuilder.append("\n\t").append(recommendation);
+                infoTextBuilder.append("\nTo the queue of ").append(session.getSessionId()).append(" belonging to server ").append(session.getAssociatedServerId());
                 Logger.info(infoTextBuilder.toString());
             }
         };
