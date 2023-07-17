@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RecommenderSession {
 	private final int MINIMUM_AUTO_QUEUE_DURATION_SECONDS = 900; // 900 seconds == 15 minutes
 	private final int MINIMUM_QUEUE_SIZE = 4; // at the least 4 songs must be queued
-	private final int MAXIMUM_QUEUE_SIZE = 15; // at the most 15 songs are queued
+	private final int MAXIMUM_QUEUE_SIZE = 25; // at the most 15 songs are queued
 	private final int YOUTUBE_SEARCH_SLEEP_DURATION_MS = 500;
 	private final int AUTO_QUEUE_RATE = 5; // unit in minutes
 	private final int INITIAL_AUTO_QUEUE_DELAY = 1; // unit in minutes
@@ -106,7 +106,7 @@ public class RecommenderSession {
 
 		// the total duration of tracks is over 15 MINIMUM_AUTO_QUEUE_DURATION_SECONDS
 		// 	OR the queue is 4 through 15 songs long
-		return totalDuration.get() > MINIMUM_AUTO_QUEUE_DURATION_SECONDS 
+		return (totalDuration.get() > MINIMUM_AUTO_QUEUE_DURATION_SECONDS && audioQueue.size() <= MAXIMUM_QUEUE_SIZE) 
 			|| (audioQueue.size() >= MINIMUM_QUEUE_SIZE && audioQueue.size() <= MAXIMUM_QUEUE_SIZE);
 	}
 }
