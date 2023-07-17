@@ -66,6 +66,7 @@ public class RecommenderProcessor {
             }
             catch(InterruptedException interruptedException) {
                 Logger.error(interruptedException, "Failed to automatically add tracks to queue due to interrupt");
+                Thread.currentThread().interrupt();
             }
 
             // setup logging info
