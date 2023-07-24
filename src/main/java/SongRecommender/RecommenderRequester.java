@@ -109,6 +109,7 @@ public class RecommenderRequester {
  		String[] trackIds = getSongIdsFromList(listOfSongs);
 
 		String commaSeparatedTrackIds = String.join(",", trackIds);
+
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		// api call made here so possiblyBackOffApiCallAndUpdateDelay

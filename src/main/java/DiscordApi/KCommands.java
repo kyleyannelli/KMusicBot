@@ -5,6 +5,9 @@ import MySQL.SetupDatabase;
 import SongRecommender.RecommenderProcessor;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+
+import DiscordBot.Commands;
+
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
@@ -16,7 +19,6 @@ import org.javacord.api.interaction.SlashCommandInteractionOption;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,6 +26,10 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * @deprecated This has been replaced by {@link Commands}
+ */
+@Deprecated
 public class KCommands {
     private static final HashMap<Long, AudioConnection> audioConnections = new HashMap<>();
     public static HashMap<Long, Boolean> isEphemeral = new HashMap<>();
@@ -150,7 +156,7 @@ public class KCommands {
                         if(userConnectedToVc(slashCommandCreateEvent) && slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getStringValue().isPresent()) {
                             String inputSong = slashCommandCreateEvent.getSlashCommandInteraction().getArguments().get(0).getStringValue().get();
                             // set up the audio player (may already be setup this name is slightly misleading)
-                            LavaplayerAudioSource.playNext(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, slashCommandCreateEvent);
+                            // LavaplayerAudioSource.playNext(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, slashCommandCreateEvent);
                         } else if(userConnectedToVc(slashCommandCreateEvent)) {
                             slashCommandCreateEvent.getSlashCommandInteraction().createFollowupMessageBuilder()
                                 .setContent("Error playing, no \"song\" argument present.");
@@ -255,63 +261,63 @@ public class KCommands {
     }
 
     private static void handleSeekCommand(SlashCommandCreateEvent event, long serverId) {
-                        // total time in milliseconds
-                        long totalRequestedTime = 0;
-                        boolean minutes = false;
-                        boolean seconds = false;
-                        boolean hours = false;
-                        for(SlashCommandInteractionOption s : event.getSlashCommandInteraction().getArguments()) {
-                            if(minutes && seconds && hours) break;
-                            Optional<Long> value = s.getLongValue();
-                            if(value.isPresent()) {
-                                switch(s.getName()) {
-                                    case "seconds":
-                                        if(!seconds) totalRequestedTime += value.get() * 1000;
-                                        seconds = true;
-                                        break;
-                                    case "minutes":
-                                        if(!minutes) totalRequestedTime += value.get() * 60000;
-                                        minutes = true;
-                                        break;
-                                    case "hours":
-                                        if(!hours) totalRequestedTime += value.get() * (60 * 60000);
-                                        hours = true;
-                                        break;
-                                    default:
-                                        event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                            .setContent("Please double check the parameters input as " + s.getName() + " is not supported for this command")
-                                            .send();
-                                        return;
-                                }
-                            }
-                        }
-                        AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
-                        long duration = player.getPlayingTrack().getDuration();
-                        if(player.getPlayingTrack() == null) {
-                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("Nothing is playing!")
-                                .send();
-                            return;
-                        }
-                        if(duration < totalRequestedTime) {
-                            System.out.println("Requested " + totalRequestedTime + " of " + duration);
-                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("Request seek position is beyond the current songs duration!")
-                                .send();
-                            return;
-                        }
-                        if(totalRequestedTime < 0) {
-                            event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                                .setContent("Requested seek position is below 0!")
-                                .send();
-                            return;
-                        }
-                        player.getPlayingTrack().setPosition(totalRequestedTime);
-                        String durationString = createTimestampString(duration);
-                        String requestedPosition = createTimestampString(totalRequestedTime);
+        // total time in milliseconds
+        long totalRequestedTime = 0;
+        boolean minutes = false;
+        boolean seconds = false;
+        boolean hours = false;
+        for(SlashCommandInteractionOption s : event.getSlashCommandInteraction().getArguments()) {
+            if(minutes && seconds && hours) break;
+            Optional<Long> value = s.getLongValue();
+            if(value.isPresent()) {
+                switch(s.getName()) {
+                    case "seconds":
+                        if(!seconds) totalRequestedTime += value.get() * 1000;
+                        seconds = true;
+                        break;
+                    case "minutes":
+                        if(!minutes) totalRequestedTime += value.get() * 60000;
+                        minutes = true;
+                        break;
+                    case "hours":
+                        if(!hours) totalRequestedTime += value.get() * (60 * 60000);
+                        hours = true;
+                        break;
+                    default:
                         event.getSlashCommandInteraction().createFollowupMessageBuilder()
-                            .setContent("Seeking to " + requestedPosition + " **|** " + durationString)
+                            .setContent("Please double check the parameters input as " + s.getName() + " is not supported for this command")
                             .send();
+                        return;
+                }
+            }
+        }
+        AudioPlayer player = LavaplayerAudioSource.getPlayerByServerId(serverId);
+        long duration = player.getPlayingTrack().getDuration();
+        if(player.getPlayingTrack() == null) {
+            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                .setContent("Nothing is playing!")
+                .send();
+            return;
+        }
+        if(duration < totalRequestedTime) {
+            System.out.println("Requested " + totalRequestedTime + " of " + duration);
+            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                .setContent("Request seek position is beyond the current songs duration!")
+                .send();
+            return;
+        }
+        if(totalRequestedTime < 0) {
+            event.getSlashCommandInteraction().createFollowupMessageBuilder()
+                .setContent("Requested seek position is below 0!")
+                .send();
+            return;
+        }
+        player.getPlayingTrack().setPosition(totalRequestedTime);
+        String durationString = createTimestampString(duration);
+        String requestedPosition = createTimestampString(totalRequestedTime);
+        event.getSlashCommandInteraction().createFollowupMessageBuilder()
+            .setContent("Seeking to " + requestedPosition + " **|** " + durationString)
+            .send();
     }
 
     private static String createTimestampString(long duration) {
@@ -406,13 +412,13 @@ public class KCommands {
                     // put the audio connection in the hashmap
                     audioConnections.put(serverId, audioConnection);
                     // set up the audio player (may already be setup this name is slightly misleading)
-                    LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event, false);
+                    //LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event, false);
                 });
             }
             else {
                 System.out.println("Bot is already connected to voice channel, playing song...");
                 // bot is already connected to the voice channel and the audio connection is already in the hashmap
-                LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event, false);
+                //LavaplayerAudioSource.setupAudioPlayer(api, RunBot.spotifyApi, audioConnections.get(serverId), inputSong, event, false);
             }
         });
         if (!isConnected.get()) {

@@ -101,14 +101,7 @@ public class RecommenderSession {
 		return associatedServerId;
 	}
 
-	private void loadRecommendedTracks() {
-		if(canQueueSongs()) {
-			// Process the songs from searched songs list
-			this.recommenderProcessor.addRecommendedSongsFromSpotify(this);
-		}
-	}
-
-	private boolean canQueueSongs() {
+	public boolean canQueueSongs() {
 		// Calculate the total duration of all songs in the queue
 		AtomicLong totalDuration = new AtomicLong();
 		// for each AudioTrack (song) in the queue add their duration
@@ -119,4 +112,12 @@ public class RecommenderSession {
 		return (totalDuration.get() > MINIMUM_AUTO_QUEUE_DURATION_SECONDS && audioQueue.size() <= MAXIMUM_QUEUE_SIZE) 
 			|| (audioQueue.size() >= MINIMUM_QUEUE_SIZE && audioQueue.size() <= MAXIMUM_QUEUE_SIZE);
 	}
+
+	private void loadRecommendedTracks() {
+		if(canQueueSongs()) {
+			// Process the songs from searched songs list
+			this.recommenderProcessor.addRecommendedSongsFromSpotify(this);
+		}
+	}
 }
+

@@ -4,43 +4,36 @@ import SongRecommender.RecommenderProcessor;
 import SongRecommender.RecommenderSession;
 
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import org.javacord.api.audio.AudioConnection;
+import org.javacord.api.entity.channel.ServerVoiceChannel;
+import org.javacord.api.entity.server.Server;
+import org.javacord.api.entity.user.User;
+import org.tinylog.Logger;
 
 import Helpers.LimitedQueue;
-import Lavaplayer.TrackScheduler;
+import Helpers.QueueResult;
 
 public class AudioSession extends RecommenderSession {
-	private static final int MAX_SEARCH_QUEUE_SIZE = 5; // a maxmimum of 5 items in mostRecentSearches
-    private static final int DISCONNECT_DELAY_SECONDS = 300000; // 300000 seconds aka 5 minutes
+	private static final int MAX_SEARCH_QUEUE_SIZE = 5; // a maximum of 5 items in mostRecentSearches
+	private static final int DISCONNECT_DELAY_SECONDS = 300000; // 300000 seconds aka 5 minutes
 
 	private final LimitedQueue<String> mostRecentSearches;
-
-	private AudioPlayer audioPlayer;
-	private TrackScheduler trackScheduler; 
+	private final LavaSource lavaSource;
+	private AudioConnection audioConnection;
 
 	private boolean isRecommendingSongs;
 
-	public AudioSession(RecommenderProcessor recommenderProcessor, long associatedServerId) {
+	public AudioSession(RecommenderProcessor recommenderProcessor, LavaSource lavaSource, long associatedServerId) {
 		super(recommenderProcessor, associatedServerId);
 
 		mostRecentSearches = new LimitedQueue<>(MAX_SEARCH_QUEUE_SIZE);
 
-		this.audioPlayer = null;
-		this.trackScheduler = null;
-
 		this.isRecommendingSongs = true;
-	}
-
-	public AudioSession(RecommenderProcessor recommenderProcessor, AudioPlayer audioPlayer, TrackScheduler trackScheduler, long associatedServerId) {
-		super(recommenderProcessor, associatedServerId);
-
-		mostRecentSearches = new LimitedQueue<>(MAX_SEARCH_QUEUE_SIZE);
-
-		this.audioPlayer = audioPlayer;
-		this.trackScheduler = trackScheduler;
-
-		this.isRecommendingSongs = true;
+		this.lavaSource = lavaSource;
 	}
 
 	/**
@@ -56,21 +49,13 @@ public class AudioSession extends RecommenderSession {
 	}
 
 	/**
-	 * Determines if songs can be queued based on the super class's logic and whether song recommendations are currently enabled.
+	 * Checks if the mostRecentSearches (LimitedQueue) is above MAX_SEARCH_QUEUE_SIZE - 1 AND if song recommendations are enabled. 
 	 * 
-	 * @return true if songs can be queued according to the superclass's logic and song recommendations are enabled, false otherwise
+	 * @return true if mostRecentSearches total MAX_SEARCH_QUEUE_SIZE - 1 or greater AND song recommendations are enabled, false otherwise
 	 */
 	@Override
 	public boolean canQueueSongs() {
-		return super.canQueueSongs() && isRecommendingSongs;
-	}
-
-	public void setAudioPlayer(AudioPlayer audioPlayer) {
-		this.audioPlayer = audioPlayer;
-	}
-
-	public void setTrackScheduler(TrackScheduler trackScheduler) {
-		this.trackScheduler = trackScheduler;
+		return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 1) && isRecommendingSongs;
 	}
 
 	/**
@@ -78,5 +63,57 @@ public class AudioSession extends RecommenderSession {
 	 */
 	public boolean toggleIsRecommending() {
 		return (isRecommendingSongs = !isRecommendingSongs);
+	}
+
+	public boolean getIsRecommending() {
+		return isRecommendingSongs;
+	}
+
+	public QueueResult queueSearchQuery(String searchQuery) {
+		mostRecentSearches.add(searchQuery);
+		return lavaSource.queueTrack(searchQuery);
+	}
+
+	public LavaSource getLavaSource() {
+		return lavaSource;
+	}
+
+	public void setupAudioConnection(ServerVoiceChannel serverVoiceChannel) {
+		AudioConnection audioConnection = null;
+
+		CompletableFuture<AudioConnection> futureConnect = serverVoiceChannel.connect();
+		
+		try {
+			audioConnection = futureConnect.get();
+		}
+		catch(ExecutionException exeException) {
+			Logger.error(exeException, "ExecutionException while attempting to wait for voice channel connect for server " + serverVoiceChannel.getServer().getId() + "|" + serverVoiceChannel.getServer().getName());
+			this.audioConnection = null;
+			return;
+		}
+		catch(InterruptedException interruptedException) {
+			Logger.error(interruptedException, "InterruptedException while attempting to wait for voice channel connect for server " + serverVoiceChannel.getServer().getId() + "|" + serverVoiceChannel.getServer().getName());
+			Thread.currentThread().interrupt();
+			this.audioConnection = null;
+			return;
+		}
+
+		this.audioConnection = audioConnection;
+		this.audioConnection.setAudioSource(lavaSource);
+	}
+
+	public boolean hasAudioConnection() {
+		return this.audioConnection != null;
+	}
+
+	/**
+	 * Checks if user is in server voice channel and if it is the same server voice channel as the bot.
+	 */
+	public boolean isUserInSameServerVoiceChannel(User user) {
+		ServerVoiceChannel botConnectedServerVoiceChannel = this.audioConnection.getChannel();
+
+		Optional<ServerVoiceChannel> userConnectedServerVoiceChannel = user.getConnectedVoiceChannel(botConnectedServerVoiceChannel.getServer());
+		
+		return userConnectedServerVoiceChannel.isPresent() && userConnectedServerVoiceChannel.get().getId() == botConnectedServerVoiceChannel.getId();
 	}
 }

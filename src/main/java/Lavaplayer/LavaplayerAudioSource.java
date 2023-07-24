@@ -5,7 +5,6 @@ import MySQL.Users;
 import SongRecommender.RecommenderProcessor;
 import SongRecommender.RecommenderSession;
 import SpotifyApi.HandleSpotifyLink;
-import com.mysql.cj.log.Log;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -15,14 +14,15 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
+
+import DiscordBot.LavaSource;
+
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.audio.AudioSource;
 import org.javacord.api.audio.AudioSourceBase;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
-import org.javacord.api.entity.channel.VoiceChannel;
 import org.javacord.api.entity.server.Server;
-import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.tinylog.Logger;
 
@@ -31,6 +31,10 @@ import se.michaelthelin.spotify.SpotifyApi;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @deprecated This has been replaced by a much more robust class, {@link LavaSource}
+ */
+@Deprecated
 public class LavaplayerAudioSource extends AudioSourceBase {
     private static final int DISCONNECT_DELAY_SECONDS = 300000; // 300000 seconds aka 5 minutes
     private final AudioPlayer audioPlayer;
@@ -125,10 +129,12 @@ public class LavaplayerAudioSource extends AudioSourceBase {
 
     public static void removeRecommenderSessionByServerId(long serverId) {
         if(recommenderSessions.containsKey(serverId)) {
+            long recommenderSessionId = recommenderSessions.get(serverId).getSessionId();
             // ensure tasks do not run past their intended lifetime
             recommenderSessions.get(serverId).shutdown();
             recommenderSessions.get(serverId).cancelAllOperations();
             recommenderSessions.remove(serverId);
+            Logger.info("Session " + recommenderSessionId + " cancelled, shutdown, and removed for server " + serverId);
         }
     }
 
@@ -293,7 +299,7 @@ public class LavaplayerAudioSource extends AudioSourceBase {
 
             @Override
             public void loadFailed(FriendlyException exception) {
-               Logger.info("Failed to load " + url);
+               Logger.info("Failed to load " + url + exception.getMessage());
             }
 
             public void loadSingleTrack(AudioTrack track) {

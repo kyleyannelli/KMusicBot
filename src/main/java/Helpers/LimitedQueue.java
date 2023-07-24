@@ -27,6 +27,8 @@ public class LimitedQueue<E> extends LinkedBlockingDeque<E> {
 		lock.lock();
 
 		try {
+			// while the queue is full remove last item (FIFO)
+			//  on true that means item went in, since ! its false
 			while(!super.offer(e)) {
 				super.remove();
 			}
@@ -38,3 +40,4 @@ public class LimitedQueue<E> extends LinkedBlockingDeque<E> {
 		return true;
 	}
 }
+

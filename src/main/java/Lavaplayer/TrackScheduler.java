@@ -12,6 +12,10 @@ import org.javacord.api.DiscordApi;
 import java.time.Instant;
 import java.util.*;
 
+/**
+ * @deprecated This has been repalced by {@link ProperTrackScheduler}
+ */
+@Deprecated
 public class TrackScheduler extends AudioEventAdapter {
     public long lastSongStartTime;
     public HashMap<String, Long> userDiscordIdRequestedSongId = new HashMap<>();
