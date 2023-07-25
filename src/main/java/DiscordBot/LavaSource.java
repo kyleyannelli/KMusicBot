@@ -200,7 +200,7 @@ public class LavaSource extends AudioSourceBase {
         Optional<List<String>> trackNamesFromSpotify = Optional.empty(); 
 
         try {
-            trackNamesFromSpotify = Optional.of(HandleSpotifyLink.getCollectionFromSpotifyLink(spotifyApi, spotifyLink));
+            trackNamesFromSpotify = Optional.ofNullable(HandleSpotifyLink.getCollectionFromSpotifyLink(spotifyApi, spotifyLink));
         }
         catch(IOException ioException) {
             Logger.error(ioException, "IOException occured while loading a spotify link " + spotifyLink);
