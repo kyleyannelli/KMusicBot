@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
+import org.javacord.api.entity.permission.Permissions;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
@@ -25,6 +26,7 @@ import se.michaelthelin.spotify.SpotifyApi;
 
 public class Commands {
 	private static final String PLAY_COMMAND_NAME = "play";
+	private static final String INVITE_COMMAND_NAME = "invite";
 
 	private final DiscordApi discordApi;
 	private final SpotifyApi spotifyApi;
@@ -42,9 +44,25 @@ public class Commands {
 	}
 
 	public void createAndListenForGlobalCommands() {
-		createPlayCommand();
-
+		createCommands();
 		listenForCommands();
+	}
+
+	private void createCommands() {
+		createPlayCommand();
+		createInviteCommand();
+	}
+
+	private void createInviteCommand() {
+		SlashCommand.with(INVITE_COMMAND_NAME, "Get an invite link for the bot").createGlobal(discordApi);
+	}
+
+	private void handleInviteCommand(SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
+		String inviteLink = discordApi.createBotInvite(Permissions.fromBitmask(36700160));
+		EmbedMessage embedMessage = new EmbedMessage(slashCommandEvent.getSlashCommandInteraction(), respondLater);
+		embedMessage.setTitle("Invite Link");
+		embedMessage.setContent(inviteLink);
+		embedMessage.send();
 	}
 
 	private void createPlayCommand() {
@@ -91,9 +109,12 @@ public class Commands {
 			audioSession.setupAudioConnection(serverVoiceChannel);
 			return false;
 		}
-		else {
+		else if(user.getConnectedVoiceChannel(server).isEmpty()){
 			sendNotInServerVoiceChannelMessage(slashCommandEvent, respondLater);
 			return true;
+		}
+		else {
+			return false;
 		}
 	}
 
@@ -157,6 +178,9 @@ public class Commands {
 			switch(slashCommandName) {
 				case PLAY_COMMAND_NAME:
 					handlePlayCommand(slashCommandEvent, respondLater);
+					break;
+				case INVITE_COMMAND_NAME:
+					handleInviteCommand(slashCommandEvent, respondLater);
 					break;
 			}
 		});

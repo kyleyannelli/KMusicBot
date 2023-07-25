@@ -34,13 +34,12 @@ public class RunBot {
 
         int maxRecommenderThreads = dotenv.get("MAX_RECOMMENDER_THREADS") == null ? 
             MAX_RECOMMENDER_THREADS_DEFAULT : Integer.parseInt(dotenv.get("MAX_RECOMMENDER_THREADS"));
-        RecommenderProcessor recommenderProcessor = new RecommenderProcessor(api, spotifyApi, maxRecommenderThreads);
         
         // Create a player manager
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
         playerManager.registerSourceManager(new YoutubeAudioSourceManager());
 
-
+        RecommenderProcessor recommenderProcessor = new RecommenderProcessor(api, spotifyApi, maxRecommenderThreads);
         Commands commands = new Commands(api, spotifyApi, recommenderProcessor, playerManager);
         commands.createAndListenForGlobalCommands();
 
