@@ -1,5 +1,6 @@
 package DiscordBot;
 
+import Lavaplayer.LavaSource;
 import SongRecommender.RecommenderProcessor;
 import SongRecommender.RecommenderSession;
 
@@ -10,7 +11,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
-import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 import org.tinylog.Logger;
 

@@ -1,4 +1,4 @@
-package DiscordBot;
+package Lavaplayer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,7 +23,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 
 import Helpers.QueueResult;
-import Lavaplayer.ProperTrackScheduler;
 import SpotifyApi.HandleSpotifyLink;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
