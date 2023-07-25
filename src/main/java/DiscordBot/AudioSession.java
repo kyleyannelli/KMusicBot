@@ -22,7 +22,7 @@ public class AudioSession extends RecommenderSession {
 	private static final int DISCONNECT_DELAY_SECONDS = 300000; // 300000 seconds aka 5 minutes
 
 	private final LimitedQueue<String> mostRecentSearches;
-	private final LavaSource lavaSource;
+	private LavaSource lavaSource;
 	private AudioConnection audioConnection;
 
 	private boolean isRecommendingSongs;
@@ -34,6 +34,14 @@ public class AudioSession extends RecommenderSession {
 
 		this.isRecommendingSongs = true;
 		this.lavaSource = lavaSource;
+	}
+
+	public AudioSession(RecommenderProcessor recommenderProcessor, long associatedServerId) {
+		super(recommenderProcessor, associatedServerId);
+
+		mostRecentSearches = new LimitedQueue<>(MAX_SEARCH_QUEUE_SIZE);
+
+		this.isRecommendingSongs = true;
 	}
 
 	/**
@@ -67,6 +75,10 @@ public class AudioSession extends RecommenderSession {
 
 	public boolean getIsRecommending() {
 		return isRecommendingSongs;
+	}
+
+	public void setLavaSource(LavaSource lavaSource) {
+		this.lavaSource = lavaSource;
 	}
 
 	public QueueResult queueSearchQuery(String searchQuery) {

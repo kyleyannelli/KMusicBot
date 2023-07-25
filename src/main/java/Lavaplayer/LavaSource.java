@@ -28,6 +28,8 @@ import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 
 public class LavaSource extends AudioSourceBase {
+    private final long ASSOCIATED_SESSION_ID;
+
     private final AudioLoadResultHandler singleResultHandler = new AudioLoadResultHandler() {
         @Override
         public void loadFailed(FriendlyException arg0) {
@@ -99,7 +101,7 @@ public class LavaSource extends AudioSourceBase {
     private Optional<List<String>> lastLoadedTracks;
 
 
-    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager) {
+    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, long associatedSessionId) {
         super(discordApi);
 
         this.spotifyApi = spotifyApi;
@@ -107,11 +109,13 @@ public class LavaSource extends AudioSourceBase {
 
         this.audioPlayerManager = audioPlayerManager;
         this.audioPlayer = audioPlayerManager.createPlayer();
-        this.trackScheduler = new ProperTrackScheduler(audioPlayer);
+        this.trackScheduler = new ProperTrackScheduler(audioPlayer, associatedSessionId);
         this.lastLoadedTracks = Optional.empty();
+
+        this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }
 
-    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, AudioPlayer audioPlayer) {
+    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, AudioPlayer audioPlayer, long associatedSessionId) {
         super(discordApi);
 
         this.spotifyApi = spotifyApi;
@@ -119,8 +123,10 @@ public class LavaSource extends AudioSourceBase {
 
         this.audioPlayerManager = audioPlayerManager;
         this.audioPlayer = audioPlayer; 
-        this.trackScheduler = new ProperTrackScheduler(audioPlayer);
+        this.trackScheduler = new ProperTrackScheduler(audioPlayer, associatedSessionId);
         this.lastLoadedTracks = Optional.empty();
+
+        this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }
 
     @Override
@@ -144,7 +150,7 @@ public class LavaSource extends AudioSourceBase {
 
     @Override
     public AudioSource copy() {
-        return new LavaSource(discordApi, spotifyApi,audioPlayerManager, audioPlayer);
+        return new LavaSource(discordApi, spotifyApi,audioPlayerManager, audioPlayer, ASSOCIATED_SESSION_ID);
     }
 
     public synchronized QueueResult queueTrack(String searchQuery) {

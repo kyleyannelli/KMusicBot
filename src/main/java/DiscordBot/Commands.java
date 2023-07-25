@@ -1,11 +1,16 @@
 package DiscordBot;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
+import Exceptions.BadAudioConnectionException;
+import Exceptions.EmptyParameterException;
+import Exceptions.EmptyServerException;
+import Helpers.EnsuredSlashCommandInteraction;
 import Lavaplayer.LavaSource;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
@@ -25,6 +30,8 @@ import Helpers.QueueResult;
 import SongRecommender.RecommenderProcessor;
 import se.michaelthelin.spotify.SpotifyApi;
 
+import javax.swing.text.html.Option;
+
 public class Commands {
 	private static final String PLAY_COMMAND_NAME = "play";
 	private static final String INVITE_COMMAND_NAME = "invite";
@@ -34,19 +41,26 @@ public class Commands {
 	private final RecommenderProcessor recommenderProcessor;
 	private final AudioPlayerManager audioPlayerManager;
 
-	private final HashMap<Long, AudioSession> audioSessions;
+	public final ConcurrentHashMap<Long, AudioSession> audioSessions;
 
 	public Commands(DiscordApi discordApi, SpotifyApi spotifyApi, RecommenderProcessor recommenderProcessor, AudioPlayerManager audioPlayerManager) {
 		this.discordApi = discordApi;
 		this.spotifyApi = spotifyApi;
 		this.recommenderProcessor = recommenderProcessor;
 		this.audioPlayerManager = audioPlayerManager;
-		this.audioSessions = new HashMap<>();
+		this.audioSessions = new ConcurrentHashMap<>();
 	}
 
 	public void createAndListenForGlobalCommands() {
 		createCommands();
 		listenForCommands();
+	}
+
+	public AudioSession createAudioSession(long serverId) {
+		AudioSession audioSession = new AudioSession(this.recommenderProcessor, serverId);
+		LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioSession.getSessionId());
+		audioSession.setLavaSource(lavaSource);
+		return audioSession;
 	}
 
 	private void createCommands() {
@@ -77,46 +91,44 @@ public class Commands {
 	}
 
 	private void handlePlayCommand(SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-		// check if the server is empty, this will handle sending a message if needed.
-		if(handleEmptyServerInInteraction(slashCommandEvent, respondLater)) return;
-
-		// check if the parameter is empty
-		Optional<String> searchQuery = slashCommandEvent.getSlashCommandInteraction().getArgumentStringValueByName("song");
-		if(handleEmptyParameter(searchQuery, slashCommandEvent, respondLater)) return;
-
-		// get the server and user as they will be used throughout
-		Server server = slashCommandEvent.getInteraction().getServer().get();
-		User requestingUser = slashCommandEvent.getInteraction().getUser();
-
-		AudioSession relevantAudioSession = audioSessions
-			.computeIfAbsent(server.getId(), this::createAudioSession);
-
-		if(handleBadAudioConnection(relevantAudioSession, server, requestingUser, slashCommandEvent, respondLater)) return;
-
+		// message to respond to interaction
 		EmbedMessage embedMessage = new EmbedMessage(slashCommandEvent.getSlashCommandInteraction(), respondLater);
-		QueueResult queueResult = relevantAudioSession.queueSearchQuery(searchQuery.get());
+
+		// begin ensured interaction setup
+		String songParameter = "song";
+		ArrayList<String> requiredParameters = new ArrayList<>();
+		requiredParameters.add(songParameter);
+
+		Optional<EnsuredSlashCommandInteraction> ensuredSlashCommandInteraction = getEnsuredInteraction(requiredParameters, slashCommandEvent, embedMessage);
+		// Above method will handle sending messages, stop execution here if we don't get an EnsuredInteraction.
+		if(ensuredSlashCommandInteraction.isEmpty()) return;
+		EnsuredSlashCommandInteraction ensuredInteraction = ensuredSlashCommandInteraction.get();
+
+		QueueResult queueResult = ensuredInteraction
+				.getAudioSession()
+				.queueSearchQuery(ensuredInteraction.getParameterValue(songParameter));
 
 		sendQueueResultEmbed(embedMessage, queueResult);
 	}
 
-	private boolean handleBadAudioConnection(AudioSession audioSession, Server server, User user, SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-		if(audioSession.hasAudioConnection() && !audioSession.isUserInSameServerVoiceChannel(user)) {
-			sendNotInServerVoiceChannelMessage(slashCommandEvent, respondLater);
-			return true;
+	private Optional<EnsuredSlashCommandInteraction> getEnsuredInteraction(ArrayList<String> requiredParams, SlashCommandCreateEvent slashCommandCreateEvent, EmbedMessage embedMessage) {
+		EnsuredSlashCommandInteraction ensuredInteraction;
+		try {
+			ensuredInteraction = new EnsuredSlashCommandInteraction(this, slashCommandCreateEvent, requiredParams);
+		} catch (EmptyParameterException e) {
+			Logger.warn(e.getCausalParameterName() + " was not in interaction for play command, sending discord message...");
+			sendEmptyParameterMessage(e.getCausalParameterName(), embedMessage);
+			return Optional.empty();
+		} catch (BadAudioConnectionException e) {
+			Logger.warn(e.getMessage());
+			sendNotInServerVoiceChannelMessage(embedMessage);
+			return Optional.empty();
+		} catch (EmptyServerException e) {
+			Logger.warn("Server was not present in an interaction!");
+			sendEmptyServerMessage(embedMessage);
+			return Optional.empty();
 		}
-		else if(!audioSession.hasAudioConnection() && user.getConnectedVoiceChannel(server).isPresent()) {
-			// the presence of ServerVoiceChannel was checked in the previous if statement
-			ServerVoiceChannel serverVoiceChannel = user.getConnectedVoiceChannel(server).get();
-			audioSession.setupAudioConnection(serverVoiceChannel);
-			return false;
-		}
-		else if(user.getConnectedVoiceChannel(server).isEmpty()){
-			sendNotInServerVoiceChannelMessage(slashCommandEvent, respondLater);
-			return true;
-		}
-		else {
-			return false;
-		}
+		return Optional.of(ensuredInteraction);
 	}
 
 	private void sendQueueResultEmbed(EmbedMessage embedMessage, QueueResult queueResult) {
@@ -132,41 +144,24 @@ public class Commands {
 		embedMessage.send();
 	}
 
-	private void sendNotInServerVoiceChannelMessage(SlashCommandCreateEvent slashCommandCreateEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-		EmbedMessage embedMessage = new EmbedMessage(slashCommandCreateEvent.getSlashCommandInteraction(), respondLater);
+	private void sendNotInServerVoiceChannelMessage(EmbedMessage embedMessage) {
 		embedMessage.setTitle("Denied!");
 		embedMessage.setContent("You are either not in a voice channel, or not in the same voice channel the bot is active in.");
 		embedMessage.setColor(Color.RED);
 		embedMessage.send();
 	}
 
-	private AudioSession createAudioSession(long serverId) {
-		LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager);
-		return new AudioSession(this.recommenderProcessor, lavaSource, serverId);
+	private void sendEmptyParameterMessage(String parameter, EmbedMessage embedMessage) {
+		embedMessage.setTitle("Missing Parameter(s)!");
+		embedMessage.setContent("Parameter \"" + parameter + " was missing! Please include all required parameters in your command and try again.");
+		embedMessage.setColor(Color.RED);
+		embedMessage.send();
 	}
 
-	private boolean handleEmptyParameter(Optional<String> parameter, SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-		if(parameter.isEmpty()) {
-			EmbedMessage embedMessage = new EmbedMessage(slashCommandEvent.getSlashCommandInteraction(), respondLater);
-			embedMessage.setTitle("Missing parameters!");
-			embedMessage.setContent("A parameter(s) was missing! Please include all required parameters in your command and try again.");
-			embedMessage.send();
-			return true;
-		}
-		return false;
-	}
-
-	private boolean handleEmptyServerInInteraction(SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-		if(slashCommandEvent.getInteraction().getServer().isEmpty()) {
-			EmbedMessage embedMessage = new EmbedMessage(slashCommandEvent.getSlashCommandInteraction(), respondLater);
-			embedMessage.setTitle("Uh Oh!");
-			embedMessage.setContent("The server was not present in the interaction. This shouldn't happen, but in the case you see this contact <@806350925723205642>.");
-			embedMessage.send();
-
-			Logger.warn("Server was empty in slash command interaction (this shouldn't happen!), id: " + slashCommandEvent.getInteraction().getIdAsString());
-			return true;
-		}
-		return false;
+	private void sendEmptyServerMessage(EmbedMessage embedMessage) {
+		embedMessage.setTitle("Uh Oh!");
+		embedMessage.setContent("The server was not present in the interaction. This shouldn't happen, but in the case you see this contact <@806350925723205642>.");
+		embedMessage.send();
 	}
 
 	private void listenForCommands() {
