@@ -19,6 +19,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     
     public ProperTrackScheduler(AudioPlayer audioPlayer) {
         this.audioPlayer = audioPlayer;
+        this.audioPlayer.addListener(this);
     }
 
     @Override
@@ -46,7 +47,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         if(iterator.hasNext()) {
             AudioTrack nextTrack = iterator.next();
             audioQueue.remove(nextTrack);
-            player.playTrack(nextTrack);
+            this.audioPlayer.playTrack(nextTrack);
         }
         lastTrack = track.makeClone();
     }
@@ -64,9 +65,8 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     }
 
     public void loadSingleTrack(AudioTrack track) {
-        if(audioPlayer.getPlayingTrack() == null) {
-            audioPlayer.playTrack(track);
-
+        if(this.audioPlayer.getPlayingTrack() == null) {
+            this.audioPlayer.playTrack(track);
         } else {
             this.queue(track);
         }
