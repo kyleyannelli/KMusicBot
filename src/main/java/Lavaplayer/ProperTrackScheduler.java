@@ -8,11 +8,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import org.tinylog.Logger;
 
-import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ProperTrackScheduler extends AudioEventAdapter {
     private final AudioPlayer audioPlayer;
-    public ArrayList<AudioTrack> audioQueue = new ArrayList<>();
+    public BlockingQueue<AudioTrack> audioQueue;
     public AudioTrack lastTrack;
     
 
@@ -20,6 +21,8 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     public ProperTrackScheduler(AudioPlayer audioPlayer) {
         this.audioPlayer = audioPlayer;
         this.audioPlayer.addListener(this);
+
+        this.audioQueue = new LinkedBlockingQueue<>();
     }
 
     @Override
@@ -39,16 +42,13 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        // log track end reason
-        Logger.info("Track ended due to " + endReason.toString());
-        // arraylist to iterator
-        Iterator<AudioTrack> iterator = audioQueue.iterator();
-        // Start next track
-        if(iterator.hasNext()) {
-            AudioTrack nextTrack = iterator.next();
-            audioQueue.remove(nextTrack);
-            this.audioPlayer.playTrack(nextTrack);
+        // log track end reason if it is not FINISHED
+        if(!endReason.equals(AudioTrackEndReason.FINISHED)) {
+            Logger.info("Track \"" + track.getInfo().uri + "\" in server ended due to " + endReason.toString());
         }
+        AudioTrack nextTrack = audioQueue.poll(); 
+        if(nextTrack != null) this.audioPlayer.playTrack(nextTrack);
+        // clone the track for the ability to replay
         lastTrack = track.makeClone();
     }
 
@@ -87,9 +87,10 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     }
 
     public void queueNext(AudioTrack track) {
-        ArrayList<AudioTrack> newAudioQueue = new ArrayList<>();
-        newAudioQueue.add(track);
-        newAudioQueue.addAll(audioQueue);
-        audioQueue = newAudioQueue;
+        BlockingQueue<AudioTrack> newBlockingQueue = new LinkedBlockingQueue<>();
+        newBlockingQueue.add(track);
+        newBlockingQueue.addAll(this.audioQueue);
+        audioQueue.clear();
+        audioQueue.addAll(newBlockingQueue);
     }
 }
