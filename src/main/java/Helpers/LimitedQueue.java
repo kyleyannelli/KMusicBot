@@ -4,8 +4,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * A thread-safe queue that holds a limited number of elements. 
- *
+ * A thread-safe queue that holds a limited number of elements.
  * When an attempt is made to add an element beyond its capacity, 
  * 	the oldest element in the queue is automatically removed to 
  * 	make space for the new element.

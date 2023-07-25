@@ -40,11 +40,11 @@ public class EnsuredSlashCommandInteraction {
 			throw new EmptyParameterException(emptyParam);
 		}
 
-		this.audioSession = generateOrGetAudioSession(commands);
-
 		// get the server and user as they will be used throughout
 		this.server = slashCommandCreateEvent.getInteraction().getServer().get();
 		this.user = slashCommandCreateEvent.getInteraction().getUser();
+
+		this.audioSession = generateOrGetAudioSession(commands);
 	}
 
 	public boolean isEmptyServerInInteraction(SlashCommandCreateEvent slashCommandEvent) {
@@ -109,7 +109,7 @@ public class EnsuredSlashCommandInteraction {
 
 	private AudioSession generateOrGetAudioSession(Commands commands) throws BadAudioConnectionException {
 		AudioSession relevantAudioSession = commands.audioSessions
-				.computeIfAbsent(server.getId(), commands::createAudioSession);
+				.computeIfAbsent(this.server.getId(), commands::createAudioSession);
 		if(isBadAudioConnection(relevantAudioSession, this.server, this.user)) {
 			throw new BadAudioConnectionException();
 		}

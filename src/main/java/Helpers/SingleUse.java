@@ -1,5 +1,7 @@
 package Helpers;
 
+import Exceptions.AlreadyAccessedException;
+
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SingleUse<T> {
@@ -9,11 +11,11 @@ public class SingleUse<T> {
 		this.value.set(val);
 	}
 
-	public T get() throws IllegalStateException {
+	public T get() throws AlreadyAccessedException {
 		T val = value.getAndSet(null);
 
 		if(value == null) {
-			throw new IllegalStateException("Value has already been accessed!");
+			throw new AlreadyAccessedException();
 		}
 
 		return val;

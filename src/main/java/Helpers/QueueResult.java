@@ -1,12 +1,14 @@
 package Helpers;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+
 import java.util.List;
 
 public class QueueResult {
 	private final boolean success;
-	private final List<String> queuedTracks;
+	private final List<AudioTrack> queuedTracks;
 
-	public QueueResult(boolean success, List<String> queuedTracks) {
+	public QueueResult(boolean success, List<AudioTrack> queuedTracks) {
 		this.success = success;
 		this.queuedTracks = queuedTracks;
 	}
@@ -15,7 +17,7 @@ public class QueueResult {
 		return success;
 	}
 
-	public List<String> getQueuedTracks() {
+	public List<AudioTrack> getQueuedTracks() {
 		return queuedTracks;
 	}
 }

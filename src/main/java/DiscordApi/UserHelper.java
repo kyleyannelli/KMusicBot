@@ -4,9 +4,12 @@ import org.javacord.api.entity.permission.PermissionType;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * @deprecated This class will no longer be maintained.
+ */
+@Deprecated
 public class UserHelper {
     public static boolean isAdmin(Server server, User user) {
         AtomicBoolean isAdmin = new AtomicBoolean(false);

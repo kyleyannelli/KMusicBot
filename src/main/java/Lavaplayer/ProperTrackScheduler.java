@@ -110,6 +110,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
     private void queue(AudioTrack track) {
         audioQueue.add(track);
+        Logger.info(getSessionIdString() + " added \"" + track.getInfo().uri + "\" to the queue.");
     }
 
     public void queueNext(AudioTrack track) {
