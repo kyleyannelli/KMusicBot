@@ -1,4 +1,4 @@
-package DiscordApi;
+package DiscordBot;
 
 import SongRecommender.RecommenderProcessor;
 import SpotifyApi.ClientCreate;

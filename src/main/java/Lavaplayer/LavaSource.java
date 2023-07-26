@@ -103,11 +103,13 @@ public class LavaSource extends AudioSourceBase {
     }
 
     public synchronized QueueResult queueTrack(String searchQuery) {
-        Optional<ArrayList<String>> lastLoadedTracks = Optional.empty();
         boolean isSuccess = false;
+        boolean isYoutubeLink =  false;
+        boolean willPlayNow = this.audioPlayer.getPlayingTrack() == null;
 
         Future<Void> playerManagerFuture = null;
-        boolean isYoutubeLink =  false;
+        Optional<ArrayList<String>> lastLoadedTracks = Optional.empty();
+
         // if given a youtube link
         if(searchQuery.startsWith("https://youtube.com/")) {
             // is success is set by result handler
@@ -130,12 +132,12 @@ public class LavaSource extends AudioSourceBase {
             playerManagerFuture = audioPlayerManager.loadItem(searchQuery, singleResultHandler);
         }
 
-        QueueResult futureQueueResult = handlePlayerManagerFuture(playerManagerFuture, isYoutubeLink);
+        QueueResult futureQueueResult = handlePlayerManagerFuture(playerManagerFuture, isYoutubeLink, willPlayNow);
 
         return futureQueueResult;
     }
 
-    private QueueResult handlePlayerManagerFuture(Future<Void> playerManagerFuture, boolean isYouTubeLink) {
+    private QueueResult handlePlayerManagerFuture(Future<Void> playerManagerFuture, boolean isYouTubeLink, boolean willPlayNow) {
         if(playerManagerFuture != null) {
             try {
                 // wait for the playerManager to load the track(s)
@@ -144,25 +146,25 @@ public class LavaSource extends AudioSourceBase {
             catch(InterruptedException interruptedException) {
                 Logger.error(interruptedException, "Interrupted while waiting for audioPlayerManager!");
                 Thread.currentThread().interrupt();
-                return new QueueResult(false, Collections.emptyList());
+                return new QueueResult(false, false, Collections.emptyList());
             }
             catch(ExecutionException executionException) {
                 Logger.error(executionException, "Execution exception while waiting for audioPlayerManager!");
-                return new QueueResult(false, Collections.emptyList());
+                return new QueueResult(false, false, Collections.emptyList());
             }
         }
 
-        return generateQueueResultFromResultHandler(isYouTubeLink);
+        return generateQueueResultFromResultHandler(isYouTubeLink, willPlayNow);
     }
 
-    private QueueResult generateQueueResultFromResultHandler(boolean isYouTubeLink) {
+    private QueueResult generateQueueResultFromResultHandler(boolean isYouTubeLink, boolean willPlayNow) {
         // if it was youtube link, pull from YoutubeResultHandler
         try {
             if(isYouTubeLink) {
-                return new QueueResult(youtubeLinkResultHandler.getIsSuccess(), youtubeLinkResultHandler.getLastLoadedTracks());
+                return new QueueResult(youtubeLinkResultHandler.getIsSuccess(), willPlayNow, youtubeLinkResultHandler.getLastLoadedTracks());
             }
             else {
-                return new QueueResult(singleResultHandler.getIsSuccess(), singleResultHandler.getLastLoadedTracks());
+                return new QueueResult(singleResultHandler.getIsSuccess(), willPlayNow, singleResultHandler.getLastLoadedTracks());
             }
         }
         catch(AlreadyAccessedException alreadyAccessedException) {

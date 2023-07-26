@@ -59,6 +59,7 @@ public class RecommenderProcessor {
     }
 
     public void addRecommendedSongsFromSpotify(RecommenderSession session) {
+        Logger.info("RecommenderProcessor invoked from Session ID: " + session.getSessionId());
         Runnable runnable = () -> {
             String[] spotifyRecommendations = getRecommendationsFromSpotify(session);
             try {

@@ -132,13 +132,27 @@ public class Commands {
 	}
 
 	private void sendQueueResultEmbed(EmbedMessage embedMessage, QueueResult queueResult) {
-		if(queueResult.isSuccess()) {
+		// check if the track(s) went into the AudioQueue by flipping willPlayNow()
+		embedMessage.setIsQueue(!queueResult.willPlayNow());
+		
+		// if the tracks were successfully queued & the size of the queue is greater than 1, just display the # of tracks added.
+		if(queueResult.isSuccess() && queueResult.getQueuedTracks().size() > 1) {
 			embedMessage.setTitle("Queued!");
-			embedMessage.setContent(queueResult.getQueuedTracks().size() > 1 ? "Queued " + queueResult.getQueuedTracks().size() + " tracks." : "Queued " + queueResult.getQueuedTracks().get(0));
+			embedMessage.setContent("Added " + queueResult.getQueuedTracks().size() + " tracks to the queue."); 
+		}
+		// otherwise, if the track added successfully & it was only 1 track, use the setupAudioTrack method to display a single track!
+		else if(queueResult.isSuccess() && queueResult.getQueuedTracks().size() == 1) {
+			embedMessage.setupAudioTrack(queueResult.getQueuedTracks().get(0));
+		}
+		else if(!queueResult.isSuccess()) {
+			embedMessage.setColor(Color.RED);
+			embedMessage.setTitle("Oops!");
+			embedMessage.setContent("There was an issue finding your query!");
 		}
 		else {
-			embedMessage.setTitle("Uh Oh!");
-			embedMessage.setContent("There was an issue finding your query!");
+			embedMessage.setColor(Color.RED);
+			embedMessage.setTitle("Oops!");
+			embedMessage.setContent("There was an uncaught edge case. Please report this to <@806350925723205642>!");
 		}
 
 		embedMessage.send();

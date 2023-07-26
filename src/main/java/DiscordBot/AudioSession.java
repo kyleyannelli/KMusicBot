@@ -6,6 +6,7 @@ import SongRecommender.RecommenderSession;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -63,7 +64,23 @@ public class AudioSession extends RecommenderSession {
 	 */
 	@Override
 	public boolean canQueueSongs() {
-		return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 1) && isRecommendingSongs;
+		return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 2) && isRecommendingSongs;
+	}
+
+	@Override
+	public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
+		Random random = new Random();
+
+		int lowerRandomBoundMs = 100; // ms
+		int upperRandomBoundMs = 1000; // ms
+
+		for(String title : recommendedTitles) {
+			int randomVariation = lowerRandomBoundMs + (int) (random.nextDouble() * upperRandomBoundMs);
+
+			Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
+
+			this.lavaSource.queueTrack(title);	
+		}
 	}
 
 	/**
