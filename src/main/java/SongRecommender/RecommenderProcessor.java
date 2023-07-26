@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -13,10 +12,8 @@ import java.util.concurrent.TimeUnit;
 import org.javacord.api.DiscordApi;
 import org.tinylog.Logger;
 
-import com.mysql.cj.xdevapi.SessionImpl;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-import SpotifyApi.RadioSongsHandler;
 import se.michaelthelin.spotify.SpotifyApi;
 
 public class RecommenderProcessor {

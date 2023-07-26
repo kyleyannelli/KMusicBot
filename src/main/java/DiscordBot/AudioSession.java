@@ -64,7 +64,7 @@ public class AudioSession extends RecommenderSession {
 	 */
 	@Override
 	public boolean canQueueSongs() {
-		return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 2) && isRecommendingSongs;
+		return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 2) && isRecommendingSongs && this.getAudioQueue().size() < 15;
 	}
 
 	@Override
