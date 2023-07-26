@@ -1,0 +1,44 @@
+version: '3'
+services:
+  kmusic_bot_betav3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - logs:/build/
+    networks:
+      - elk
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    networks:
+      - elk
+    environment:
+      - discovery.type=single-node
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+  filebeat:
+    user: root
+    image: docker.elastic.co/beats/filebeat:7.14.0
+    volumes:
+      - logs:/build/
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+    networks:
+      - elk
+    depends_on:
+      - kmusic_bot_betav3
+      - elasticsearch
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.0
+    networks:
+      - elk
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+networks:
+  elk:
+    driver: bridge
+volumes:
+  logs:
+  esdata:
+
