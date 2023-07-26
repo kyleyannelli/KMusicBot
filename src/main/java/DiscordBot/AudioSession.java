@@ -15,6 +15,8 @@ import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.user.User;
 import org.tinylog.Logger;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+
 import Helpers.LimitedQueue;
 import Helpers.QueueResult;
 
@@ -81,6 +83,11 @@ public class AudioSession extends RecommenderSession {
 
 			this.lavaSource.queueTrack(title);	
 		}
+	}
+
+	@Override
+	public ArrayList<AudioTrack> getAudioQueue() {
+		return this.lavaSource.getAudioQueue();	
 	}
 
 	/**

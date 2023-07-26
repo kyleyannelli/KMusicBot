@@ -17,6 +17,7 @@ import org.javacord.api.audio.AudioSource;
 import org.javacord.api.audio.AudioSourceBase;
 import org.tinylog.Logger;
 
+import com.mysql.cj.x.protobuf.MysqlxDatatypes.Array;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -135,6 +136,10 @@ public class LavaSource extends AudioSourceBase {
         QueueResult futureQueueResult = handlePlayerManagerFuture(playerManagerFuture, isYoutubeLink, willPlayNow);
 
         return futureQueueResult;
+    }
+
+    public ArrayList<AudioTrack> getAudioQueue() {
+        return new ArrayList<>(this.trackScheduler.audioQueue);
     }
 
     private QueueResult handlePlayerManagerFuture(Future<Void> playerManagerFuture, boolean isYouTubeLink, boolean willPlayNow) {
