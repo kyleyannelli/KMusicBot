@@ -71,6 +71,7 @@ public class RecommenderSession {
 		this.recommenderProcessor.cancelTasksBySessionId(this.id);
 	}
 
+	@Deprecated
 	public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
 		String youtubeSearchPrefix = "ytsearch: "; 
 	    AudioPlayerManager playerManager = LavaplayerAudioSource.createYouTubePlayerManager();	

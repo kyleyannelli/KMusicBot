@@ -142,6 +142,23 @@ public class LavaSource extends AudioSourceBase {
         return new ArrayList<>(this.trackScheduler.audioQueue);
     }
 
+    /**
+     * Checks if the AudioPlayer has a track currently playing.
+     * 
+     * @return boolean | True if playingTrack != null. False if playingTrack == null.
+     */ 
+    public boolean hasCurrentPlayingTrack() {
+        return this.audioPlayer.getPlayingTrack() != null;
+    }
+
+    public boolean isAudioQueueEmpty() {
+        return (this.getAudioQueue() != null && this.getAudioQueue().size() <= 0) || this.getAudioQueue() == null;
+    }
+
+    public String getCurrentPlayingTrack() {
+        return this.hasCurrentPlayingTrack() ? this.audioPlayer.getPlayingTrack().getInfo().title + " | " + this.audioPlayer.getPlayingTrack().getInfo().author + " | " + this.audioPlayer.getPlayingTrack().getInfo().uri  : "!Nothing Playing!";
+    }
+
     private QueueResult handlePlayerManagerFuture(Future<Void> playerManagerFuture, boolean isYouTubeLink, boolean willPlayNow) {
         if(playerManagerFuture != null) {
             try {

@@ -13,10 +13,7 @@ import Exceptions.EmptyServerException;
 import Helpers.EnsuredSlashCommandInteraction;
 import Lavaplayer.LavaSource;
 import org.javacord.api.DiscordApi;
-import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.permission.Permissions;
-import org.javacord.api.entity.server.Server;
-import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandOption;
@@ -29,8 +26,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import Helpers.QueueResult;
 import SongRecommender.RecommenderProcessor;
 import se.michaelthelin.spotify.SpotifyApi;
-
-import javax.swing.text.html.Option;
 
 public class Commands {
 	private static final String PLAY_COMMAND_NAME = "play";
@@ -57,7 +52,11 @@ public class Commands {
 	}
 
 	public AudioSession createAudioSession(long serverId) {
-		AudioSession audioSession = new AudioSession(this.recommenderProcessor, serverId);
+		AudioSession audioSession = new AudioSession(this.recommenderProcessor, serverId, associatedServerId -> {
+			long sessionId = this.audioSessions.get(associatedServerId).getSessionId();
+			this.audioSessions.remove(associatedServerId);
+			Logger.info("Session " + sessionId + " removed from server " + associatedServerId);
+		});
 		LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioSession.getSessionId());
 		audioSession.setLavaSource(lavaSource);
 		return audioSession;
@@ -134,11 +133,11 @@ public class Commands {
 	private void sendQueueResultEmbed(EmbedMessage embedMessage, QueueResult queueResult) {
 		// check if the track(s) went into the AudioQueue by flipping willPlayNow()
 		embedMessage.setIsQueue(!queueResult.willPlayNow());
-		
+
 		// if the tracks were successfully queued & the size of the queue is greater than 1, just display the # of tracks added.
 		if(queueResult.isSuccess() && queueResult.getQueuedTracks().size() > 1) {
 			embedMessage.setTitle("Queued!");
-			embedMessage.setContent("Added " + queueResult.getQueuedTracks().size() + " tracks to the queue."); 
+			embedMessage.setContent("Added " + queueResult.getQueuedTracks().size() + " tracks to the queue.");
 		}
 		// otherwise, if the track added successfully & it was only 1 track, use the setupAudioTrack method to display a single track!
 		else if(queueResult.isSuccess() && queueResult.getQueuedTracks().size() == 1) {
