@@ -142,6 +142,22 @@ public class LavaSource extends AudioSourceBase {
         return new ArrayList<>(this.trackScheduler.audioQueue);
     }
 
+    public AudioTrack skipCurrentTrack() {
+        if(this.audioPlayer.getPlayingTrack() == null) {
+            return null;
+        }
+        else {
+            AudioTrack stoppedTrack = this.audioPlayer.getPlayingTrack();
+            // stop the current playing track, this will effectively "skip" due to ProperTrackScheduler logic.
+            this.audioPlayer.stopTrack();
+            return stoppedTrack;
+        }
+    }
+
+    public AudioTrack getCurrentPlayingAudioTrack() {
+        return this.audioPlayer.getPlayingTrack();
+    }
+
     /**
      * Checks if the AudioPlayer has a track currently playing.
      * 

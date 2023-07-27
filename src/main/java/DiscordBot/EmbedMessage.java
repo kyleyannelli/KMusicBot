@@ -18,6 +18,7 @@ public class EmbedMessage {
 
 	private String content;
 	private String title;
+	private String forcedTitle;
 	private String author;
 	private String youtubeTitle;
 	private String youtubeUri;
@@ -47,6 +48,10 @@ public class EmbedMessage {
 		this.color = color;
 	}
 
+	public void setForcedTitle(String forcedTitle) {
+		this.forcedTitle = forcedTitle;
+	}
+	
 	public void setYoutubeUri(String youtubeUri) {
 		this.youtubeUri = youtubeUri;
 	}
@@ -88,6 +93,9 @@ public class EmbedMessage {
 				.setUrl(this.youtubeUri == null ? "" : this.youtubeUri)
 				.addField("", author == null ? "" : author);
 		}
+
+		if(forcedTitle != null) embedBuilder.setTitle(forcedTitle);
+
 		return embedBuilder;
 	}
 

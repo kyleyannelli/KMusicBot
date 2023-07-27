@@ -49,7 +49,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         // log track end reason if it is not FINISHED
-        if(!endReason.equals(AudioTrackEndReason.FINISHED)) {
+        if(!endReason.equals(AudioTrackEndReason.FINISHED) && !endReason.equals(AudioTrackEndReason.STOPPED)) {
             Logger.warn(getSessionIdString() + " Track \"" + track.getInfo().uri + "\" in server ended due to " + endReason.toString());
         }
         AudioTrack nextTrack = audioQueue.poll();

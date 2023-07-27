@@ -5,6 +5,7 @@ import SongRecommender.RecommenderProcessor;
 import SongRecommender.RecommenderSession;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -125,6 +126,22 @@ public class AudioSession extends RecommenderSession {
 	public QueueResult queueSearchQuery(String searchQuery) {
 		mostRecentSearches.add(searchQuery);
 		return lavaSource.queueTrack(searchQuery);
+	}
+
+	/**
+	 * Returns the skipped track in [0], returns the new track in [1]
+	 */
+	public QueueResult[] skipCurrentPlaying() {
+		AudioTrack skippedTrack = this.lavaSource.skipCurrentTrack();
+		AudioTrack newTrack = this.lavaSource.getCurrentPlayingAudioTrack();
+
+		QueueResult[] queueResults = new QueueResult[2];
+		// only success if something was playing, is not playing now because it was skipped
+		queueResults[0] = new QueueResult(skippedTrack != null, false, skippedTrack);
+		// if exists, it will play now
+		queueResults[1] = new QueueResult(newTrack != null, newTrack != null, newTrack);
+
+		return queueResults;
 	}
 
 	public LavaSource getLavaSource() {

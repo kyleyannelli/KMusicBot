@@ -30,6 +30,7 @@ import se.michaelthelin.spotify.SpotifyApi;
 public class Commands {
 	private static final String PLAY_COMMAND_NAME = "play";
 	private static final String INVITE_COMMAND_NAME = "invite";
+	private static final String SKIP_COMMAND_NAME = "skip";
 
 	private final DiscordApi discordApi;
 	private final SpotifyApi spotifyApi;
@@ -51,6 +52,62 @@ public class Commands {
 		listenForCommands();
 	}
 
+	private void listenForCommands() {
+		discordApi.addSlashCommandCreateListener(slashCommandEvent -> {
+			// we always want to respond later, these commands (could) be quite heavy
+			CompletableFuture<InteractionOriginalResponseUpdater> respondLater = slashCommandEvent.getSlashCommandInteraction().respondLater();
+			// get slash command name
+			String slashCommandName = slashCommandEvent.getSlashCommandInteraction().getCommandName();
+
+			switch(slashCommandName) {
+				case PLAY_COMMAND_NAME:
+					handlePlayCommand(slashCommandEvent, respondLater);
+					break;
+				case INVITE_COMMAND_NAME:
+					handleInviteCommand(slashCommandEvent, respondLater);
+					break;
+				case SKIP_COMMAND_NAME:
+					handleSkipCommand(slashCommandEvent, respondLater);
+					break;
+			}
+		});
+	}
+
+	private void createCommands() {
+		createPlayCommand();
+		createInviteCommand();
+		createSkipCommand();
+	}
+
+	private void handleSkipCommand(SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
+		// message to respond to interaction
+		EmbedMessage embedMessage = new EmbedMessage(slashCommandEvent.getSlashCommandInteraction(), respondLater);
+
+		// begin ensured interaction setup
+		// we can pass through null if there are no params
+		EnsuredSlashCommandInteraction ensuredInteraction = getEnsuredInteraction(null, slashCommandEvent, embedMessage);
+		// Above method will handle sending messages, stop execution here if we don't get an EnsuredInteraction.
+		if(ensuredInteraction == null) return;
+
+		// skipCurrentPlaying skips current into [0], and new goes into [1]
+		QueueResult[] queueResults = ensuredInteraction.getAudioSession().skipCurrentPlaying();
+
+		// if [1] is success, that means a new track is going to play
+		if(queueResults[1].isSuccess()) {
+			embedMessage.setForcedTitle("Now Playing");
+			sendQueueResultEmbed(embedMessage, queueResults[1]);
+		}
+		// else if a track was skipped
+		else if(queueResults[0].isSuccess()) {
+			embedMessage.setForcedTitle("Stopped.");
+			sendQueueResultEmbed(embedMessage, queueResults[0]);
+		}
+		// else nothing was playing and nothing was skipped!
+		else {
+			sendNothingPlayingEmbed(embedMessage);
+		}
+	}
+
 	public AudioSession createAudioSession(long serverId) {
 		AudioSession audioSession = new AudioSession(this.recommenderProcessor, serverId, associatedServerId -> {
 			long sessionId = this.audioSessions.get(associatedServerId).getSessionId();
@@ -62,9 +119,15 @@ public class Commands {
 		return audioSession;
 	}
 
-	private void createCommands() {
-		createPlayCommand();
-		createInviteCommand();
+	private void sendNothingPlayingEmbed(EmbedMessage embedMessage) {
+		embedMessage.setColor(Color.RED);
+		embedMessage.setTitle("Nothing Playing!");
+		embedMessage.setContent("Nothing was playing, so no action was taken.");
+		embedMessage.send();
+	}
+
+	private void createSkipCommand() {
+		SlashCommand.with(SKIP_COMMAND_NAME, "Skip the current playing song.").createGlobal(discordApi);
 	}
 
 	private void createInviteCommand() {
@@ -98,10 +161,9 @@ public class Commands {
 		ArrayList<String> requiredParameters = new ArrayList<>();
 		requiredParameters.add(songParameter);
 
-		Optional<EnsuredSlashCommandInteraction> ensuredSlashCommandInteraction = getEnsuredInteraction(requiredParameters, slashCommandEvent, embedMessage);
+		EnsuredSlashCommandInteraction ensuredInteraction = getEnsuredInteraction(requiredParameters, slashCommandEvent, embedMessage);
 		// Above method will handle sending messages, stop execution here if we don't get an EnsuredInteraction.
-		if(ensuredSlashCommandInteraction.isEmpty()) return;
-		EnsuredSlashCommandInteraction ensuredInteraction = ensuredSlashCommandInteraction.get();
+		if(ensuredInteraction == null) return;
 
 		QueueResult queueResult = ensuredInteraction
 				.getAudioSession()
@@ -110,24 +172,24 @@ public class Commands {
 		sendQueueResultEmbed(embedMessage, queueResult);
 	}
 
-	private Optional<EnsuredSlashCommandInteraction> getEnsuredInteraction(ArrayList<String> requiredParams, SlashCommandCreateEvent slashCommandCreateEvent, EmbedMessage embedMessage) {
+	private EnsuredSlashCommandInteraction getEnsuredInteraction(ArrayList<String> requiredParams, SlashCommandCreateEvent slashCommandCreateEvent, EmbedMessage embedMessage) {
 		EnsuredSlashCommandInteraction ensuredInteraction;
 		try {
 			ensuredInteraction = new EnsuredSlashCommandInteraction(this, slashCommandCreateEvent, requiredParams);
 		} catch (EmptyParameterException e) {
 			Logger.warn(e.getCausalParameterName() + " was not in interaction for play command, sending discord message...");
 			sendEmptyParameterMessage(e.getCausalParameterName(), embedMessage);
-			return Optional.empty();
+			return null;
 		} catch (BadAudioConnectionException e) {
 			Logger.warn(e.getMessage());
 			sendNotInServerVoiceChannelMessage(embedMessage);
-			return Optional.empty();
+			return null;
 		} catch (EmptyServerException e) {
 			Logger.warn("Server was not present in an interaction!");
 			sendEmptyServerMessage(embedMessage);
-			return Optional.empty();
+			return null;
 		}
-		return Optional.of(ensuredInteraction);
+		return ensuredInteraction;
 	}
 
 	private void sendQueueResultEmbed(EmbedMessage embedMessage, QueueResult queueResult) {
@@ -135,13 +197,16 @@ public class Commands {
 		embedMessage.setIsQueue(!queueResult.willPlayNow());
 
 		// if the tracks were successfully queued & the size of the queue is greater than 1, just display the # of tracks added.
-		if(queueResult.isSuccess() && queueResult.getQueuedTracks().size() > 1) {
+		if(queueResult.isSuccess() && queueResult.getQueuedTracks() != null && queueResult.getQueuedTracks().size() > 1) {
 			embedMessage.setTitle("Queued!");
 			embedMessage.setContent("Added " + queueResult.getQueuedTracks().size() + " tracks to the queue.");
 		}
 		// otherwise, if the track added successfully & it was only 1 track, use the setupAudioTrack method to display a single track!
-		else if(queueResult.isSuccess() && queueResult.getQueuedTracks().size() == 1) {
+		else if(queueResult.isSuccess() && queueResult.getQueuedTracks() != null && queueResult.getQueuedTracks().size() == 1) {
 			embedMessage.setupAudioTrack(queueResult.getQueuedTracks().get(0));
+		}
+		else if(queueResult.isSuccess() && queueResult.getQueueTrack() != null) {
+			embedMessage.setupAudioTrack(queueResult.getQueueTrack());
 		}
 		else if(!queueResult.isSuccess()) {
 			embedMessage.setColor(Color.RED);
@@ -177,21 +242,5 @@ public class Commands {
 		embedMessage.send();
 	}
 
-	private void listenForCommands() {
-		discordApi.addSlashCommandCreateListener(slashCommandEvent -> {
-			// we always want to respond later, these commands (could) be quite heavy
-			CompletableFuture<InteractionOriginalResponseUpdater> respondLater = slashCommandEvent.getSlashCommandInteraction().respondLater();
-			// get slash command name
-			String slashCommandName = slashCommandEvent.getSlashCommandInteraction().getCommandName();
 
-			switch(slashCommandName) {
-				case PLAY_COMMAND_NAME:
-					handlePlayCommand(slashCommandEvent, respondLater);
-					break;
-				case INVITE_COMMAND_NAME:
-					handleInviteCommand(slashCommandEvent, respondLater);
-					break;
-			}
-		});
-	}
 }
