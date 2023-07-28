@@ -1,6 +1,7 @@
 package SpotifyApi;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import org.tinylog.Logger;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
@@ -25,7 +26,7 @@ public class ClientCreate {
             final ClientCredentials clientCredentials = clientCredentialsRequest.execute();
             // Set access token for further "spotifyApi" object usage
             spotifyApi.setAccessToken(clientCredentials.getAccessToken());
-            System.out.println("Expires in: " + clientCredentials.getExpiresIn());
+            Logger.info("Created spotify access token, expires in " + clientCredentials.getExpiresIn());
             return spotifyApi;
         } catch (IOException | SpotifyWebApiException | ParseException e) {
             System.out.println("Error: " + e.getMessage());

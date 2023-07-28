@@ -18,6 +18,8 @@ import org.tinylog.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neovisionaries.i18n.CountryCode;
+import se.michaelthelin.spotify.model_objects.credentials.ClientCredentials;
+import se.michaelthelin.spotify.requests.authorization.client_credentials.ClientCredentialsRequest;
 
 public class RecommenderRequester {
 	// Can make a maximum of 180 requests to Spotify
@@ -85,24 +87,62 @@ public class RecommenderRequester {
 
 	private String[] getSongArrayFromSpotify(ArrayList<String> listOfSongs) {
 		String[] songs = new String[0];
+		int attempts = 0;
+		boolean success = false;
 
-		try {
-			songs =	generateRecommendationsFromList(listOfSongs);
-		}
-		catch(IOException ioException) {
-			Logger.error(ioException, "IOException occured while trying to get recommended songs from spotify.");	
-		}
-		catch(SpotifyWebApiException spotifyWebApiException) {
-			Logger.error(spotifyWebApiException, "SpotifyWebApiException occured while trying to get recommended songs from spotify.");	
-		}
-		catch(ParseException parseException) {
-			Logger.error(parseException, "ParseException occured while trying to get recommended songs from spotify.");	
-		}
-		catch(InterruptedException interruptedException) {
-			Logger.error(interruptedException, "InterruptedException occured while trying to get recommended songs from spotify.");	
+		while(!success && attempts < 2) {
+			try {
+				songs =	generateRecommendationsFromList(listOfSongs);
+				success = true;
+			}
+			catch(IOException ioException) {
+				Logger.error(ioException, "IOException occurred while trying to get recommended songs from spotify.");
+			}
+			catch(SpotifyWebApiException spotifyWebApiException) {
+				Logger.error(spotifyWebApiException, "SpotifyWebApiException occurred while trying to get recommended songs from spotify.");
+				if(attempts == 0) {
+					Logger.error("Going to retry once by refreshing access token.");
+					boolean successfullyRefreshed = refreshSpotifyAccessToken();
+					if(!successfullyRefreshed) {
+						Logger.warn("Spotify token was not refreshed successfully!");
+						attempts = 2;
+					}
+					else {
+						Logger.info("Spotify token was refreshed successfully.");
+					}
+				}
+			}
+			catch(ParseException parseException) {
+				Logger.error(parseException, "ParseException occurred while trying to get recommended songs from spotify.");
+			}
+			catch(InterruptedException interruptedException) {
+				Logger.error(interruptedException, "InterruptedException occurred while trying to get recommended songs from spotify.");
+			}
+			attempts++;
 		}
 
 		return songs;
+	}
+
+	private boolean refreshSpotifyAccessToken() {
+		boolean success = false;
+		try {
+			ClientCredentialsRequest clientCredentialsRequest = this.spotifyApi.clientCredentials().build();
+			ClientCredentials clientCredentials = clientCredentialsRequest.execute();
+			this.spotifyApi.setAccessToken(clientCredentials.getAccessToken());
+			Logger.info("Created spotify access token, expires in " + clientCredentials.getExpiresIn());
+			success = true;
+		}
+		catch(IOException ioException) {
+			Logger.error(ioException, "IOException occurred while refreshing spotify token.");
+		}
+		catch(SpotifyWebApiException webApiException) {
+			Logger.error(webApiException, "SpotifyWebApiException occurred while refreshing spotify token.");
+		}
+		catch(ParseException parseException) {
+			Logger.error(parseException, "ParseException occurred while refreshing spotify token.");
+		}
+		return success;
 	}
 
 	private String[] generateRecommendationsFromList(List<String> listOfSongs) throws InterruptedException, IOException, ParseException, SpotifyWebApiException {
