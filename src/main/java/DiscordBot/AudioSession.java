@@ -4,10 +4,9 @@ import Lavaplayer.LavaSource;
 import SongRecommender.RecommenderProcessor;
 import SongRecommender.RecommenderSession;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -89,13 +88,13 @@ public class AudioSession extends RecommenderSession {
 
 	@Override
 	public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
-		Random random = new Random();
+		SecureRandom secureRandom = new SecureRandom();
 
-		int lowerRandomBoundMs = 100; // ms
-		int upperRandomBoundMs = 1000; // ms
+		int lowerRandomBoundMs = 5000; // ms
+		int upperRandomBoundMs = 15000; // ms
 
 		for(String title : recommendedTitles) {
-			int randomVariation = lowerRandomBoundMs + (int) (random.nextDouble() * upperRandomBoundMs);
+			int randomVariation = lowerRandomBoundMs + secureRandom.nextInt(upperRandomBoundMs - lowerRandomBoundMs); 
 
 			Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
 

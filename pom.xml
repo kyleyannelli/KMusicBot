@@ -141,6 +141,7 @@
         <dependency>
             <groupId>com.github.walkyst</groupId>
             <artifactId>lavaplayer-fork</artifactId>
+            <!-- Update? -->
             <version>1.4.0</version>
         </dependency>
         <dependency>
