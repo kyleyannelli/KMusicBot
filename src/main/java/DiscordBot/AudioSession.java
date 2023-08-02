@@ -90,8 +90,8 @@ public class AudioSession extends RecommenderSession {
 	public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
 		SecureRandom secureRandom = new SecureRandom();
 
-		int lowerRandomBoundMs = 5000; // ms
-		int upperRandomBoundMs = 15000; // ms
+		int lowerRandomBoundMs = 1000 * 60; // ms
+		int upperRandomBoundMs = 1000 * 60 * 5; // ms
 
 		for(String title : recommendedTitles) {
 			int randomVariation = lowerRandomBoundMs + secureRandom.nextInt(upperRandomBoundMs - lowerRandomBoundMs); 
