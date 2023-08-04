@@ -1,8 +1,8 @@
-#!/bin/zsh
+#!/bin/bash
 docker build -t kmusic_bot_beta .
 # check if script was run with -d flag
 if [[ $1 == "-d" ]]; then
-    docker run -d --restart always kmusic_bot_beta
+    docker run -d --name KMusic_v3.2.0_BETA --restart always kmusic_bot_beta
 else
     docker run kmusic_bot_beta
 fi
