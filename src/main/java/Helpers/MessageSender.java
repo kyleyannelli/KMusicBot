@@ -16,6 +16,13 @@ public class MessageSender {
         this.embedMessage.send();
     }
 
+    public void sendStoppedEmbed() {
+        this.embedMessage.setColor(Color.BLACK);
+        this.embedMessage.setTitle("Stopped.");
+        this.embedMessage.setContent("Music has stopped, and bot has left the channel.");
+        this.embedMessage.send();
+    }
+
     public void sendQueueResultEmbed(QueueResult queueResult) {
         // check if the track(s) went into the AudioQueue by flipping willPlayNow()
         this.embedMessage.setIsQueue(!queueResult.willPlayNow());

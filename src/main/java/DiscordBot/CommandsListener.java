@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import DiscordBot.Commands.InviteCommand;
 import DiscordBot.Commands.PlayCommand;
 import DiscordBot.Commands.SkipCommand;
+import DiscordBot.Commands.StopCommand;
 import DiscordBot.Sessions.SessionManager;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.interaction.SlashCommand;
@@ -17,6 +18,7 @@ public class CommandsListener {
 	private static final String PLAY_COMMAND_NAME = "play";
 	private static final String INVITE_COMMAND_NAME = "invite";
 	private static final String SKIP_COMMAND_NAME = "skip";
+	private static final String STOP_COMMAND_NAME = "stop";
 
 	private final DiscordApi discordApi;
 	private final SessionManager sessionManager;
@@ -51,6 +53,10 @@ public class CommandsListener {
 					SkipCommand skipCommand = new SkipCommand(this.sessionManager, slashCommandEvent, respondLater);
 					skipCommand.execute();
 					break;
+				case STOP_COMMAND_NAME:
+					StopCommand stopCommand = new StopCommand(this.sessionManager, slashCommandEvent, respondLater);
+					stopCommand.execute();
+					break;
 			}
 		});
 	}
@@ -59,6 +65,7 @@ public class CommandsListener {
 		createPlayCommand();
 		createInviteCommand();
 		createSkipCommand();
+		createStopCommand();
 	}
 
 	private void createSkipCommand() {
@@ -67,6 +74,10 @@ public class CommandsListener {
 
 	private void createInviteCommand() {
 		SlashCommand.with(INVITE_COMMAND_NAME, "Get an invite link for the bot").createGlobal(this.discordApi);
+	}
+
+	private void createStopCommand() {
+		SlashCommand.with(STOP_COMMAND_NAME, "Stop the music, including the queue, then disconnect the bot.").createGlobal(this.discordApi);
 	}
 
 	private void createPlayCommand() {

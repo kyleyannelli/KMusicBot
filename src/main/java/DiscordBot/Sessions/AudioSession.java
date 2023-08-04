@@ -195,6 +195,10 @@ public class AudioSession extends RecommenderSession {
 		return first + second + third;
 	}
 
+	public void properlyDisconnectFromVoiceChannel() {
+		this.audioConnection.close().thenRun(this::shutdown);
+	}
+
 	@Override
 	public void shutdown() {
 		// shutdown the super classes stuff! This is important!
@@ -215,10 +219,6 @@ public class AudioSession extends RecommenderSession {
 		else {
 			Logger.info("Did NOT Disconnect: \n" + this);
 		}
-	}
-
-	private void properlyDisconnectFromVoiceChannel() {
-		this.audioConnection.close().thenRun(this::shutdown);
 	}
 
 	private boolean canDisconnectFromVoiceChannel() {
