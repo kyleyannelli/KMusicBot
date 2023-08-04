@@ -60,9 +60,6 @@ public class ViewQueueCommand extends Command {
         int endIndex = Math.min(startIndex + PAGE_MAX_ROWS, allTracks.size());
 
         for(int i = startIndex; i < endIndex; i++) {
-            if(allTracks.get(i) == null && i < 0) {
-                i--;
-            }
             relevantTracks.add(allTracks.get(i));
         }
 
