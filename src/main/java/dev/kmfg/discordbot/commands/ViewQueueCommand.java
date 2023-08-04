@@ -3,7 +3,6 @@ package dev.kmfg.discordbot.commands;
 import dev.kmfg.lavaplayer.PositionalAudioTrack;
 import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.helpers.EnsuredSlashCommandInteraction;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.tinylog.Logger;
@@ -42,7 +41,7 @@ public class ViewQueueCommand extends Command {
             return;
         }
 
-        totalPages = calculateTotalPages(audioTrackQueue.size() - 1);
+        totalPages = calculateTotalPages(audioTrackQueue.size());
 
         if(totalPages < requestedPageNumber) {
             this.messageSender.sendOutOfBoundsEmbed(requestedPageNumber, totalPages);
