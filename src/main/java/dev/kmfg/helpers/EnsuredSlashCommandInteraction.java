@@ -77,7 +77,7 @@ public class EnsuredSlashCommandInteraction {
 		if(requiredParameters == null) return null;
 
 		for(String paramName : requiredParameters) {
-			Optional<String> param = slashCommandEvent.getSlashCommandInteraction().getArgumentStringValueByName(paramName);
+			Optional<String> param = slashCommandEvent.getSlashCommandInteraction().getArgumentStringRepresentationValueByName(paramName);
 			if(param.isEmpty()){
 				// Can "early" return with the missing parameter name
 				return paramName;

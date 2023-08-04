@@ -18,6 +18,7 @@ public class InviteCommand extends Command {
         String inviteLink = this.sessionManager
                 .getDiscordApi()
                 .createBotInvite(Permissions.fromBitmask(PERMISSIONS_BITMASK));
-        this.messageSender.sendInviteEmbed(inviteLink);
+        String wrappedLink = "[" + "Click Here" +"]" + "(" + inviteLink + ")";
+        this.messageSender.sendInviteEmbed(wrappedLink);
     }
 }

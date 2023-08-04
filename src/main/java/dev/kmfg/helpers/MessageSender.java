@@ -102,7 +102,7 @@ public class MessageSender {
     public void sendEmptyParameterEmbed(String parameter) {
         this.embedMessage
                 .setTitle("Missing Parameter(s)!")
-                .setContent("Parameter \"" + parameter + " was missing! Please include all required parameters in your command and try again.")
+                .setContent("Parameter \"" + parameter + "\" was missing! Please include all required parameters in your command and try again.")
                 .setColor(Color.RED)
                 .send();
     }

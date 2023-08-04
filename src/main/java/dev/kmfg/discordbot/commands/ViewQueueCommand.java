@@ -20,15 +20,15 @@ public class ViewQueueCommand extends Command {
     @Override
     public void execute() {
         ArrayList<String> params = new ArrayList<>();
-        params.add("page");
+        params.add("pagenumber");
 
         EnsuredSlashCommandInteraction ensuredSlashCommandInteraction = getEnsuredInteraction(params);
         if(ensuredSlashCommandInteraction == null) return;
 
-        int requestedPageNumber = parsePageNumber(ensuredSlashCommandInteraction.getParameterValue("page"));
+        int requestedPageNumber = parsePageNumber(ensuredSlashCommandInteraction.getParameterValue("pagenumber"));
 
         if(requestedPageNumber <= 0) {
-            this.messageSender.sendBadParameterEmbed("page");
+            this.messageSender.sendBadParameterEmbed("pagenumber");
             return;
         }
 
