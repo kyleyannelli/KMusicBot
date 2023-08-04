@@ -32,16 +32,16 @@ public class ViewQueueCommand extends Command {
             return;
         }
 
-        ArrayList<AudioTrack> audioTrackQueue = ensuredSlashCommandInteraction.getAudioSession().getAudioQueue();
+        ArrayList<AudioTrack> audioTrackQueue = ensuredSlashCommandInteraction.getAudioSession().getNullSeparatedAudioQueue();
 
         int totalPages;
 
-        if(audioTrackQueue == null || audioTrackQueue.size() == 0) {
+        if(audioTrackQueue == null || audioTrackQueue.size() - 1 == 0) {
             this.messageSender.sendEmptyQueueEmbed();
             return;
         }
 
-        totalPages = calculateTotalPages(audioTrackQueue.size());
+        totalPages = calculateTotalPages(audioTrackQueue.size() - 1);
 
         if(totalPages < requestedPageNumber) {
             this.messageSender.sendOutOfBoundsEmbed(requestedPageNumber, totalPages);
@@ -58,7 +58,15 @@ public class ViewQueueCommand extends Command {
         int startIndex = ((pageNumber - 1) * PAGE_MAX_ROWS);
         int endIndex = Math.min(startIndex + PAGE_MAX_ROWS, allTracks.size());
 
+        // handle the case that we are starting at an autoqueue position
+        if(startIndex < 0 && allTracks.get(startIndex - 1) == null) {
+            relevantTracks.add(null);
+        }
+
         for(int i = startIndex; i < endIndex; i++) {
+            if(allTracks.get(i) == null && i < 0) {
+                i--;
+            }
             relevantTracks.add(allTracks.get(i));
         }
 

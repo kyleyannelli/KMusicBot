@@ -99,13 +99,20 @@ public class LavaSource extends AudioSourceBase {
         return new LavaSource(discordApi, spotifyApi,audioPlayerManager, audioPlayer, ASSOCIATED_SESSION_ID);
     }
 
-    public synchronized QueueResult queueTrack(String searchQuery) {
-        boolean isSuccess = false;
+    public synchronized QueueResult queueTrack(String searchQuery, boolean deprioritizeQueue) {
         boolean isYoutubeLink =  false;
         boolean willPlayNow = this.audioPlayer.getPlayingTrack() == null;
 
         Future<Void> playerManagerFuture = null;
-        Optional<ArrayList<String>> lastLoadedTracks = Optional.empty();
+
+        // update the queue priority
+        if(deprioritizeQueue) {
+            this.youtubeLinkResultHandler.deprioritizeQueue();
+            this.singleResultHandler.deprioritizeQueue();
+        } else {
+            this.youtubeLinkResultHandler.prioritizeQueue();
+            this.singleResultHandler.prioritizeQueue();
+        }
 
         // if given a youtube link
         if(searchQuery.startsWith("https://youtube.com/")) {
@@ -134,8 +141,17 @@ public class LavaSource extends AudioSourceBase {
         return futureQueueResult;
     }
 
+    public synchronized QueueResult queueTrackAsPriority(String searchQuery) {
+        // pass through false because we want this to be on the prioritizedQueue
+        return queueTrack(searchQuery, false);
+    }
+
     public ArrayList<AudioTrack> getAudioQueue() {
-        return new ArrayList<>(this.trackScheduler.audioQueue);
+        return this.trackScheduler.getFullAudioQueue();
+    }
+
+    public ArrayList<AudioTrack> getNullSeparatedQueue() {
+        return this.trackScheduler.getQueueWithNullSeparation();
     }
 
     public AudioTrack skipCurrentTrack() {

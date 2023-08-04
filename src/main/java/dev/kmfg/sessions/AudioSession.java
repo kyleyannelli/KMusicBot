@@ -89,21 +89,26 @@ public class AudioSession extends RecommenderSession {
 	public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
 		SecureRandom secureRandom = new SecureRandom();
 
-		int lowerRandomBoundMs = 1000 * 60; // ms
-		int upperRandomBoundMs = 1000 * 60 * 5; // ms
+		int lowerRandomBoundMs = 1000 * 10; // ms, 10 second
+		int upperRandomBoundMs = 1000 * 60; // ms, 60 seconds aka 1 minute
 
 		for(String title : recommendedTitles) {
 			int randomVariation = lowerRandomBoundMs + secureRandom.nextInt(upperRandomBoundMs - lowerRandomBoundMs); 
 
 			Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
 
-			this.lavaSource.queueTrack(title);
+			// we want the recommended songs to be on the non priority queue
+			this.lavaSource.queueTrack(title, true);
 		}
 	}
 
 	@Override
 	public ArrayList<AudioTrack> getAudioQueue() {
 		return this.lavaSource.getAudioQueue();
+	}
+
+	public ArrayList<AudioTrack> getNullSeparatedAudioQueue()  {
+		return this.lavaSource.getNullSeparatedQueue();
 	}
 
 	/**
@@ -123,7 +128,7 @@ public class AudioSession extends RecommenderSession {
 
 	public QueueResult queueSearchQuery(String searchQuery) {
 		mostRecentSearches.add(searchQuery);
-		return lavaSource.queueTrack(searchQuery);
+		return lavaSource.queueTrackAsPriority(searchQuery);
 	}
 
 	/**

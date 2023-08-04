@@ -26,13 +26,13 @@ public class YoutubeAudioResultHandler extends KAudioResultHandler {
 
     @Override
     public void playlistLoaded(AudioPlaylist arg0) {
-        boolean loadPlaylistResult = trackScheduler.loadPlaylist(arg0);
+        boolean loadPlaylistResult = trackScheduler.loadPlaylist(arg0, this.deprioritizeQueue);
         isSuccess = new SingleUse<>(loadPlaylistResult);
     }
 
     @Override
     public void trackLoaded(AudioTrack arg0) {
-        trackScheduler.loadSingleTrack(arg0);
+        trackScheduler.loadSingleTrack(arg0, this.deprioritizeQueue);
         isSuccess = new SingleUse<>(true);
     }
 }

@@ -22,10 +22,15 @@ public class MessageSender {
     public void sendViewQueueEmbed(ArrayList<AudioTrack> relevantAudioTracks, int pageNumber, int totalPages) {
         String tracksString = "";
 
+        boolean hitAutoQueueTracks = false;
         for(AudioTrack audioTrack : relevantAudioTracks) {
+            if(audioTrack == null) {
+                hitAutoQueueTracks = true;
+                continue;
+            }
             String info = audioTrack.getInfo().title + " by " + audioTrack.getInfo().author;
             String uri = audioTrack.getInfo().uri;
-            tracksString += "[" + info + "]" + "(" + uri + ")\n\n";
+            tracksString += hitAutoQueueTracks ? "Via AutoQueue:" + "[" + info + "]" + "(" + uri + ")\n\n" : "[" + info + "]" + "(" + uri + ")\n\n";
         }
 
         this.embedMessage

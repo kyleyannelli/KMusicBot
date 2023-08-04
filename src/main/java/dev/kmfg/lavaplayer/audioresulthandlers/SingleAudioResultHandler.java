@@ -30,7 +30,7 @@ public class SingleAudioResultHandler extends KAudioResultHandler {
         ArrayList<AudioTrack> loadedTracks = new ArrayList<>();
         // if theres a list of tracks AND first result, play the track
         if(arg0.getTracks() != null && arg0.getTracks().get(0) != null) {
-            trackScheduler.loadSingleTrack(arg0.getTracks().get(0));
+            trackScheduler.loadSingleTrack(arg0.getTracks().get(0), this.deprioritizeQueue);
             loadedTracks.add(arg0.getTracks().get(0));
             isSuccess = new SingleUse<>(true);
         }
@@ -39,7 +39,7 @@ public class SingleAudioResultHandler extends KAudioResultHandler {
 
     @Override
     public void trackLoaded(AudioTrack arg0) {
-        trackScheduler.loadSingleTrack(arg0);
+        trackScheduler.loadSingleTrack(arg0, this.deprioritizeQueue);
         isSuccess = new SingleUse<>(true);
         ArrayList<AudioTrack> loadedTracks = new ArrayList<>();
         loadedTracks.add(arg0);
