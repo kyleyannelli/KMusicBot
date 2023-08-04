@@ -1,5 +1,6 @@
 package DiscordBot;
 
+import DiscordBot.Sessions.SessionManager;
 import SongRecommender.RecommenderProcessor;
 import SpotifyApi.ClientCreate;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -11,7 +12,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 
-import DiscordBot.Commands;
 import se.michaelthelin.spotify.SpotifyApi;
 
 public class RunBot {
@@ -39,8 +39,13 @@ public class RunBot {
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
         playerManager.registerSourceManager(new YoutubeAudioSourceManager());
 
+        // create the recommender processor for RecommenderSessions (and its child classes)
         RecommenderProcessor recommenderProcessor = new RecommenderProcessor(api, spotifyApi, maxRecommenderThreads);
-        Commands commands = new Commands(api, spotifyApi, recommenderProcessor, playerManager);
+
+        // create session manager for AudioSessions
+        SessionManager sessionManager = new SessionManager(api, spotifyApi, playerManager, recommenderProcessor);
+
+        CommandsListener commands = new CommandsListener(api, sessionManager);
         commands.createAndListenForGlobalCommands();
 
         // make sure to properly handle a shutdown

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import DiscordBot.Commands;
 import Exceptions.BadAudioConnectionException;
 import Exceptions.EmptyParameterException;
 import Exceptions.EmptyServerException;
@@ -13,7 +12,8 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 
-import DiscordBot.AudioSession;
+import DiscordBot.Commands.Command;
+import DiscordBot.Sessions.AudioSession;
 import org.tinylog.Logger;
 
 /**
@@ -28,7 +28,7 @@ public class EnsuredSlashCommandInteraction {
 	private final ConcurrentHashMap<String, String> parameters;
 	private final AudioSession audioSession;
 
-	public EnsuredSlashCommandInteraction(Commands commands, SlashCommandCreateEvent slashCommandCreateEvent, ArrayList<String> requiredParameters) throws EmptyParameterException, BadAudioConnectionException, EmptyServerException {
+	public EnsuredSlashCommandInteraction(Command command, SlashCommandCreateEvent slashCommandCreateEvent, ArrayList<String> requiredParameters) throws EmptyParameterException, BadAudioConnectionException, EmptyServerException {
 		// check if the server is empty, this will handle sending a message if needed.
 		if(isEmptyServerInInteraction(slashCommandCreateEvent) || slashCommandCreateEvent.getInteraction().getServer().isEmpty()) {
 			throw new EmptyServerException();
@@ -44,7 +44,7 @@ public class EnsuredSlashCommandInteraction {
 		this.server = slashCommandCreateEvent.getInteraction().getServer().get();
 		this.user = slashCommandCreateEvent.getInteraction().getUser();
 
-		this.audioSession = generateOrGetAudioSession(commands);
+		this.audioSession = generateOrGetAudioSession(command);
 	}
 
 	public boolean isEmptyServerInInteraction(SlashCommandCreateEvent slashCommandEvent) {
@@ -107,9 +107,8 @@ public class EnsuredSlashCommandInteraction {
 		return this.audioSession;
 	}
 
-	private AudioSession generateOrGetAudioSession(Commands commands) throws BadAudioConnectionException {
-		AudioSession relevantAudioSession = commands.audioSessions
-				.computeIfAbsent(this.server.getId(), commands::createAudioSession);
+	private AudioSession generateOrGetAudioSession(Command command) throws BadAudioConnectionException {
+		AudioSession relevantAudioSession = command.createOrGetAudioSession(this.server.getId());
 		if(isBadAudioConnection(relevantAudioSession, this.server, this.user)) {
 			throw new BadAudioConnectionException();
 		}

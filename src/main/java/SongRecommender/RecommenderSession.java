@@ -1,9 +1,7 @@
 package SongRecommender;
 
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-import Lavaplayer.LavaplayerAudioSource;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
@@ -26,7 +24,7 @@ public class RecommenderSession {
 	private final RecommenderProcessor recommenderProcessor;
 
 	private ArrayList<AudioTrack> audioQueue; // audio queue for the voice channel session
-	private ArrayList<String> searchedSongs;
+	private final ArrayList<String> searchedSongs;
 
 	private final long id;
 	private final long associatedServerId;
@@ -48,7 +46,7 @@ public class RecommenderSession {
 		
 		// every AUTO_QUEUE_RATE minutes autoqueue
 		this.scheduler = Executors.newSingleThreadScheduledExecutor();
-		this.scheduler.scheduleAtFixedRate(() -> loadRecommendedTracks(), INITIAL_AUTO_QUEUE_DELAY, AUTO_QUEUE_RATE, TimeUnit.MINUTES);
+		this.scheduler.scheduleAtFixedRate(this::loadRecommendedTracks, INITIAL_AUTO_QUEUE_DELAY, AUTO_QUEUE_RATE, TimeUnit.MINUTES);
 	}
 
 	public void addSearchToSearchedSongs(String searchQuery) {
@@ -73,21 +71,7 @@ public class RecommenderSession {
 
 	@Deprecated
 	public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
-		String youtubeSearchPrefix = "ytsearch: "; 
-	    AudioPlayerManager playerManager = LavaplayerAudioSource.createYouTubePlayerManager();	
 
-		Random random = new Random();
-
-		int lowerRandomBoundMs = 100; // ms
-		int upperRandomBoundMs = 1000; // ms
-
-		for(String title : recommendedTitles) {
-			int randomVariation = lowerRandomBoundMs + (int) (random.nextDouble() * upperRandomBoundMs);
-
-			Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
-
-			LavaplayerAudioSource.playerManagerSilentlyLoadTrack(playerManager, youtubeSearchPrefix + title, this.associatedServerId);
-		}
 	}
 
 	public long getSessionId() {

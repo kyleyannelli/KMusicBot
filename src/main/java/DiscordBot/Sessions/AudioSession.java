@@ -1,4 +1,4 @@
-package DiscordBot;
+package DiscordBot.Sessions;
 
 import Lavaplayer.LavaSource;
 import SongRecommender.RecommenderProcessor;
@@ -46,7 +46,7 @@ public class AudioSession extends RecommenderSession {
 		this.lavaSource = lavaSource;
 
 		this.disconnectScheduledService = Executors.newSingleThreadScheduledExecutor();
-		this.disconnectScheduledService.scheduleAtFixedRate(() -> handleDisconnectService(), DISCONNECT_DELAY_MS, DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
+		this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS, DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
 
 		this.sessionCloseHandler = sessionCloseHandler;
 	}
@@ -59,7 +59,7 @@ public class AudioSession extends RecommenderSession {
 		this.isRecommendingSongs = true;
 
 		this.disconnectScheduledService = Executors.newSingleThreadScheduledExecutor();
-		this.disconnectScheduledService.scheduleAtFixedRate(() -> handleDisconnectService(), DISCONNECT_DELAY_MS, DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
+		this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS, DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
 
 		this.sessionCloseHandler = sessionCloseHandler;
 	}
@@ -73,7 +73,7 @@ public class AudioSession extends RecommenderSession {
 	@Override
 	public ArrayList<String> getSearchedSongs() {
 		// LimitedQueue extends LinkedBlockingDeque which is an AbstractCollection
-		return new ArrayList<String>(mostRecentSearches);
+		return new ArrayList<>(mostRecentSearches);
 	}
 
 	/**
@@ -148,7 +148,7 @@ public class AudioSession extends RecommenderSession {
 	}
 
 	public void setupAudioConnection(ServerVoiceChannel serverVoiceChannel) {
-		AudioConnection audioConnection = null;
+		AudioConnection audioConnection;
 
 		CompletableFuture<AudioConnection> futureConnect = serverVoiceChannel.connect();
 
@@ -204,23 +204,21 @@ public class AudioSession extends RecommenderSession {
 
 		this.sessionCloseHandler.handle(this.getAssociatedServerId());
 		
-		Logger.info("SHUTDOWN \n" + this.toString());
+		Logger.info("SHUTDOWN \n" + this);
 	}
 
 	private void handleDisconnectService() {
 		if(canDisconnectFromVoiceChannel()) {
-			Logger.info("DISCONNECTING \n" + this.toString());
+			Logger.info("DISCONNECTING \n" + this);
 			this.properlyDisconnectFromVoiceChannel();
 		}
 		else {
-			Logger.info("Did NOT Disconnect: \n" + this.toString());
+			Logger.info("Did NOT Disconnect: \n" + this);
 		}
 	}
 
 	private void properlyDisconnectFromVoiceChannel() {
-		this.audioConnection.close().thenRun(() -> {
-			this.shutdown();
-		});
+		this.audioConnection.close().thenRun(this::shutdown);
 	}
 
 	private boolean canDisconnectFromVoiceChannel() {

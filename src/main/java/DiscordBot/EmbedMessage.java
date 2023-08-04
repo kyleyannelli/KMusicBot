@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
@@ -26,8 +27,8 @@ public class EmbedMessage {
 	private Color color;
 	private boolean isQueue;
 
-	public EmbedMessage(SlashCommandInteraction slashCommandInteraction, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-		this.slashCommandInteraction = slashCommandInteraction;
+	public EmbedMessage(SlashCommandCreateEvent slashCommandCreateEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
+		this.slashCommandInteraction = slashCommandCreateEvent.getSlashCommandInteraction();
 		this.respondLater = respondLater;
 		this.isQueue = false;
 	}
