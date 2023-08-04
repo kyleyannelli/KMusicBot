@@ -35,6 +35,7 @@ public class SessionManager {
 		});
 		LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioSession.getSessionId());
 		audioSession.setLavaSource(lavaSource);
+		this.audioSessions.put(serverId, audioSession);
 		return audioSession;
 	}
 
