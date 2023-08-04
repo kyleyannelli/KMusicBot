@@ -10,17 +10,18 @@ public class MessageSender {
         this.embedMessage = embedMessage;
     }
     public void sendNothingPlayingEmbed() {
-        this.embedMessage.setColor(Color.RED);
-        this.embedMessage.setTitle("Nothing Playing!");
-        this.embedMessage.setContent("Nothing was playing, so no action was taken.");
-        this.embedMessage.send();
+        this.embedMessage
+                .setColor(Color.RED)
+                .setTitle("Nothing Playing!")
+                .setContent("Nothing was playing, so no action was taken.")
+                .send();
     }
 
     public void sendStoppedEmbed() {
-        this.embedMessage.setColor(Color.BLACK);
-        this.embedMessage.setTitle("Stopped.");
-        this.embedMessage.setContent("Music has stopped, and bot has left the channel.");
-        this.embedMessage.send();
+        this.embedMessage.setColor(Color.BLACK)
+                .setTitle("Stopped.")
+                .setContent("Music has stopped, and bot has left the channel.")
+                .send();
     }
 
     public void sendQueueResultEmbed(QueueResult queueResult) {
@@ -29,8 +30,9 @@ public class MessageSender {
 
         // if the tracks were successfully queued & the size of the queue is greater than 1, just display the # of tracks added.
         if(queueResult.isSuccess() && queueResult.getQueuedTracks() != null && queueResult.getQueuedTracks().size() > 1) {
-            this.embedMessage.setTitle("Queued!");
-            this.embedMessage.setContent("Added " + queueResult.getQueuedTracks().size() + " tracks to the queue.");
+            this.embedMessage
+                    .setTitle("Queued!")
+                    .setContent("Added " + queueResult.getQueuedTracks().size() + " tracks to the queue.");
         }
         // otherwise, if the track added successfully & it was only 1 track, use the setupAudioTrack method to display a single track!
         else if(queueResult.isSuccess() && queueResult.getQueuedTracks() != null && queueResult.getQueuedTracks().size() == 1) {
@@ -40,43 +42,57 @@ public class MessageSender {
             this.embedMessage.setupAudioTrack(queueResult.getQueueTrack());
         }
         else if(!queueResult.isSuccess()) {
-            this.embedMessage.setColor(Color.RED);
-            this.embedMessage.setTitle("Oops!");
-            this.embedMessage.setContent("There was an issue finding your query!");
+            this.embedMessage
+                    .setColor(Color.RED)
+                    .setTitle("Oops!")
+                    .setContent("There was an issue finding your query!");
         }
         else {
-            this.embedMessage.setColor(Color.RED);
-            this.embedMessage.setTitle("Oops!");
-            this.embedMessage.setContent("There was an uncaught edge case. Please report this to <@806350925723205642>!");
+            this.embedMessage
+                    .setColor(Color.RED)
+                    .setTitle("Oops!")
+                    .setContent("There was an uncaught edge case. Please report this to <@806350925723205642>!");
         }
 
         this.embedMessage.send();
     }
 
-    public void sendNotInServerVoiceChannelMessage() {
-        this.embedMessage.setTitle("Denied!");
-        this.embedMessage.setContent("You are either not in a voice channel, or not in the same voice channel the bot is active in.");
-        this.embedMessage.setColor(Color.RED);
-        this.embedMessage.send();
+    public void sendNotInServerVoiceChannelEmbed() {
+        this.embedMessage
+                .setTitle("Denied!")
+                .setContent("You are either not in a voice channel, or not in the same voice channel the bot is active in.")
+                .setColor(Color.RED)
+                .send();
     }
 
-    public void sendEmptyParameterMessage(String parameter) {
-        this.embedMessage.setTitle("Missing Parameter(s)!");
-        this.embedMessage.setContent("Parameter \"" + parameter + " was missing! Please include all required parameters in your command and try again.");
-        this.embedMessage.setColor(Color.RED);
-        this.embedMessage.send();
+    public void sendEmptyParameterEmbed(String parameter) {
+        this.embedMessage
+                .setTitle("Missing Parameter(s)!")
+                .setContent("Parameter \"" + parameter + " was missing! Please include all required parameters in your command and try again.")
+                .setColor(Color.RED)
+                .send();
+    }
+    
+    public void sendBadParameterEmbed(String parameter) {
+        this.embedMessage
+                .setTitle("Bad Parameter(s)!")
+                .setContent("Parameter \"" + parameter + "\" was not of the expected type. Please double check your command usage.")
+                .setColor(Color.RED)
+                .send();
     }
 
-    public void sendEmptyServerMessage() {
-        this.embedMessage.setTitle("Uh Oh!");
-        this.embedMessage.setContent("The server was not present in the interaction. This shouldn't happen, but in the case you see this contact <@806350925723205642>.");
-        this.embedMessage.send();
+    public void sendEmptyServerEmbed() {
+        this.embedMessage
+                .setTitle("Uh Oh!")
+                .setContent("The server was not present in the interaction. This shouldn't happen, but in the case you see this contact <@806350925723205642>.")
+                .send();
     }
 
-    public void sendInviteMessage(String inviteLink) {
-        this.embedMessage.setTitle("Invite Link");
-        this.embedMessage.setContent(inviteLink);
-        this.embedMessage.send();
+    public void sendInviteEmbed(String inviteLink) {
+        this.embedMessage
+                .setTitle("Invite Link")
+                .setContent(inviteLink)
+                .send();
     }
 
     public void setForcedTitle(String forcedTitle) {

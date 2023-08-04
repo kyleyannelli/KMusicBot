@@ -47,18 +47,17 @@ public abstract class Command {
 			ensuredInteraction = new EnsuredSlashCommandInteraction(this, slashCommandEvent, requiredParams);
 		} catch (EmptyParameterException e) {
 			Logger.warn(e.getCausalParameterName() + " was not in interaction for command, sending discord message...");
-			this.messageSender.sendEmptyParameterMessage(e.getCausalParameterName());
+			this.messageSender.sendEmptyParameterEmbed(e.getCausalParameterName());
 			return null;
 		} catch (BadAudioConnectionException e) {
 			Logger.warn(e.getMessage());
-			this.messageSender.sendNotInServerVoiceChannelMessage();
+			this.messageSender.sendNotInServerVoiceChannelEmbed();
 			return null;
 		} catch (EmptyServerException e) {
 			Logger.warn("Server was not present in an interaction!");
-			this.messageSender.sendEmptyServerMessage();
+			this.messageSender.sendEmptyServerEmbed();
 			return null;
 		}
 		return ensuredInteraction;
 	}
-
 }
