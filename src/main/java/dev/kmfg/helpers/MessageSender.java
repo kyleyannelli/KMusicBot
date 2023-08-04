@@ -25,7 +25,7 @@ public class MessageSender {
         for(AudioTrack audioTrack : relevantAudioTracks) {
             String info = audioTrack.getInfo().title + " by " + audioTrack.getInfo().author;
             String uri = audioTrack.getInfo().uri;
-            tracksString += "[" + info + "]" + "(" + uri + ")\n";
+            tracksString += "[" + info + "]" + "(" + uri + ")\n\n";
         }
 
         this.embedMessage
