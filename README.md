@@ -1,5 +1,5 @@
 # KMusicBot
-## Built on Maven with [Javacord](https://github.com/Javacord/Javacord) & [Lavaplayer](https://github.com/sedmelluq/lavaplayer)
+## Built on Maven with [Javacord](https://github.com/Javacord/Javacord) & [dev.kmfg.lavaplayer](https://github.com/sedmelluq/lavaplayer)
 [![CodeQL](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml)
 
 # Getting Started (Ubuntu & Mac OS)
