@@ -37,7 +37,7 @@ public class ViewQueueCommand extends Command {
 
         int totalPages;
 
-        if(audioTrackQueue == null || audioTrackQueue.size() - 1 == 0) {
+        if(audioTrackQueue == null || audioTrackQueue.size() == 0) {
             this.messageSender.sendEmptyQueueEmbed();
             return;
         }
