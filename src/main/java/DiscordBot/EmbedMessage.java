@@ -33,37 +33,44 @@ public class EmbedMessage {
 		this.isQueue = false;
 	}
 
-	public void setContent(String content) {
+	public EmbedMessage setContent(String content) {
 		this.content = content;
+		return this;
 	}
 
-	public void setTitle(String title) {
+	public EmbedMessage setTitle(String title) {
 		this.title = title;
+		return this;
 	}
 
-	public void setIsQueue(boolean isQueue) {
+	public EmbedMessage setIsQueue(boolean isQueue) {
 		this.isQueue = isQueue;
+		return this;
 	}
 
-	public void setColor(Color color) {
+	public EmbedMessage setColor(Color color) {
 		this.color = color;
+		return this;
 	}
 
-	public void setForcedTitle(String forcedTitle) {
+	public EmbedMessage setForcedTitle(String forcedTitle) {
 		this.forcedTitle = forcedTitle;
+		return this;
 	}
 	
-	public void setYoutubeUri(String youtubeUri) {
+	public EmbedMessage setYoutubeUri(String youtubeUri) {
 		this.youtubeUri = youtubeUri;
+		return this;
 	}
 
-	public void setupAudioTrack(AudioTrack audioTrack) {
+	public EmbedMessage setupAudioTrack(AudioTrack audioTrack) {
 		this.youtubeTitle = audioTrack.getInfo().title;
 		this.author = audioTrack.getInfo().author;
 		this.youtubeUri = audioTrack.getInfo().uri;
 
 		String identifier = audioTrack.getInfo().identifier;
 		this.fullYoutubeThumbnailUri = YOUTUBE_THUMBNAIL_BEGIN_URI + identifier + YOUTUBE_THUMBNAIL_END_URI;
+		return this;
 	}
 
 	public EmbedBuilder generateEmbedBuilder(User requestingUser) {
