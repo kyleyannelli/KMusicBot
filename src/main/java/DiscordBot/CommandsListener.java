@@ -3,10 +3,7 @@ package DiscordBot;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
-import DiscordBot.Commands.InviteCommand;
-import DiscordBot.Commands.PlayCommand;
-import DiscordBot.Commands.SkipCommand;
-import DiscordBot.Commands.StopCommand;
+import DiscordBot.Commands.*;
 import DiscordBot.Sessions.SessionManager;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.interaction.SlashCommand;
@@ -19,6 +16,7 @@ public class CommandsListener {
 	private static final String INVITE_COMMAND_NAME = "invite";
 	private static final String SKIP_COMMAND_NAME = "skip";
 	private static final String STOP_COMMAND_NAME = "stop";
+	private static final String VIEW_QUEUE_COMMAND_NAME = "queue";
 
 	private final DiscordApi discordApi;
 	private final SessionManager sessionManager;
@@ -57,6 +55,10 @@ public class CommandsListener {
 					StopCommand stopCommand = new StopCommand(this.sessionManager, slashCommandEvent, respondLater);
 					stopCommand.execute();
 					break;
+				case VIEW_QUEUE_COMMAND_NAME:
+					ViewQueueCommand viewQueueCommand = new ViewQueueCommand(this.sessionManager, slashCommandEvent, respondLater);
+					viewQueueCommand.execute();
+					break;
 			}
 		});
 	}
@@ -66,6 +68,19 @@ public class CommandsListener {
 		createInviteCommand();
 		createSkipCommand();
 		createStopCommand();
+		createViewQueueCommand();
+	}
+
+	private void createViewQueueCommand() {
+		SlashCommand.with(VIEW_QUEUE_COMMAND_NAME, "View the queue of tracks at a specified page number.",
+				Collections.singletonList(
+						SlashCommandOption
+								.create(SlashCommandOptionType.LONG,
+										"pageNumber",
+										"The page of queue to view.",
+										true)
+				))
+				.createGlobal(this.discordApi);
 	}
 
 	private void createSkipCommand() {

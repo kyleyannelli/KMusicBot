@@ -71,7 +71,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--      Uncomment this for potentially easier debugging      -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

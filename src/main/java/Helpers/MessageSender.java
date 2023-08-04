@@ -1,8 +1,10 @@
 package Helpers;
 
 import DiscordBot.EmbedMessage;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 public class MessageSender {
     private final EmbedMessage embedMessage;
@@ -14,6 +16,38 @@ public class MessageSender {
                 .setColor(Color.RED)
                 .setTitle("Nothing Playing!")
                 .setContent("Nothing was playing, so no action was taken.")
+                .send();
+    }
+
+    public void sendViewQueueEmbed(ArrayList<AudioTrack> relevantAudioTracks, int pageNumber, int totalPages) {
+        String tracksString = "";
+
+        for(AudioTrack audioTrack : relevantAudioTracks) {
+            String info = audioTrack.getInfo().title + " by " + audioTrack.getInfo().author;
+            String uri = audioTrack.getInfo().uri;
+            tracksString += "[" + info + "]" + "(" + uri + ")\n";
+        }
+
+        this.embedMessage
+                .setTitle("Page " + pageNumber + " of " + totalPages)
+                .setColor(Color.BLUE)
+                .setContent(tracksString)
+                .send();
+    }
+
+    public void sendEmptyQueueEmbed() {
+        this.embedMessage
+                .setColor(Color.BLACK)
+                .setTitle("Empty Queue.")
+                .setContent("The queue is empty!")
+                .send();
+    }
+
+    public void sendOutOfBoundsEmbed(int requestedPage, int totalPages) {
+        this.embedMessage
+                .setColor(Color.RED)
+                .setTitle("Page is Out of Bounds!")
+                .setContent("Page #" + requestedPage + " is beyond the " + totalPages + " available pages.")
                 .send();
     }
 
