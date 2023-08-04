@@ -13,7 +13,7 @@ import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
 public class CommandsListener {
 	private static final String PLAY_COMMAND_NAME = "play";
-	private static final String PLAY_NEXT_COMMAND_NAME = "playNext";
+	private static final String PLAY_NEXT_COMMAND_NAME = "playnext";
 	private static final String INVITE_COMMAND_NAME = "invite";
 	private static final String SKIP_COMMAND_NAME = "skip";
 	private static final String STOP_COMMAND_NAME = "stop";
