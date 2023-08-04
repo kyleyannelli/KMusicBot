@@ -2,6 +2,7 @@ package dev.kmfg.helpers;
 
 import dev.kmfg.discordbot.EmbedMessage;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import dev.kmfg.lavaplayer.PositionalAudioTrack;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -19,18 +20,17 @@ public class MessageSender {
                 .send();
     }
 
-    public void sendViewQueueEmbed(ArrayList<AudioTrack> relevantAudioTracks, int pageNumber, int totalPages) {
+    public void sendViewQueueEmbed(ArrayList<PositionalAudioTrack> relevantAudioTracks, int pageNumber, int totalPages) {
         String tracksString = "";
 
-        boolean hitAutoQueueTracks = false;
-        for(AudioTrack audioTrack : relevantAudioTracks) {
-            if(audioTrack == null) {
-                hitAutoQueueTracks = true;
-                continue;
-            }
+        for(PositionalAudioTrack positionalAudioTrackTrack : relevantAudioTracks) {
+            AudioTrack audioTrack = positionalAudioTrackTrack.getAudioTrack();
+
             String info = audioTrack.getInfo().title + " by " + audioTrack.getInfo().author;
             String uri = audioTrack.getInfo().uri;
-            tracksString += hitAutoQueueTracks ? "Via AutoQueue:" + "[" + info + "]" + "(" + uri + ")\n\n" : "[" + info + "]" + "(" + uri + ")\n\n";
+            tracksString += positionalAudioTrackTrack.isQueuedByUser() ?
+                    positionalAudioTrackTrack.getPosition() + ". [" + info + "]" + "(" + uri + ")\n\n" :
+                    "Via AutoQueue: " + "[" + info + "]" + "(" + uri + ")\n\n";
         }
 
         this.embedMessage

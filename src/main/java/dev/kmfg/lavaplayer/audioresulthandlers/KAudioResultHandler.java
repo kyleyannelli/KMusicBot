@@ -13,11 +13,13 @@ public abstract class KAudioResultHandler implements AudioLoadResultHandler {
     SingleUse<Boolean> isSuccess;
     SingleUse<ArrayList<AudioTrack>> lastLoadedTracks;
     protected boolean deprioritizeQueue;
+    protected boolean playNext;
 
     public KAudioResultHandler(ProperTrackScheduler trackScheduler) {
         this.trackScheduler = trackScheduler;
         // by default do not deprioritize
         this.deprioritizeQueue = false;
+        this.playNext = false;
     }
 
     public ArrayList<AudioTrack> getLastLoadedTracks() throws AlreadyAccessedException {
@@ -34,5 +36,9 @@ public abstract class KAudioResultHandler implements AudioLoadResultHandler {
 
     public void prioritizeQueue() {
         this.deprioritizeQueue = false;
+    }
+
+    public void setPlayNext(boolean playNext) {
+        this.playNext = playNext;
     }
 }

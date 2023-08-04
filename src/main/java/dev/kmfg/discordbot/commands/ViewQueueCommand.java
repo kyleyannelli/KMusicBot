@@ -1,5 +1,6 @@
 package dev.kmfg.discordbot.commands;
 
+import dev.kmfg.lavaplayer.PositionalAudioTrack;
 import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.helpers.EnsuredSlashCommandInteraction;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -32,7 +33,7 @@ public class ViewQueueCommand extends Command {
             return;
         }
 
-        ArrayList<AudioTrack> audioTrackQueue = ensuredSlashCommandInteraction.getAudioSession().getNullSeparatedAudioQueue();
+        ArrayList<PositionalAudioTrack> audioTrackQueue = ensuredSlashCommandInteraction.getAudioSession().getPositionalAudioQueue();
 
         int totalPages;
 
@@ -48,20 +49,15 @@ public class ViewQueueCommand extends Command {
             return;
         }
 
-        ArrayList<AudioTrack> relevantAudioTracks = getRelevantAudioTracks(audioTrackQueue, requestedPageNumber);
+        ArrayList<PositionalAudioTrack> relevantAudioTracks = getRelevantAudioTracks(audioTrackQueue, requestedPageNumber);
         this.messageSender.sendViewQueueEmbed(relevantAudioTracks, requestedPageNumber, totalPages);
     }
 
-    private ArrayList<AudioTrack> getRelevantAudioTracks(ArrayList<AudioTrack> allTracks, int pageNumber) {
-        ArrayList<AudioTrack> relevantTracks = new ArrayList<>();
+    private ArrayList<PositionalAudioTrack> getRelevantAudioTracks(ArrayList<PositionalAudioTrack> allTracks, int pageNumber) {
+        ArrayList<PositionalAudioTrack> relevantTracks = new ArrayList<>();
 
         int startIndex = ((pageNumber - 1) * PAGE_MAX_ROWS);
         int endIndex = Math.min(startIndex + PAGE_MAX_ROWS, allTracks.size());
-
-        // handle the case that we are starting at an autoqueue position
-        if(startIndex < 0 && allTracks.get(startIndex - 1) == null) {
-            relevantTracks.add(null);
-        }
 
         for(int i = startIndex; i < endIndex; i++) {
             if(allTracks.get(i) == null && i < 0) {

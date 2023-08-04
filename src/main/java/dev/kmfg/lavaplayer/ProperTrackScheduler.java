@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import org.tinylog.Logger;
 
+import java.awt.image.AreaAveragingScaleFilter;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -95,11 +96,16 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         }
     }
 
-    public boolean loadPlaylist(AudioPlaylist audioPlaylist, boolean deprioritizeQueue) {
+    public boolean loadPlaylist(AudioPlaylist audioPlaylist, boolean deprioritizeQueue, boolean playNext) {
         boolean isSuccess = audioPlaylist != null && audioPlaylist.getTracks() != null;
         if(isSuccess) {
             for(AudioTrack audioTrack : audioPlaylist.getTracks()) {
-                loadSingleTrack(audioTrack, deprioritizeQueue);
+                if(playNext) {
+                    queueNext(audioTrack);
+                }
+                else {
+                    loadSingleTrack(audioTrack, deprioritizeQueue);
+                }
             }
         }
         return isSuccess;
@@ -111,12 +117,25 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         return combined;
     }
 
-    public ArrayList<AudioTrack> getQueueWithNullSeparation() {
-        ArrayList<AudioTrack> combined = new ArrayList<>(this.audioQueue);
-        combined.add(null);
-        combined.addAll(this.recommenderAudioQueue);
-        return combined;
+    public ArrayList<PositionalAudioTrack> getPositionalAudioQueue() {
+        ArrayList<PositionalAudioTrack> queuedTracks = new ArrayList<>();
+
+        int position = 1;
+        for(AudioTrack userQueuedTrack : this.audioQueue) {
+            queuedTracks.add(
+                    new PositionalAudioTrack(userQueuedTrack, true, position++)
+            );
+        }
+
+        for(AudioTrack autoQueuedTrack : this.recommenderAudioQueue) {
+            queuedTracks.add(
+                    new PositionalAudioTrack(autoQueuedTrack, false, position++)
+            );
+        }
+
+        return queuedTracks;
     }
+
     public ArrayList<AudioTrack> getRecommenderQueue() {
         return new ArrayList<>(this.recommenderAudioQueue);
     }

@@ -13,6 +13,7 @@ import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
 public class CommandsListener {
 	private static final String PLAY_COMMAND_NAME = "play";
+	private static final String PLAY_NEXT_COMMAND_NAME = "playNext";
 	private static final String INVITE_COMMAND_NAME = "invite";
 	private static final String SKIP_COMMAND_NAME = "skip";
 	private static final String STOP_COMMAND_NAME = "stop";
@@ -59,6 +60,10 @@ public class CommandsListener {
 					ViewQueueCommand viewQueueCommand = new ViewQueueCommand(this.sessionManager, slashCommandEvent, respondLater);
 					viewQueueCommand.execute();
 					break;
+				case PLAY_NEXT_COMMAND_NAME:
+					PlayNextCommand playNextCommand = new PlayNextCommand(this.sessionManager, slashCommandEvent, respondLater);
+					playNextCommand.execute();
+					break;
 			}
 		});
 	}
@@ -69,6 +74,17 @@ public class CommandsListener {
 		createSkipCommand();
 		createStopCommand();
 		createViewQueueCommand();
+		createPlayNextCommand();
+	}
+
+	private void createPlayNextCommand() {
+		SlashCommand.with(PLAY_NEXT_COMMAND_NAME, "Play a song, but, if there is a queue it will be added to the front.",
+						// create option(s)
+						Collections.singletonList(
+								// create option /play <song>
+								SlashCommandOption.create(SlashCommandOptionType.STRING, "song", "The song to play", true)
+						))
+				.createGlobal(this.discordApi).join();
 	}
 
 	private void createViewQueueCommand() {

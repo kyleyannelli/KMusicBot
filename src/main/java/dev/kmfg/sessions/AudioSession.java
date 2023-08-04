@@ -1,6 +1,7 @@
 package dev.kmfg.sessions;
 
 import dev.kmfg.lavaplayer.LavaSource;
+import dev.kmfg.lavaplayer.PositionalAudioTrack;
 import dev.kmfg.songrecommender.RecommenderProcessor;
 import dev.kmfg.songrecommender.RecommenderSession;
 
@@ -98,17 +99,13 @@ public class AudioSession extends RecommenderSession {
 			Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
 
 			// we want the recommended songs to be on the non priority queue
-			this.lavaSource.queueTrack(title, true);
+			this.lavaSource.queueTrack(title, true, false);
 		}
 	}
 
 	@Override
 	public ArrayList<AudioTrack> getAudioQueue() {
 		return this.lavaSource.getAudioQueue();
-	}
-
-	public ArrayList<AudioTrack> getNullSeparatedAudioQueue()  {
-		return this.lavaSource.getNullSeparatedQueue();
 	}
 
 	/**
@@ -131,6 +128,11 @@ public class AudioSession extends RecommenderSession {
 		return lavaSource.queueTrackAsPriority(searchQuery);
 	}
 
+	public QueueResult queueSearchQueryNext(String searchQuery) {
+		mostRecentSearches.add(searchQuery);
+		return lavaSource.queueTrackAsPriorityNext(searchQuery);
+	}
+
 	/**
 	 * Returns the skipped track in [0], returns the new track in [1]
 	 */
@@ -149,6 +151,10 @@ public class AudioSession extends RecommenderSession {
 
 	public LavaSource getLavaSource() {
 		return lavaSource;
+	}
+
+	public ArrayList<PositionalAudioTrack> getPositionalAudioQueue() {
+		return this.lavaSource.getPositionalAudioQueue();
 	}
 
 	public void setupAudioConnection(ServerVoiceChannel serverVoiceChannel) {
@@ -199,10 +205,6 @@ public class AudioSession extends RecommenderSession {
 		return first + second + third;
 	}
 
-	public void properlyDisconnectFromVoiceChannel() {
-		this.audioConnection.close().thenRun(this::shutdown);
-	}
-
 	@Override
 	public void shutdown() {
 		// shutdown the super classes stuff! This is important!
@@ -213,6 +215,10 @@ public class AudioSession extends RecommenderSession {
 		this.sessionCloseHandler.handle(this.getAssociatedServerId());
 		
 		Logger.info("SHUTDOWN \n" + this);
+	}
+
+	public void properlyDisconnectFromVoiceChannel() {
+		this.audioConnection.close().thenRun(this::shutdown);
 	}
 
 	private void handleDisconnectService() {
