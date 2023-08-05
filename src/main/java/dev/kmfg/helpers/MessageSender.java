@@ -6,18 +6,40 @@ import dev.kmfg.lavaplayer.PositionalAudioTrack;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class MessageSender {
     private final EmbedMessage embedMessage;
+
     public MessageSender(EmbedMessage embedMessage) {
         this.embedMessage = embedMessage;
     }
+
     public void sendNothingPlayingEmbed() {
         this.embedMessage
                 .setColor(Color.RED)
                 .setTitle("Nothing Playing!")
                 .setContent("Nothing was playing, so no action was taken.")
                 .send();
+    }
+
+    public void sendSeekEmbed(AudioTrack audioTrack, long seekedMs) {
+        String hoursMinutesSeconds = convertToHMS(seekedMs);
+        String totalHoursMinutesSeconds = convertToHMS(audioTrack.getDuration());
+
+        this.embedMessage
+            .setTitle("Seeked.")
+            .setColor(Color.BLUE)
+            .setContent("Seeked to " + hoursMinutesSeconds + " (HMS) of " + totalHoursMinutesSeconds + " (HMS).")
+            .send();
+    }
+
+    public String convertToHMS(long milliseconds) {
+        long hours = TimeUnit.MILLISECONDS.toHours(milliseconds);
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(milliseconds) - TimeUnit.HOURS.toMinutes(hours);
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(milliseconds) - TimeUnit.MINUTES.toSeconds(minutes);
+        
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
     public void sendViewQueueEmbed(ArrayList<PositionalAudioTrack> relevantAudioTracks, int pageNumber, int totalPages) {

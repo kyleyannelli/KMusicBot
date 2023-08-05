@@ -1,5 +1,6 @@
 package dev.kmfg.discordbot;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
@@ -18,6 +19,7 @@ public class CommandsListener {
 	private static final String SKIP_COMMAND_NAME = "skip";
 	private static final String STOP_COMMAND_NAME = "stop";
 	private static final String VIEW_QUEUE_COMMAND_NAME = "queue";
+	private static final String SEEK_COMMAND_NAME = "seek";
 
 	private final DiscordApi discordApi;
 	private final SessionManager sessionManager;
@@ -64,6 +66,10 @@ public class CommandsListener {
 					PlayNextCommand playNextCommand = new PlayNextCommand(this.sessionManager, slashCommandEvent, respondLater);
 					playNextCommand.execute();
 					break;
+				case SEEK_COMMAND_NAME:
+					SeekCommand seekCommand = new SeekCommand(this.sessionManager, slashCommandEvent, respondLater);
+					seekCommand.execute();
+					break;
 			}
 		});
 	}
@@ -75,6 +81,19 @@ public class CommandsListener {
 		createStopCommand();
 		createViewQueueCommand();
 		createPlayNextCommand();
+		createSeekCommand();
+	}
+
+	private void createSeekCommand() {
+		ArrayList<SlashCommandOption> options = new ArrayList<>();
+		options.add(SlashCommandOption
+				.create(SlashCommandOptionType.LONG, "seconds", "The amount of seconds"));
+		options.add(SlashCommandOption
+				.create(SlashCommandOptionType.LONG, "minutes", "The amount of minutes"));
+		options.add(SlashCommandOption
+				.create(SlashCommandOptionType.LONG, "hours", "The amount of hours"));
+
+		SlashCommand.with(SEEK_COMMAND_NAME, "Seek to a specific position in the current playing song. Just one of three options is required.", options).createGlobal(this.discordApi);
 	}
 
 	private void createPlayNextCommand() {
