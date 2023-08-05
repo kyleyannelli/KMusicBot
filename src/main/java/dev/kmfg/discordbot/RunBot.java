@@ -30,18 +30,19 @@ public class RunBot {
                 // start the bot :)
                 .login().join();
 
-        SpotifyApi spotifyApi = ClientCreate.clientCredentials_Sync();
-
+        // if the .env file does not have MAX_RECOMMENDER_THREADS, use default value, else, use the .env value
         int maxRecommenderThreads = dotenv.get("MAX_RECOMMENDER_THREADS") == null ? 
             MAX_RECOMMENDER_THREADS_DEFAULT : Integer.parseInt(dotenv.get("MAX_RECOMMENDER_THREADS"));
         
         // Create a player manager
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+        // set Youtube as the audio source
         playerManager.registerSourceManager(new YoutubeAudioSourceManager());
 
+        // Create the spotify API object. This is used by the RecommenderProcessor
+        SpotifyApi spotifyApi = ClientCreate.clientCredentials_Sync();
         // create the recommender processor for RecommenderSessions (and its child classes)
         RecommenderProcessor recommenderProcessor = new RecommenderProcessor(api, spotifyApi, maxRecommenderThreads);
-
         // create session manager for AudioSessions
         SessionManager sessionManager = new SessionManager(api, spotifyApi, playerManager, recommenderProcessor);
 
