@@ -27,6 +27,10 @@ import dev.kmfg.spotifyapi.HandleSpotifyLink;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 
+/**
+ * Handles search queries to the AudioSource with SingleResultHandler and YoutubeResultHandler.
+ * Use this class to make queries and get audio streamed to a ServerVoiceChannel.
+ */
 public class LavaSource extends AudioSourceBase {
     private final long ASSOCIATED_SESSION_ID;
 
@@ -75,6 +79,10 @@ public class LavaSource extends AudioSourceBase {
         this.youtubeLinkResultHandler = new YoutubeAudioResultHandler(trackScheduler);
     }
 
+    /**
+     * Checks if there is a next frame. If so it applies transformers, else returns null.
+     * @return byte[], applied transformers if the next frame exists.
+     */
     @Override
     public byte[] getNextFrame() {
         if (lastFrame == null) {
@@ -83,22 +91,41 @@ public class LavaSource extends AudioSourceBase {
         return applyTransformers(lastFrame.getData());
     }
 
+    /**
+     * This is a constant of false.
+     * @return boolean, false
+     */
     @Override
     public boolean hasFinished() {
         return false;
     }
 
+    /**
+     * Checks the audio player to see if it has a next frame.
+     * @return boolean
+     */
     @Override
     public boolean hasNextFrame() {
         lastFrame = audioPlayer.provide();
         return lastFrame != null;
     }
 
+    /**
+     * Creates a new Lavasource object with the exact data.
+     * @return AudioSource, LavaSource in this case (subclass).
+     */
     @Override
     public AudioSource copy() {
         return new LavaSource(discordApi, spotifyApi,audioPlayerManager, audioPlayer, ASSOCIATED_SESSION_ID);
     }
 
+    /**
+     * Queues a track based on the searchQuery parameter. This is a thread safe function.
+     * @param searchQuery the query you would like to search for
+     * @param deprioritizeQueue tell the ResultHandler whether to put the track at the head queue (false, priority queue) or tail queue (true, deprioritized queue)
+     * @param playNext tells the ResultHandler whether to put the track at the head (true) or tail (false) of the priority queue.
+     * @return QueueResult, detailing what tracks were added.
+     */
     public synchronized QueueResult queueTrack(String searchQuery, boolean deprioritizeQueue, boolean playNext) {
         boolean isYoutubeLink =  false;
         boolean willPlayNow = this.audioPlayer.getPlayingTrack() == null;
@@ -140,28 +167,55 @@ public class LavaSource extends AudioSourceBase {
             playerManagerFuture = audioPlayerManager.loadItem(searchQuery, singleResultHandler);
         }
 
-        QueueResult futureQueueResult = handlePlayerManagerFuture(playerManagerFuture, isYoutubeLink, willPlayNow);
-
-        return futureQueueResult;
+        return handlePlayerManagerFuture(playerManagerFuture, isYoutubeLink, willPlayNow);
     }
 
+    /**
+     * Queue a track into the priority (aka user) queue. This is a thread safe function.
+     * @param searchQuery The track you would like to find
+     * @return QueueResult, detailing what was added to the queue.
+     */
     public synchronized QueueResult queueTrackAsPriority(String searchQuery) {
-        // pass through false because we want this to be on the prioritizedQueue
+        // 2nd parameter states we want to prioritize this query
+        // 3rd parameter states we want to send the track to the tail of the queue
         return queueTrack(searchQuery, false, false);
     }
 
+    /**
+     * Queue a track into the priority at the head. This is a thread safe function.
+     * @param searchQuery the track you want to search for
+     * @return QueueResult, detailing what was added to the queue.
+     */
     public synchronized QueueResult queueTrackAsPriorityNext(String searchQuery) {
+        // 2nd parameter states we want to prioritize this query
+        // 3rd parameter states we want to send the track to the head of the queue
         return queueTrack(searchQuery, false, true);
     }
 
+    /**
+     * Gets the audio queue from the track scheduler, including the priority and depriority queue.
+     * The priority queue is at the head, deprioritized queue is at the tail.
+     * @return ArrayList<AudioTrack>
+     */
     public ArrayList<AudioTrack> getAudioQueue() {
         return this.trackScheduler.getFullAudioQueue();
     }
 
+    /**
+     * Note: This is slower than the regular getAudioQueue function as it has to loop through each queue. Only use this if you need PositionalAudioTrack objects.
+     * Gets the audio queue as PositionalAudioTrack from the track scheduler.
+     * This includes the priority and depriority queue.
+     * The priority queue is at the head, deprioritized queue is at the tail.
+     * @return ArrayList<PositionalAudioTrack>
+     */
     public ArrayList<PositionalAudioTrack> getPositionalAudioQueue() {
         return this.trackScheduler.getPositionalAudioQueue();
     }
 
+    /**
+     * Skips the current playing track by stopping the current playing track.
+     * @return AudioTrack, the track which was stopped.
+     */
     public AudioTrack skipCurrentTrack() {
         if(this.audioPlayer.getPlayingTrack() == null) {
             return null;
@@ -174,6 +228,10 @@ public class LavaSource extends AudioSourceBase {
         }
     }
 
+    /**
+     * Gets the current playing track from audioplayer.
+     * @return AudioTrack, the current playing track. It is possible to be null.
+     */
     public AudioTrack getCurrentPlayingAudioTrack() {
         return this.audioPlayer.getPlayingTrack();
     }
@@ -187,14 +245,29 @@ public class LavaSource extends AudioSourceBase {
         return this.audioPlayer.getPlayingTrack() != null;
     }
 
+    /**
+     * Checks if the audioQueue is empty. This uses the getAudioQueue function, so the queue which is polled is dependent on that function.
+     * @return boolean, true if it is empty (0 or null), false if it has at least 1 AudioTrack object.
+     */
     public boolean isAudioQueueEmpty() {
         return (this.getAudioQueue() != null && this.getAudioQueue().size() <= 0) || this.getAudioQueue() == null;
     }
 
+    /**
+     * Gets the current playing track as its title, author, and uri in a string
+     * @return String, contains the title, author, and uri.
+     */
     public String getCurrentPlayingTrack() {
         return this.hasCurrentPlayingTrack() ? this.audioPlayer.getPlayingTrack().getInfo().title + " | " + this.audioPlayer.getPlayingTrack().getInfo().author + " | " + this.audioPlayer.getPlayingTrack().getInfo().uri  : "!Nothing Playing!";
     }
 
+    /**
+     * Handles the future from the player manager. Generates a QueueResult whether it fails (this is detailed by the QueueResult)
+     * @param playerManagerFuture The future from the audioPlayerManager
+     * @param isYouTubeLink Whether it is a youtube link, this is relevant to the QueueResult
+     * @param willPlayNow Whether it will play now or got put in the queue, this is relevant to the QueueResult
+     * @return QueueResult, detailing what was loaded.
+     */
     private QueueResult handlePlayerManagerFuture(Future<Void> playerManagerFuture, boolean isYouTubeLink, boolean willPlayNow) {
         if(playerManagerFuture != null) {
             try {
@@ -215,6 +288,12 @@ public class LavaSource extends AudioSourceBase {
         return generateQueueResultFromResultHandler(isYouTubeLink, willPlayNow);
     }
 
+    /**
+     * Generates a QueueResult from the loaded track. Will return null if the result handler has an already accessed value.
+     * @param isYouTubeLink Whether its a youtube link. This determines what result handler gets pulled from.
+     * @param willPlayNow Whether it will play now or got put in the queue. This is relevant to the QueueResult.
+     * @return QueueResult, detailing what was loaded.
+     */
     private QueueResult generateQueueResultFromResultHandler(boolean isYouTubeLink, boolean willPlayNow) {
         // if it was youtube link, pull from YoutubeResultHandler
         try {
@@ -231,6 +310,11 @@ public class LavaSource extends AudioSourceBase {
         }
     }
 
+    /**
+     * @TODO Function hasn't been implemented yet. Do I still want to support Spotify links?
+     * @param spotifyLink
+     * @return
+     */
     private Optional<List<String>> getTracksFromSpotifyLink(String spotifyLink) {
         Optional<List<String>> trackNamesFromSpotify = Optional.empty(); 
 
