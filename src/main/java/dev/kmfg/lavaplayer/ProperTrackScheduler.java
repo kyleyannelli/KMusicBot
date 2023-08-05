@@ -117,8 +117,16 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         return combined;
     }
 
+    /**
+     * Converts the generic AudioTrack queues to PositionalAudioTracks
+     * This includes the user added queue at the head, and the recommender queue at the tail.
+     * @return
+     */
     public ArrayList<PositionalAudioTrack> getPositionalAudioQueue() {
-        ArrayList<PositionalAudioTrack> queuedTracks = new ArrayList<>();
+        // preallocate ArrayList size
+        // this usually wont change much, but with bigger queue sizes it might increase performance
+        int queueSizeTotal = this.audioQueue.size() + this.recommenderAudioQueue.size();
+        ArrayList<PositionalAudioTrack> queuedTracks = new ArrayList<>(queueSizeTotal);
 
         int position = 1;
         for(AudioTrack userQueuedTrack : this.audioQueue) {
