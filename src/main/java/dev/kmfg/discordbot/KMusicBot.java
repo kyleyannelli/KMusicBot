@@ -1,4 +1,4 @@
-package dev.kmfg;
+package dev.kmfg.discordbot;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
