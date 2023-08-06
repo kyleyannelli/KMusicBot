@@ -53,7 +53,7 @@
                             <finalName>KMusic</finalName>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>dev.kmfg.discordbot.RunBot</mainClass>
+                                    <mainClass>dev.kmfg.RunBot</mainClass>
                                 </transformer>
                             </transformers>
                             <!-- Remove the signature files, runtime breaking -->
@@ -79,7 +79,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>dev.kmfg.discordbot.RunBot</mainClass>
+                            <mainClass>dev.kmfg.RunBot</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -89,7 +89,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>dev.kmfg.discordbot.RunBot</mainClass>
+                    <mainClass>dev.kmfg.RunBot</mainClass>
                 </configuration>
             </plugin>
         </plugins>
