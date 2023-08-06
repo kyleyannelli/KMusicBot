@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import dev.kmfg.discordbot.CommandsListener;
+import dev.kmfg.discordbot.listenerhandlers.UserLeaveVoiceListenerHandler;
 import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.songrecommender.RecommenderProcessor;
 import dev.kmfg.spotifyapi.ClientCreate;
@@ -13,6 +14,9 @@ import org.javacord.api.DiscordApiBuilder;
 import org.tinylog.Logger;
 import se.michaelthelin.spotify.SpotifyApi;
 
+/**
+ * KMusicBot fully allows for a music bot to operate. After initializing, calling start() on the object will launch the bot.
+ */
 public class KMusicBot {
     private static final Dotenv dotenv = Dotenv.load();
     // if the .env file does not have MAX_RECOMMENDER_THREADS, use default value of 10, else, use the .env value
@@ -49,6 +53,25 @@ public class KMusicBot {
         // now we can listen for the commands
         this.setupCommandsListener();
         Logger.info("CommandsListener setup and listening.");
+
+        // Create all listeners
+        this.setupListeners();
+    }
+
+    /**
+     * Setup all the listeners.
+     * This is just a wrapper for every listener so an inner function is more clean.
+     */
+    protected void setupListeners() {
+        this.listenForServerVoiceChannelLeaves();
+    }
+
+    /**
+     * Listen for ServerVoiceChannel leaves and pass the handling to UserLeaveVoiceListenerHandler
+     */
+    protected void listenForServerVoiceChannelLeaves() {
+        // UserLeaveVoiceListenerHandler will handle the event
+        this.discordApi.addServerVoiceChannelMemberLeaveListener(new UserLeaveVoiceListenerHandler(this.sessionManager));
     }
 
     /**
