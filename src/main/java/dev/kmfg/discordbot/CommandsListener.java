@@ -20,6 +20,7 @@ public class CommandsListener {
 	private static final String STOP_COMMAND_NAME = "stop";
 	private static final String VIEW_QUEUE_COMMAND_NAME = "queue";
 	private static final String SEEK_COMMAND_NAME = "seek";
+	private static final String NOW_PLAYING_COMMAND_NAME = "np";
 
 	private final DiscordApi discordApi;
 	private final SessionManager sessionManager;
@@ -70,6 +71,10 @@ public class CommandsListener {
 					SeekCommand seekCommand = new SeekCommand(this.sessionManager, slashCommandEvent, respondLater);
 					seekCommand.execute();
 					break;
+				case NOW_PLAYING_COMMAND_NAME:
+					NowPlayingCommand nowPlayingCommand = new NowPlayingCommand(this.sessionManager, slashCommandEvent, respondLater);
+					nowPlayingCommand.execute();
+					break;
 			}
 		});
 	}
@@ -82,6 +87,11 @@ public class CommandsListener {
 		createViewQueueCommand();
 		createPlayNextCommand();
 		createSeekCommand();
+		createNowPlayingCommand();
+	}
+
+	private void createNowPlayingCommand() {
+		SlashCommand.with(NOW_PLAYING_COMMAND_NAME, "Display the current playing song.").createGlobal(this.discordApi);
 	}
 
 	private void createSeekCommand() {

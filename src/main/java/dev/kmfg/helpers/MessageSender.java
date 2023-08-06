@@ -118,6 +118,17 @@ public class MessageSender {
         this.embedMessage.send();
     }
 
+    public void sendNowPlayingEmbed(AudioTrack audioTrack) {
+        // reuse sendQueueResultEmbed
+        // force the title to make it fit
+        this.embedMessage.setForcedTitle("Current Track:");
+        // mock a queue result so we can use an existing function
+        // is success because it is playing, use will play now so it uses the same format as a will play now
+        QueueResult mockQueueResult = new QueueResult(true, true, audioTrack);
+        // use the existing function
+        this.sendQueueResultEmbed(mockQueueResult);
+    }
+
     public void sendNotInServerVoiceChannelEmbed() {
         this.embedMessage
                 .setTitle("Denied!")
