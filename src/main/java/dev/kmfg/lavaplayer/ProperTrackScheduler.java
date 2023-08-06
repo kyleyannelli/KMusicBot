@@ -120,7 +120,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     /**
      * Converts the generic AudioTrack queues to PositionalAudioTracks
      * This includes the user added queue at the head, and the recommender queue at the tail.
-     * @return
+     * @return ArrayList of PositionalAudioTrack
      */
     public ArrayList<PositionalAudioTrack> getPositionalAudioQueue() {
         // preallocate ArrayList size

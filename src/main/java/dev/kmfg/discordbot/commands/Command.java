@@ -29,6 +29,12 @@ public abstract class Command {
 		this.messageSender = new MessageSender(embedMessage);
 	}
 
+	/**
+	 * This method should entirely handle the SlashCommandCreateEvent
+	 * This means responding to it with an EmbedMessage and handling related effects.
+	 * EnsuredInteraction may appear with a null check frequently, however, there is no reason to fully implement it as a constant.
+	 * Some commands do not require the EnsuredInteraction
+	 */
 	public abstract void execute();
 
 	public AudioSession createOrGetAudioSession(long serverId){

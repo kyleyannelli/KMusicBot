@@ -195,7 +195,7 @@ public class LavaSource extends AudioSourceBase {
     /**
      * Gets the audio queue from the track scheduler, including the priority and depriority queue.
      * The priority queue is at the head, deprioritized queue is at the tail.
-     * @return ArrayList<AudioTrack>
+     * @return ArrayList of AudioTrack
      */
     public ArrayList<AudioTrack> getAudioQueue() {
         return this.trackScheduler.getFullAudioQueue();
@@ -206,7 +206,7 @@ public class LavaSource extends AudioSourceBase {
      * Gets the audio queue as PositionalAudioTrack from the track scheduler.
      * This includes the priority and depriority queue.
      * The priority queue is at the head, deprioritized queue is at the tail.
-     * @return ArrayList<PositionalAudioTrack>
+     * @return ArrayList of PositonalAudioTrack
      */
     public ArrayList<PositionalAudioTrack> getPositionalAudioQueue() {
         return this.trackScheduler.getPositionalAudioQueue();

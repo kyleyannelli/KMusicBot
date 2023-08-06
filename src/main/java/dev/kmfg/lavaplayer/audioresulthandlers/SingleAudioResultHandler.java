@@ -19,7 +19,7 @@ public class SingleAudioResultHandler extends KAudioResultHandler {
 
     /**
      * Not much happens here, isSuccess will turn to false, and the error gets logged.
-     * @param friendlyException
+     * @param friendlyException the FriendlyException
      */
     @Override
     public void loadFailed(FriendlyException friendlyException) {
@@ -36,7 +36,7 @@ public class SingleAudioResultHandler extends KAudioResultHandler {
     /**
      * Queues the first track available in the AudioPlaylist (if it exists)
      * isSuccess updates to true here
-     * @param audioPlaylist
+     * @param audioPlaylist the AudioPlaylist
      */
     @Override
     public void playlistLoaded(AudioPlaylist audioPlaylist) {
@@ -58,7 +58,7 @@ public class SingleAudioResultHandler extends KAudioResultHandler {
     /**
      * Queues the loaded track
      * isSuccess updates to true here.
-     * @param audioTrack
+     * @param audioTrack the AudioTrack
      */
     @Override
     public void trackLoaded(AudioTrack audioTrack) {

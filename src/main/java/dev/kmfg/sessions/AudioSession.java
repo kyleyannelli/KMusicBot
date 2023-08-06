@@ -110,6 +110,7 @@ public class AudioSession extends RecommenderSession {
 
 	/**
 	 * Toggles the isRecommendingSongs variable and returns new value
+	 * @return boolean, will be of new value
 	*/
 	public boolean toggleIsRecommending() {
 		return (isRecommendingSongs = !isRecommendingSongs);
@@ -134,7 +135,7 @@ public class AudioSession extends RecommenderSession {
 	}
 
 	/**
-	 * Returns the skipped track in [0], returns the new track in [1]
+	 * @return QueueResult array, returns the skipped track in [0], returns the new track in [1]
 	 */
 	public QueueResult[] skipCurrentPlaying() {
 		AudioTrack skippedTrack = this.lavaSource.skipCurrentTrack();
@@ -187,6 +188,8 @@ public class AudioSession extends RecommenderSession {
 
 	/**
 	 * Checks if user is in server voice channel and if it is the same server voice channel as the bot.
+	 * @param user, the user we are checking
+	 * @return boolean, true if user is in same voice channel (or voice channel at all), false if not
 	*/
 	public boolean isUserInSameServerVoiceChannel(User user) {
 		ServerVoiceChannel botConnectedServerVoiceChannel = this.audioConnection.getChannel();

@@ -30,7 +30,7 @@ public abstract class KAudioResultHandler implements AudioLoadResultHandler {
      * Get the tracks which were last loaded.
      * Since KAudioResultHandlers (and its children) may have a long lifetime, this value can only be accessed once, until it is updated.
      * The above behavior is set as such so you can guarantee new access is a new set of data.
-     * @return ArrayList<AudioTrack>
+     * @return ArrayList of AudioTrack
      * @throws AlreadyAccessedException If the data was already accessed, this exception will be thrown.
      */
     public ArrayList<AudioTrack> getLastLoadedTracks() throws AlreadyAccessedException {
