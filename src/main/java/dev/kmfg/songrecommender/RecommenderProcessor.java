@@ -36,6 +36,12 @@ public class RecommenderProcessor {
 
         this.recommenderRequester = new RecommenderRequester(spotifyApi);
         this.queuedTasksMap = new ConcurrentHashMap<>();
+
+        // make sure to properly handle a shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            this.cancelAllTasks();
+            this.shutdown();
+        }));
     }
 
     public void shutdown() {
