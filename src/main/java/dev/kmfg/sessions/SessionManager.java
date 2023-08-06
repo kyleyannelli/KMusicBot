@@ -27,12 +27,7 @@ public class SessionManager {
 	}
 
 	public AudioSession createAudioSession(long serverId) {
-		AudioSession audioSession = new AudioSession(this.recommenderProcessor, serverId, associatedServerId -> {
-			// remove the audiosession upon shutdown
-			long sessionId = this.audioSessions.get(associatedServerId).getSessionId();
-			this.audioSessions.remove(associatedServerId);
-			Logger.info("Session " + sessionId + " removed from server " + associatedServerId);
-		});
+		AudioSession audioSession = new AudioSession(this.recommenderProcessor, serverId, this::handleAudioSessionShutdown);
 		LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioSession.getSessionId());
 		audioSession.setLavaSource(lavaSource);
 		this.audioSessions.put(serverId, audioSession);
@@ -45,5 +40,12 @@ public class SessionManager {
 
 	public DiscordApi getDiscordApi() {
 		return this.discordApi;
+	}
+
+	private void handleAudioSessionShutdown(long associatedServerId) {
+		// remove the audiosession upon shutdown
+		long sessionId = this.audioSessions.get(associatedServerId).getSessionId();
+		this.audioSessions.remove(associatedServerId);
+		Logger.info("Session " + sessionId + " removed from server " + associatedServerId);
 	}
 }
