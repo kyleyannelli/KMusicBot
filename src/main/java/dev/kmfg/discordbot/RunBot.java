@@ -1,6 +1,6 @@
-package dev.kmfg;
+package dev.kmfg.discordbot;
 
-import dev.kmfg.discordbot.KMusicBot;
+import dev.kmfg.KMusicBot;
 
 public class RunBot {
     public static void main(String[] args) {
