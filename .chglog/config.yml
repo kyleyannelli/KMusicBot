@@ -12,6 +12,7 @@ options:
     #     - perf
     #     - refactor
     #     - dep
+    #     - chore
   commit_groups:
     # title_maps:
     #   feat: Features
@@ -19,6 +20,7 @@ options:
     #   perf: Performance Improvements
     #   refactor: Code Refactoring
     #   dependency: Dependency changes
+    #   chore: Grunt work
   header:
     pattern: "^(\\w*)\\:\\s(.*)$"
     pattern_maps:
