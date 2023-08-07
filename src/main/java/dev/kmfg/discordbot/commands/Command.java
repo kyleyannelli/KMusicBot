@@ -3,13 +3,13 @@ package dev.kmfg.discordbot.commands;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
-import dev.kmfg.helpers.MessageSender;
+import dev.kmfg.helpers.messages.MessageSender;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.tinylog.Logger;
 
 import dev.kmfg.sessions.AudioSession;
-import dev.kmfg.discordbot.EmbedMessage;
+import dev.kmfg.helpers.messages.EmbedMessage;
 import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.exceptions.BadAudioConnectionException;
 import dev.kmfg.exceptions.EmptyParameterException;

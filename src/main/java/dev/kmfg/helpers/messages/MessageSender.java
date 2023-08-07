@@ -1,18 +1,14 @@
-package dev.kmfg.helpers;
+package dev.kmfg.helpers.messages;
 
-import dev.kmfg.discordbot.EmbedMessage;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import dev.kmfg.helpers.QueueResult;
 import dev.kmfg.lavaplayer.PositionalAudioTrack;
 import org.javacord.api.entity.message.component.ActionRow;
 import org.javacord.api.entity.message.component.SelectMenu;
-import org.javacord.api.entity.message.component.SelectMenuBuilder;
 import org.javacord.api.entity.message.component.SelectMenuOption;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -198,6 +194,14 @@ public class MessageSender {
         this.embedMessage
                 .setTitle("Invite Link")
                 .setContent(inviteLink)
+                .send();
+    }
+
+    public void sendNothingFoundEmbed(String searchQuery) {
+        this.embedMessage
+                .setTitle("Nothing Found!")
+                .setContent("Nothing was found from \"" + searchQuery + "\"")
+                .setColor(Color.BLACK)
                 .send();
     }
 

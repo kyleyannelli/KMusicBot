@@ -1,7 +1,7 @@
 package dev.kmfg.discordbot.listenerhandlers;
 
-import dev.kmfg.discordbot.EmbedMessage;
-import dev.kmfg.helpers.MessageSender;
+import dev.kmfg.helpers.messages.EmbedMessage;
+import dev.kmfg.helpers.messages.MessageSender;
 import dev.kmfg.helpers.QueueResult;
 import dev.kmfg.sessions.AudioSession;
 import dev.kmfg.sessions.SessionManager;
@@ -13,6 +13,10 @@ import org.tinylog.Logger;
 
 import java.util.List;
 
+/**
+ * Handles the event when a user select the /search menu option
+ * Logically equivalent to PlayCommand in terms of how audio is spawned from this handler
+ */
 public class SelectMenuChooseListenerHandler implements SelectMenuChooseListener {
     private final SessionManager sessionManager;
 
@@ -20,6 +24,10 @@ public class SelectMenuChooseListenerHandler implements SelectMenuChooseListener
         this.sessionManager = sessionManager;
     }
 
+    /**
+     * On menu choose, queue the search query. In this case the youtube URI from the Menu Option.
+     * @param event The event.
+     */
     @Override
     public void onSelectMenuChoose(SelectMenuChooseEvent event) {
         SelectMenuInteraction selectMenuInteraction = event.getSelectMenuInteraction();
@@ -49,6 +57,7 @@ public class SelectMenuChooseListenerHandler implements SelectMenuChooseListener
 
     /**
      * Sets up the MessageSender
+     * @return MessageSender KMusic preferred object to send messages through
      */
     private MessageSender setupMessageSender(SelectMenuInteraction selectMenuInteraction) {
         EmbedMessage embedMessage = new EmbedMessage(selectMenuInteraction, selectMenuInteraction.respondLater());

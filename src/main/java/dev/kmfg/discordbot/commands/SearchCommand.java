@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Handles the /search command by loading in results from SearchResultAudioHandler and passing it to the messageSender object.
+ */
 public class SearchCommand extends Command {
 
     public SearchCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
@@ -26,6 +29,16 @@ public class SearchCommand extends Command {
 
         String searchQuery = ensuredInteraction.getParameterValue("song");
         QueueResult searchResults = ensuredInteraction.getAudioSession().getLavaSource().getListQueryResults(searchQuery);
-        this.messageSender.sendSearchResultEmbed(searchResults.getQueuedTracks(), ensuredInteraction.getAudioSession().getAssociatedServerId());
+
+        // if no tracks were found
+        if(searchResults.getQueuedTracks().isEmpty()) {
+            this.messageSender.sendNothingFoundEmbed(searchQuery);
+            return;
+        }
+
+        this.messageSender.sendSearchResultEmbed(
+                searchResults.getQueuedTracks(),
+                ensuredInteraction.getAudioSession().getAssociatedServerId()
+        );
     }
 }

@@ -1,4 +1,4 @@
-package dev.kmfg.discordbot;
+package dev.kmfg.helpers.messages;
 
 import java.awt.Color;
 import java.util.concurrent.CompletableFuture;
