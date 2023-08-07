@@ -21,6 +21,7 @@ public class CommandsListener {
 	private static final String VIEW_QUEUE_COMMAND_NAME = "queue";
 	private static final String SEEK_COMMAND_NAME = "seek";
 	private static final String NOW_PLAYING_COMMAND_NAME = "np";
+	private static final String SEARCH_COMMAND_NAME = "search";
 
 	private final DiscordApi discordApi;
 	private final SessionManager sessionManager;
@@ -75,6 +76,10 @@ public class CommandsListener {
 					NowPlayingCommand nowPlayingCommand = new NowPlayingCommand(this.sessionManager, slashCommandEvent, respondLater);
 					nowPlayingCommand.execute();
 					break;
+				case SEARCH_COMMAND_NAME:
+					SearchCommand searchCommand = new SearchCommand(this.sessionManager, slashCommandEvent, respondLater);
+					searchCommand.execute();
+					break;
 			}
 		});
 	}
@@ -88,6 +93,17 @@ public class CommandsListener {
 		createPlayNextCommand();
 		createSeekCommand();
 		createNowPlayingCommand();
+		createSearchCommand();
+	}
+
+	private void createSearchCommand() {
+		SlashCommand.with(SEARCH_COMMAND_NAME, "Search for a song",
+						// create option(s)
+						Collections.singletonList(
+								// create option /search <song>
+								SlashCommandOption.create(SlashCommandOptionType.STRING, "song", "The song to search for", true)
+						))
+				.createGlobal(this.discordApi).join();
 	}
 
 	private void createNowPlayingCommand() {

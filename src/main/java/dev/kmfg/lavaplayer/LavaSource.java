@@ -1,13 +1,11 @@
 package dev.kmfg.lavaplayer;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import dev.kmfg.lavaplayer.audioresulthandlers.SearchResultAudioHandler;
 import dev.kmfg.lavaplayer.audioresulthandlers.SingleAudioResultHandler;
 import dev.kmfg.lavaplayer.audioresulthandlers.YoutubeAudioResultHandler;
 import dev.kmfg.exceptions.AlreadyAccessedException;
@@ -37,6 +35,7 @@ public class LavaSource extends AudioSourceBase {
     private final SingleAudioResultHandler singleResultHandler;
 
     private final YoutubeAudioResultHandler youtubeLinkResultHandler;
+    private final SearchResultAudioHandler searchResultAudioHandler;
 
     private final AudioPlayerManager audioPlayerManager;
     private final AudioPlayer audioPlayer;
@@ -61,6 +60,7 @@ public class LavaSource extends AudioSourceBase {
 
         this.singleResultHandler = new SingleAudioResultHandler(trackScheduler);
         this.youtubeLinkResultHandler = new YoutubeAudioResultHandler(trackScheduler);
+        this.searchResultAudioHandler = new SearchResultAudioHandler(trackScheduler);
     }
 
     public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, AudioPlayer audioPlayer, long associatedSessionId) {
@@ -77,6 +77,7 @@ public class LavaSource extends AudioSourceBase {
 
         this.singleResultHandler = new SingleAudioResultHandler(trackScheduler);
         this.youtubeLinkResultHandler = new YoutubeAudioResultHandler(trackScheduler);
+        this.searchResultAudioHandler = new SearchResultAudioHandler(trackScheduler);
     }
 
     /**
@@ -117,6 +118,47 @@ public class LavaSource extends AudioSourceBase {
     @Override
     public AudioSource copy() {
         return new LavaSource(discordApi, spotifyApi,audioPlayerManager, audioPlayer, ASSOCIATED_SESSION_ID);
+    }
+
+    /**
+     * Uses SearchResultAudioHandler to list results for a search query
+     * @return QueueResult containing what was found (not loaded)
+     */
+    public synchronized QueueResult getListQueryResults(String searchQuery) {
+        Future<Void> searchResultAudioHandlerFuture = audioPlayerManager.loadItem("ytsearch:" + searchQuery, this.searchResultAudioHandler);
+        return handleSearchResultFuture(searchResultAudioHandlerFuture);
+    }
+
+    private QueueResult handleSearchResultFuture(Future<Void> searchResultAudioHandlerFuture) {
+        // attempt to wait for future
+        try {
+            searchResultAudioHandlerFuture.get();
+        }
+        catch(InterruptedException interruptedException) {
+            Logger.error(interruptedException, "Interrupted while waiting for search result handler!");
+            Thread.currentThread().interrupt();
+            return new QueueResult(false, false, Collections.emptyList());
+        }
+        catch(ExecutionException executionException) {
+            Logger.error(executionException, "Execution exception while waiting for search result handler!");
+            return new QueueResult(false, false, Collections.emptyList());
+        }
+        // items should be loaded by now.
+        return generateQueueResultFromSearch();
+    }
+
+    private QueueResult generateQueueResultFromSearch() {
+        try {
+            boolean wasSuccess = this.searchResultAudioHandler.getIsSuccess();
+            boolean willPlayNow = false;
+            ArrayList<AudioTrack> foundTracks = this.searchResultAudioHandler.getLastLoadedTracks();
+            return new QueueResult(wasSuccess, willPlayNow, foundTracks);
+        }
+        catch(AlreadyAccessedException alreadyAccessedException) {
+            // already accessed exception will contain what value if thrown properly
+            Logger.error(alreadyAccessedException, "Value for searchResultAudioHandler was already accessed!\nSearch attempt failed!");
+            return new QueueResult(false, false, Collections.emptyList());
+        }
     }
 
     /**

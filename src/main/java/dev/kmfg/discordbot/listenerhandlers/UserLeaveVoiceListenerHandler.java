@@ -2,6 +2,7 @@ package dev.kmfg.discordbot.listenerhandlers;
 
 import dev.kmfg.sessions.AudioSession;
 import dev.kmfg.sessions.SessionManager;
+import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.channel.server.voice.ServerVoiceChannelMemberLeaveEvent;
 import org.javacord.api.listener.channel.server.voice.ServerVoiceChannelMemberLeaveListener;
@@ -48,7 +49,7 @@ public class UserLeaveVoiceListenerHandler implements ServerVoiceChannelMemberLe
             // get the server id from the event
             long relevantServerId = event.getServer().getId();
             // now disconnect and shutdown the session
-            this.disconnectFromEmptyServerVoiceChannel(relevantServerId);
+            this.disconnectFromEmptyServerVoiceChannel(relevantServerId, event.getChannel());
         }
     }
 
@@ -57,7 +58,9 @@ public class UserLeaveVoiceListenerHandler implements ServerVoiceChannelMemberLe
      * Will warn in logs if AudioSession is null as this is unexpected behavior.
      * @param disconnectingServerId, server id of which to remove the audio session.
      */
-    protected void disconnectFromEmptyServerVoiceChannel(long disconnectingServerId) {
+    protected void disconnectFromEmptyServerVoiceChannel(long disconnectingServerId, ServerVoiceChannel voiceChannel) {
+        // disconnect from the voice channel
+        voiceChannel.disconnect();
         // get the audioSession from the manager
         AudioSession audioSession = this.sessionManager.getAudioSession(disconnectingServerId);
         // this shouldn't be null if the bot was connected to a VoiceChannel, but just to be safe.

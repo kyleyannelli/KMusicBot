@@ -6,6 +6,8 @@ import dev.kmfg.lavaplayer.PositionalAudioTrack;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class MessageSender {
@@ -41,6 +43,16 @@ public class MessageSender {
         
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
+
+   public void sendSearchResultEmbed(List<AudioTrack> foundTracks) {
+       this.embedMessage.setForcedTitle("Search Results: ");
+       ArrayList<PositionalAudioTrack> relevantAudioTracks = new ArrayList<>();
+       for(int i = 0; i < foundTracks.size(); i++) {
+           relevantAudioTracks.add(new PositionalAudioTrack(foundTracks.get(i), true, 1+i));
+       }
+       // we are reusing sendViewQueueEmbed, so have to setup as 1 of 1 page since we do not want to overwhelm with results
+       this.sendViewQueueEmbed(relevantAudioTracks, 1, 1);
+   }
 
     public void sendViewQueueEmbed(ArrayList<PositionalAudioTrack> relevantAudioTracks, int pageNumber, int totalPages) {
         String tracksString = "";
