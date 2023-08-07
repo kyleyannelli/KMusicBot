@@ -3,7 +3,7 @@ package dev.kmfg.discordbot;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
-import dev.kmfg.discordbot.CommandsListener;
+import dev.kmfg.discordbot.listenerhandlers.SelectMenuChooseListenerHandler;
 import dev.kmfg.discordbot.listenerhandlers.UserLeaveVoiceListenerHandler;
 import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.songrecommender.RecommenderProcessor;
@@ -64,6 +64,14 @@ public class KMusicBot {
      */
     protected void setupListeners() {
         this.listenForServerVoiceChannelLeaves();
+        this.listenForMenuSelection();
+    }
+
+    /**
+     * Listens for MenuSelections on Search Commands
+     */
+    protected void listenForMenuSelection() {
+        this.discordApi.addSelectMenuChooseListener(new SelectMenuChooseListenerHandler(this.sessionManager));
     }
 
     /**

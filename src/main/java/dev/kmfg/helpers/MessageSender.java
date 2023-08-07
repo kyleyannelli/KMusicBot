@@ -3,10 +3,16 @@ package dev.kmfg.helpers;
 import dev.kmfg.discordbot.EmbedMessage;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.kmfg.lavaplayer.PositionalAudioTrack;
+import org.javacord.api.entity.message.component.ActionRow;
+import org.javacord.api.entity.message.component.SelectMenu;
+import org.javacord.api.entity.message.component.SelectMenuBuilder;
+import org.javacord.api.entity.message.component.SelectMenuOption;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -44,14 +50,22 @@ public class MessageSender {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
-   public void sendSearchResultEmbed(List<AudioTrack> foundTracks) {
-       this.embedMessage.setForcedTitle("Search Results: ");
-       ArrayList<PositionalAudioTrack> relevantAudioTracks = new ArrayList<>();
-       for(int i = 0; i < foundTracks.size(); i++) {
-           relevantAudioTracks.add(new PositionalAudioTrack(foundTracks.get(i), true, 1+i));
+   public void sendSearchResultEmbed(List<AudioTrack> foundTracks, long serverId) {
+        // generate menu options
+       List<SelectMenuOption> foundTrackMenuOptions = new ArrayList<>();
+       for(AudioTrack audioTrack : foundTracks) {
+           SelectMenuOption selectMenuOption = SelectMenuOption
+                   // create menu option with [title] by [author]. set the value to the youtube link
+                   .create(audioTrack.getInfo().title + " by " + audioTrack.getInfo().author, audioTrack.getInfo().uri);
+           foundTrackMenuOptions.add(selectMenuOption);
        }
-       // we are reusing sendViewQueueEmbed, so have to setup as 1 of 1 page since we do not want to overwhelm with results
-       this.sendViewQueueEmbed(relevantAudioTracks, 1, 1);
+       // now create the menu with the audio session id
+       SelectMenu selectMenu = SelectMenu.createStringMenu(String.valueOf(serverId), foundTrackMenuOptions);
+       ActionRow actionRow = ActionRow.of(selectMenu);
+       this.embedMessage.getRespondLater().thenAccept(acceptance -> {
+           acceptance.addComponents(actionRow);
+           acceptance.update();
+       });
    }
 
     public void sendViewQueueEmbed(ArrayList<PositionalAudioTrack> relevantAudioTracks, int pageNumber, int totalPages) {
@@ -169,6 +183,14 @@ public class MessageSender {
         this.embedMessage
                 .setTitle("Uh Oh!")
                 .setContent("The server was not present in the interaction. This shouldn't happen, but in the case you see this contact <@806350925723205642>.")
+                .send();
+    }
+
+    public void sendTooOldEmbed() {
+        this.embedMessage
+                .setTitle("Too Old!")
+                .setContent("The thing you tried to interact with was too old. You may have taken too long or clicked on an old response.")
+                .setColor(Color.BLACK)
                 .send();
     }
 

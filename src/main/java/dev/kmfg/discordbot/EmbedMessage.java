@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
+import org.javacord.api.interaction.SelectMenuInteraction;
 import org.javacord.api.interaction.SlashCommandInteraction;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
@@ -15,6 +16,7 @@ public class EmbedMessage {
 	private static final String YOUTUBE_THUMBNAIL_END_URI = "/0.jpg";
 
 	private final SlashCommandInteraction slashCommandInteraction;
+	private final SelectMenuInteraction selectMenuInteraction;
 	private final CompletableFuture<InteractionOriginalResponseUpdater> respondLater;
 
 	private String content;
@@ -27,8 +29,15 @@ public class EmbedMessage {
 	private Color color;
 	private boolean isQueue;
 
+	public EmbedMessage(SelectMenuInteraction selectMenuInteraction, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
+		this.respondLater = respondLater;
+		this.slashCommandInteraction = null;
+		this.selectMenuInteraction = selectMenuInteraction;
+	}
+
 	public EmbedMessage(SlashCommandCreateEvent slashCommandCreateEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
 		this.slashCommandInteraction = slashCommandCreateEvent.getSlashCommandInteraction();
+		this.selectMenuInteraction = null;
 		this.respondLater = respondLater;
 		this.isQueue = false;
 	}
@@ -108,7 +117,7 @@ public class EmbedMessage {
 	}
 
 	public void send() {
-		User requestingUser = slashCommandInteraction.getUser();
+		User requestingUser = slashCommandInteraction == null ? selectMenuInteraction.getUser() : slashCommandInteraction.getUser();
 
 		EmbedBuilder embedBuilder = generateEmbedBuilder(requestingUser);
 
@@ -116,5 +125,9 @@ public class EmbedMessage {
 			acceptance.addEmbed(embedBuilder);
 			acceptance.update();
 		});
+	}
+
+	public CompletableFuture<InteractionOriginalResponseUpdater> getRespondLater() {
+		return respondLater;
 	}
 }

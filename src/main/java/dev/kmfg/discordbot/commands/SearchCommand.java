@@ -26,6 +26,6 @@ public class SearchCommand extends Command {
 
         String searchQuery = ensuredInteraction.getParameterValue("song");
         QueueResult searchResults = ensuredInteraction.getAudioSession().getLavaSource().getListQueryResults(searchQuery);
-        this.messageSender.sendSearchResultEmbed(searchResults.getQueuedTracks());
+        this.messageSender.sendSearchResultEmbed(searchResults.getQueuedTracks(), ensuredInteraction.getAudioSession().getAssociatedServerId());
     }
 }
