@@ -25,7 +25,7 @@ public abstract class Command {
 		this.sessionManager = sessionManager;
 		this.slashCommandEvent = slashCommandEvent;
 
-		EmbedMessage embedMessage = new EmbedMessage(this.slashCommandEvent, respondLater);
+		EmbedMessage embedMessage = new EmbedMessage(this.slashCommandEvent.getSlashCommandInteraction().getUser(), respondLater);
 		this.messageSender = new MessageSender(embedMessage);
 	}
 

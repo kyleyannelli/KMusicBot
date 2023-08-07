@@ -6,19 +6,15 @@ import java.util.concurrent.CompletableFuture;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
-import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.interaction.SelectMenuInteraction;
-import org.javacord.api.interaction.SlashCommandInteraction;
+import org.javacord.api.interaction.callback.ComponentInteractionOriginalMessageUpdater;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 
 public class EmbedMessage {
 	private static final String YOUTUBE_THUMBNAIL_BEGIN_URI = "https://img.youtube.com/vi/";
 	private static final String YOUTUBE_THUMBNAIL_END_URI = "/0.jpg";
-
-	private final SlashCommandInteraction slashCommandInteraction;
-	private final SelectMenuInteraction selectMenuInteraction;
+	private final User requestingUser;
 	private final CompletableFuture<InteractionOriginalResponseUpdater> respondLater;
-
+	private final ComponentInteractionOriginalMessageUpdater originalMessageUpdater;
 	private String content;
 	private String title;
 	private String forcedTitle;
@@ -29,17 +25,16 @@ public class EmbedMessage {
 	private Color color;
 	private boolean isQueue;
 
-	public EmbedMessage(SelectMenuInteraction selectMenuInteraction, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-		this.respondLater = respondLater;
-		this.slashCommandInteraction = null;
-		this.selectMenuInteraction = selectMenuInteraction;
+	public EmbedMessage(User requestingUser, ComponentInteractionOriginalMessageUpdater originalMessageUpdater) {
+		this.respondLater = null;
+		this.originalMessageUpdater = originalMessageUpdater;
+		this.requestingUser = requestingUser;
 	}
 
-	public EmbedMessage(SlashCommandCreateEvent slashCommandCreateEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-		this.slashCommandInteraction = slashCommandCreateEvent.getSlashCommandInteraction();
-		this.selectMenuInteraction = null;
+	public EmbedMessage(User requestingUser, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
 		this.respondLater = respondLater;
-		this.isQueue = false;
+		this.originalMessageUpdater = null;
+		this.requestingUser = requestingUser;
 	}
 
 	public EmbedMessage setContent(String content) {
@@ -117,14 +112,18 @@ public class EmbedMessage {
 	}
 
 	public void send() {
-		User requestingUser = slashCommandInteraction == null ? selectMenuInteraction.getUser() : slashCommandInteraction.getUser();
+		EmbedBuilder embedBuilder = generateEmbedBuilder(this.requestingUser);
 
-		EmbedBuilder embedBuilder = generateEmbedBuilder(requestingUser);
-
- 		this.respondLater.thenAccept(acceptance -> {
-			acceptance.addEmbed(embedBuilder);
-			acceptance.update();
-		});
+		if(this.originalMessageUpdater == null) {
+			this.respondLater.thenAccept(acceptance -> {
+				acceptance.addEmbed(embedBuilder);
+				acceptance.update();
+			});
+		}
+		else {
+			this.originalMessageUpdater.addEmbed(embedBuilder);
+			this.originalMessageUpdater.update();
+		}
 	}
 
 	public CompletableFuture<InteractionOriginalResponseUpdater> getRespondLater() {
