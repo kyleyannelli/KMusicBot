@@ -50,9 +50,12 @@ public class MessageSender {
         // generate menu options
        List<SelectMenuOption> foundTrackMenuOptions = new ArrayList<>();
        for(AudioTrack audioTrack : foundTracks) {
+           String label = audioTrack.getInfo().title + " by " + audioTrack.getInfo().author;
+           // make sure label does not exceed length of 100
+           label = label.length() > 100 ? label.substring(0, 100) : label;
            SelectMenuOption selectMenuOption = SelectMenuOption
                    // create menu option with [title] by [author]. set the value to the youtube link
-                   .create(audioTrack.getInfo().title + " by " + audioTrack.getInfo().author, audioTrack.getInfo().uri);
+                   .create(label, audioTrack.getInfo().uri);
            foundTrackMenuOptions.add(selectMenuOption);
        }
        // now create the menu with the audio session id
