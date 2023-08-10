@@ -21,8 +21,8 @@ import org.tinylog.Logger;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-import dev.kmfg.helpers.LimitedQueue;
-import dev.kmfg.helpers.QueueResult;
+import dev.kmfg.helpers.sessions.LimitedQueue;
+import dev.kmfg.helpers.sessions.QueueResult;
 
 public class AudioSession extends RecommenderSession {
 	private static final int MAX_SEARCH_QUEUE_SIZE = 5; // a maximum of 5 items in mostRecentSearches

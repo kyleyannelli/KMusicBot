@@ -1,4 +1,4 @@
-package dev.kmfg.helpers;
+package dev.kmfg.helpers.sessions;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 

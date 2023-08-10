@@ -1,20 +1,48 @@
-package dev.kmfg.discordbot.commands;
+package dev.kmfg.discordbot.commands.executors;
 
 import dev.kmfg.lavaplayer.PositionalAudioTrack;
 import dev.kmfg.sessions.SessionManager;
-import dev.kmfg.helpers.EnsuredSlashCommandInteraction;
+import dev.kmfg.helpers.slashcommands.EnsuredSlashCommandInteraction;
+import org.javacord.api.DiscordApi;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
+import org.javacord.api.interaction.SlashCommand;
+import org.javacord.api.interaction.SlashCommandOption;
+import org.javacord.api.interaction.SlashCommandOptionType;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
+import java.util.Collections;
 
 public class ViewQueueCommand extends Command {
+    public static final String COMMAND_NAME = "queue";
+    private static final String DESCRIPTION = "View the queue of tracks at a specified page number.";
     private static final int PAGE_MAX_ROWS = 5;
 
-    public ViewQueueCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandCreateEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-        super(sessionManager, slashCommandCreateEvent, respondLater);
+    public ViewQueueCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandCreateEvent) {
+        super(sessionManager, slashCommandCreateEvent);
+    }
+
+    @Override
+    public void register(DiscordApi discordApi) {
+        SlashCommand.with(COMMAND_NAME, DESCRIPTION,
+                        Collections.singletonList(
+                                SlashCommandOption
+                                        .create(SlashCommandOptionType.LONG,
+                                                "pageNumber",
+                                                "The page of queue to view.",
+                                                true)
+                        ))
+                .createGlobal(discordApi);
+    }
+
+    @Override
+    public String getCommandName() {
+        return null;
+    }
+
+    @Override
+    public String getCommandDescription() {
+        return null;
     }
 
     @Override

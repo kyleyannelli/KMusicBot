@@ -2,7 +2,7 @@ package dev.kmfg.discordbot.listenerhandlers;
 
 import dev.kmfg.helpers.messages.EmbedMessage;
 import dev.kmfg.helpers.messages.MessageSender;
-import dev.kmfg.helpers.QueueResult;
+import dev.kmfg.helpers.sessions.QueueResult;
 import dev.kmfg.sessions.AudioSession;
 import dev.kmfg.sessions.SessionManager;
 import org.javacord.api.entity.message.component.ActionRow;

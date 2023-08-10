@@ -1,4 +1,4 @@
-package dev.kmfg.helpers;
+package dev.kmfg.helpers.slashcommands;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -12,7 +12,7 @@ import org.javacord.api.entity.server.Server;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 
-import dev.kmfg.discordbot.commands.Command;
+import dev.kmfg.discordbot.commands.executors.Command;
 import dev.kmfg.sessions.AudioSession;
 import org.tinylog.Logger;
 

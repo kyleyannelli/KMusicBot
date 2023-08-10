@@ -1,7 +1,7 @@
 package dev.kmfg.lavaplayer.audioresulthandlers;
 
 import dev.kmfg.exceptions.AlreadyAccessedException;
-import dev.kmfg.helpers.SingleUse;
+import dev.kmfg.helpers.sessions.SingleUse;
 import dev.kmfg.lavaplayer.ProperTrackScheduler;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;

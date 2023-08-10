@@ -3,6 +3,7 @@ package dev.kmfg.discordbot;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import dev.kmfg.discordbot.listenerhandlers.SlashCommandListenerHandler;
 import dev.kmfg.discordbot.listenerhandlers.SelectMenuChooseListenerHandler;
 import dev.kmfg.discordbot.listenerhandlers.UserLeaveVoiceListenerHandler;
 import dev.kmfg.sessions.SessionManager;
@@ -25,7 +26,6 @@ public class KMusicBot {
     protected DiscordApiBuilder discordApiBuilder;
     protected DiscordApi discordApi;
     protected SessionManager sessionManager;
-    protected CommandsListener commandsListener;
 
     public KMusicBot() {
         // pull variables from .env file
@@ -107,7 +107,6 @@ public class KMusicBot {
      * Initializes the CommandsListener with the SessionManager, then sets it to listen for the commands.
      */
     protected void setupCommandsListener() {
-        this.commandsListener = new CommandsListener(this.discordApi, sessionManager);
-        this.commandsListener.createAndListenForGlobalCommands();
+        this.discordApi.addSlashCommandCreateListener(new SlashCommandListenerHandler(this.sessionManager));
     }
 }

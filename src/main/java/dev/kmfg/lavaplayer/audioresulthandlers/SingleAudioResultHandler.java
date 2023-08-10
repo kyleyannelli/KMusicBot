@@ -1,6 +1,6 @@
 package dev.kmfg.lavaplayer.audioresulthandlers;
 
-import dev.kmfg.helpers.SingleUse;
+import dev.kmfg.helpers.sessions.SingleUse;
 import dev.kmfg.lavaplayer.ProperTrackScheduler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;

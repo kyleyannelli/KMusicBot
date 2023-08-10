@@ -20,7 +20,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 
-import dev.kmfg.helpers.QueueResult;
+import dev.kmfg.helpers.sessions.QueueResult;
 import dev.kmfg.spotifyapi.HandleSpotifyLink;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;

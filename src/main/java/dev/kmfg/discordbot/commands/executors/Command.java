@@ -1,9 +1,10 @@
-package dev.kmfg.discordbot.commands;
+package dev.kmfg.discordbot.commands.executors;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 import dev.kmfg.helpers.messages.MessageSender;
+import org.javacord.api.DiscordApi;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.tinylog.Logger;
@@ -14,20 +15,40 @@ import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.exceptions.BadAudioConnectionException;
 import dev.kmfg.exceptions.EmptyParameterException;
 import dev.kmfg.exceptions.EmptyServerException;
-import dev.kmfg.helpers.EnsuredSlashCommandInteraction;
+import dev.kmfg.helpers.slashcommands.EnsuredSlashCommandInteraction;
 
 public abstract class Command {
 	protected final SessionManager sessionManager;
 	protected final SlashCommandCreateEvent slashCommandEvent;
 	protected final MessageSender messageSender;
 
-	public Command(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
+	public Command(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
 		this.sessionManager = sessionManager;
+
 		this.slashCommandEvent = slashCommandEvent;
 
-		EmbedMessage embedMessage = new EmbedMessage(this.slashCommandEvent.getSlashCommandInteraction().getUser(), respondLater);
+		EmbedMessage embedMessage = new EmbedMessage(this.slashCommandEvent.getSlashCommandInteraction().getUser(), getRespondLater());
 		this.messageSender = new MessageSender(embedMessage);
+
+		// finally register the command
+		this.register(this.sessionManager.getDiscordApi());
 	}
+
+	/**
+	 * Registers the command with the Discord API
+	 * @param discordApi, the discordApi object to register with
+	 */
+	public abstract void register(DiscordApi discordApi);
+
+	/**
+	 * Gets the command name
+	 */
+	public abstract String getCommandName();
+
+	/**
+	 * Gets the description of the command
+	 */
+	public abstract String getCommandDescription();
 
 	/**
 	 * This method should entirely handle the SlashCommandCreateEvent
@@ -36,6 +57,13 @@ public abstract class Command {
 	 * Some commands do not require the EnsuredInteraction
 	 */
 	public abstract void execute();
+
+	/**
+	 * pulls the respond later future out of the event
+	 */
+	public CompletableFuture<InteractionOriginalResponseUpdater> getRespondLater() {
+		return this.slashCommandEvent.getInteraction().respondLater();
+	}
 
 	public AudioSession createOrGetAudioSession(long serverId){
 		AudioSession audioSession = this.sessionManager.getAudioSession(serverId);

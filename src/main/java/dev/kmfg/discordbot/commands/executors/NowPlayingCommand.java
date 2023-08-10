@@ -1,19 +1,35 @@
-package dev.kmfg.discordbot.commands;
+package dev.kmfg.discordbot.commands.executors;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import dev.kmfg.helpers.EnsuredSlashCommandInteraction;
+import dev.kmfg.helpers.slashcommands.EnsuredSlashCommandInteraction;
 import dev.kmfg.sessions.SessionManager;
+import org.javacord.api.DiscordApi;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
-
-import java.util.concurrent.CompletableFuture;
+import org.javacord.api.interaction.SlashCommand;
 
 /**
  * Handles the /np command by sending out an EmbedMessage of the current playing track
  */
 public class NowPlayingCommand extends Command {
-    public NowPlayingCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-        super(sessionManager, slashCommandEvent, respondLater);
+    public static final String COMMAND_NAME = "np";
+    private static final String DESCRIPTION = "Display the current playing song.";
+    public NowPlayingCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
+        super(sessionManager, slashCommandEvent);
+    }
+
+    @Override
+    public void register(DiscordApi discordApi) {
+        SlashCommand.with(COMMAND_NAME, DESCRIPTION).createGlobal(discordApi);
+    }
+
+    @Override
+    public String getCommandName() {
+        return COMMAND_NAME;
+    }
+
+    @Override
+    public String getCommandDescription() {
+        return DESCRIPTION;
     }
 
     // javadoc is still exactly applicable from super

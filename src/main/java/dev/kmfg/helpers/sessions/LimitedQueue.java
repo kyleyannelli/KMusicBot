@@ -1,4 +1,4 @@
-package dev.kmfg.helpers;
+package dev.kmfg.helpers.sessions;
 
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.locks.ReentrantLock;

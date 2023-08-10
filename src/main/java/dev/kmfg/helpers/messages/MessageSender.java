@@ -1,7 +1,7 @@
 package dev.kmfg.helpers.messages;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import dev.kmfg.helpers.QueueResult;
+import dev.kmfg.helpers.sessions.QueueResult;
 import dev.kmfg.lavaplayer.PositionalAudioTrack;
 import org.javacord.api.entity.message.component.ActionRow;
 import org.javacord.api.entity.message.component.SelectMenu;

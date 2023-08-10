@@ -1,21 +1,47 @@
-package dev.kmfg.discordbot.commands;
+package dev.kmfg.discordbot.commands.executors;
 
-import dev.kmfg.sessions.AudioSession;
 import dev.kmfg.sessions.SessionManager;
+import org.javacord.api.DiscordApi;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
-import org.slf4j.Logger;
+import org.javacord.api.interaction.SlashCommand;
+import org.javacord.api.interaction.SlashCommandOption;
+import org.javacord.api.interaction.SlashCommandOptionType;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-import dev.kmfg.helpers.EnsuredSlashCommandInteraction;
+import dev.kmfg.helpers.slashcommands.EnsuredSlashCommandInteraction;
 
+import java.util.ArrayList;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 public class SeekCommand extends Command {
-    public SeekCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-        super(sessionManager, slashCommandEvent, respondLater);
+    public static final String COMMAND_NAME = "seek";
+    private static final String DESCRIPTION = "Seek to a specific position in the current playing song. Just one of three options is required.";
+    public SeekCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
+        super(sessionManager, slashCommandEvent);
+    }
+
+    @Override
+    public void register(DiscordApi discordApi) {
+        ArrayList<SlashCommandOption> options = new ArrayList<>();
+        options.add(SlashCommandOption
+                .create(SlashCommandOptionType.LONG, "seconds", "The amount of seconds"));
+        options.add(SlashCommandOption
+                .create(SlashCommandOptionType.LONG, "minutes", "The amount of minutes"));
+        options.add(SlashCommandOption
+                .create(SlashCommandOptionType.LONG, "hours", "The amount of hours"));
+
+        SlashCommand.with(COMMAND_NAME, DESCRIPTION, options).createGlobal(discordApi);
+    }
+
+    @Override
+    public String getCommandName() {
+        return COMMAND_NAME;
+    }
+
+    @Override
+    public String getCommandDescription() {
+        return DESCRIPTION;
     }
 
     @Override

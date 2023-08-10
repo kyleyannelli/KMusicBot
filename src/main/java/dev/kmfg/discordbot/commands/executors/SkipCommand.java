@@ -1,17 +1,34 @@
-package dev.kmfg.discordbot.commands;
+package dev.kmfg.discordbot.commands.executors;
 
 import dev.kmfg.sessions.SessionManager;
-import dev.kmfg.helpers.EnsuredSlashCommandInteraction;
-import dev.kmfg.helpers.QueueResult;
+import dev.kmfg.helpers.slashcommands.EnsuredSlashCommandInteraction;
+import dev.kmfg.helpers.sessions.QueueResult;
+import org.javacord.api.DiscordApi;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
-import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
-
-import java.util.concurrent.CompletableFuture;
+import org.javacord.api.interaction.SlashCommand;
 
 public class SkipCommand extends Command {
-    public SkipCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent, CompletableFuture<InteractionOriginalResponseUpdater> respondLater) {
-        super(sessionManager, slashCommandEvent, respondLater);
+    public static final String COMMAND_NAME = "skip";
+    private static final String DESCRIPTION = "Skip the current playing song.";
+    public SkipCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
+        super(sessionManager, slashCommandEvent);
     }
+
+    @Override
+    public void register(DiscordApi discordApi) {
+        SlashCommand.with(COMMAND_NAME, DESCRIPTION).createGlobal(discordApi);
+    }
+
+    @Override
+    public String getCommandName() {
+        return COMMAND_NAME;
+    }
+
+    @Override
+    public String getCommandDescription() {
+        return DESCRIPTION;
+    }
+
     @Override
     public void execute() {
         // begin ensured interaction setup
