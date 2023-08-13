@@ -146,13 +146,17 @@ public class RecommenderProcessor {
                 // If it's a YouTube URL, check if it's already in the queue
                 for(AudioTrack track : session.getAudioQueue()) {
                     if(track.getInfo().uri.equals(songStr)) {
-                        trackNames.add(track.getInfo().title);
+                        // ensure it will not exceed 100 character limit
+                        trackNames.add(track.getInfo().title.length() < 100 ?
+                                track.getInfo().title : track.getInfo().title.substring(0, 100));
                         break;
                     }
                 }
             } else {
                 // If it's not a YouTube URL, simply add it to trackNames
-                trackNames.add(songStr);
+                // ensure it will not exceed 100 character limit
+                trackNames.add(songStr.length() < 100 ?
+                        songStr : songStr.substring(0, 100));
             }
         }
         return trackNames;
