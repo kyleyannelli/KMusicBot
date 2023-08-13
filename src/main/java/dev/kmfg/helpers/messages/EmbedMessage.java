@@ -19,6 +19,7 @@ public class EmbedMessage {
 	private String title;
 	private String forcedTitle;
 	private String author;
+	private String forcedContent;
 	private String youtubeTitle;
 	private String youtubeUri;
 	private String fullYoutubeThumbnailUri;
@@ -67,6 +68,10 @@ public class EmbedMessage {
 		return this;
 	}
 
+	public void setForcedContent(String content) {
+		this.forcedContent = content;
+	}
+
 	public EmbedMessage setupAudioTrack(AudioTrack audioTrack) {
 		this.youtubeTitle = audioTrack.getInfo().title;
 		this.author = audioTrack.getInfo().author;
@@ -107,6 +112,10 @@ public class EmbedMessage {
 		}
 
 		if(forcedTitle != null) embedBuilder.setTitle(forcedTitle);
+		if(forcedContent != null) {
+			embedBuilder.removeAllFields();
+			embedBuilder.addField("", forcedContent);
+		}
 
 		return embedBuilder;
 	}

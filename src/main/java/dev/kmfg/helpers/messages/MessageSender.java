@@ -144,9 +144,14 @@ public class MessageSender {
     }
 
     public void sendNowPlayingEmbed(AudioTrack audioTrack) {
+        String artistAndTitle = audioTrack.getInfo().title + " by " + audioTrack.getInfo().author;
         // reuse sendQueueResultEmbed
         // force the title to make it fit
-        this.embedMessage.setForcedTitle("Current Track:");
+        this.embedMessage.setForcedTitle(artistAndTitle);
+        long currentPositionMs = audioTrack.getPosition();
+        long durationMs = audioTrack.getDuration();
+        // force the content to be HH:MM:SS
+        this.embedMessage.setForcedContent(convertToHMS(currentPositionMs) + " of " + convertToHMS(durationMs) + " (HH:MM:SS)");
         // mock a queue result so we can use an existing function
         // is success because it is playing, use will play now so it uses the same format as a will play now
         QueueResult mockQueueResult = new QueueResult(true, true, audioTrack);
