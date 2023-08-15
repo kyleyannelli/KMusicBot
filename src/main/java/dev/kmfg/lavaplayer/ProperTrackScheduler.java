@@ -87,6 +87,10 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         }
     }
 
+    public boolean hasNowPlaying() {
+        return this.audioPlayer.getPlayingTrack() != null;
+    }
+
     public void loadSingleTrack(AudioTrack track, boolean deprioritizeQueue) {
         if(this.audioPlayer.getPlayingTrack() == null) {
             this.audioPlayer.playTrack(track);

@@ -32,7 +32,7 @@ public class YoutubeAudioResultHandler extends KAudioResultHandler {
 
     @Override
     public void trackLoaded(AudioTrack arg0) {
-        if(this.playNext) {
+        if(this.playNext && this.trackScheduler.hasNowPlaying()) {
             trackScheduler.queueNext(arg0);
         }
         else {

@@ -43,7 +43,7 @@ public class SingleAudioResultHandler extends KAudioResultHandler {
         ArrayList<AudioTrack> loadedTracks = new ArrayList<>();
         // if theres a list of tracks AND first result, play the track
         if(audioPlaylist.getTracks() != null && audioPlaylist.getTracks().get(0) != null) {
-            if(this.playNext) {
+            if(this.playNext && this.trackScheduler.hasNowPlaying()) {
                 trackScheduler.queueNext(audioPlaylist.getTracks().get(0));
             }
             else {
