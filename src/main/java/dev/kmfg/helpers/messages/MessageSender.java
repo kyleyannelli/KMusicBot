@@ -111,6 +111,11 @@ public class MessageSender {
     }
 
     public void sendQueueResultEmbed(QueueResult queueResult) {
+        if(queueResult == null) {
+            this.sendNothingFoundEmbed();
+            //early return
+            return;
+        }
         // check if the track(s) went into the AudioQueue by flipping willPlayNow()
         this.embedMessage.setIsQueue(!queueResult.willPlayNow());
 
@@ -209,6 +214,14 @@ public class MessageSender {
         this.embedMessage
                 .setTitle("Nothing Found!")
                 .setContent("Nothing was found from \"" + searchQuery + "\"")
+                .setColor(Color.BLACK)
+                .send();
+    }
+
+    public void sendNothingFoundEmbed() {
+        this.embedMessage
+                .setTitle("Nothing Found!")
+                .setContent("Nothing was found with your search query. Double check it is a valid direct YouTube link or playlist, and is public.")
                 .setColor(Color.BLACK)
                 .send();
     }

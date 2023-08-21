@@ -350,6 +350,10 @@ public class LavaSource extends AudioSourceBase {
             Logger.warn(alreadyAccessedException, "Value for Result Handler was already accessed!");
             return null;
         }
+        catch(NullPointerException nullPointerException) {
+            Logger.error(nullPointerException, "Null Pointer for generate queue. Likely no results found.");
+            return null;
+        }
     }
 
     /**
