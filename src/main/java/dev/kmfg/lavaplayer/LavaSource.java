@@ -162,6 +162,16 @@ public class LavaSource extends AudioSourceBase {
     }
 
     /**
+     * Checks if a string is one of the many valid youtube links
+     */
+    public boolean isYoutubeLink(String potentialLink) {
+        return potentialLink.startsWith("https://youtube.com/") ||
+            potentialLink.startsWith("https://www.youtube.com/") ||
+            potentialLink.startsWith("https://youtu.be/") ||
+            potentialLink.startsWith("https://www.youtu.be");
+    }
+
+    /**
      * Queues a track based on the searchQuery parameter. This is a thread safe function.
      * @param searchQuery the query you would like to search for
      * @param deprioritizeQueue tell the ResultHandler whether to put the track at the head queue (false, priority queue) or tail queue (true, deprioritized queue)
@@ -188,9 +198,13 @@ public class LavaSource extends AudioSourceBase {
         this.singleResultHandler.setPlayNext(playNext);
 
         // if given a youtube link
-        if(searchQuery.startsWith("https://youtube.com/")) {
+        if(this.isYoutubeLink(searchQuery)) {
+            int indexOfFirstParameter = searchQuery.indexOf('&');
+            // chop off any parameters
+            String parameterlessSearchQuery = indexOfFirstParameter != -1 ?
+                searchQuery.substring(0, indexOfFirstParameter) : searchQuery;
             // is success is set by result handler
-            playerManagerFuture = audioPlayerManager.loadItem(searchQuery, youtubeLinkResultHandler);
+            playerManagerFuture = audioPlayerManager.loadItem(parameterlessSearchQuery, youtubeLinkResultHandler);
             isYoutubeLink = true;
         }
         // if given a spotify link
