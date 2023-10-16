@@ -5,6 +5,9 @@ import dev.kmfg.lavaplayer.ProperTrackScheduler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+
+import java.util.ArrayList;
+
 import org.tinylog.Logger;
 
 public class YoutubeAudioResultHandler extends KAudioResultHandler {
@@ -21,13 +24,24 @@ public class YoutubeAudioResultHandler extends KAudioResultHandler {
     @Override
     public void noMatches() {
         Logger.warn("No matches found for query!");
-        isSuccess = new SingleUse<>(false);
+        this.isSuccess = new SingleUse<>(false);
     }
 
     @Override
     public void playlistLoaded(AudioPlaylist arg0) {
         boolean loadPlaylistResult = trackScheduler.loadPlaylist(arg0, this.deprioritizeQueue, this.playNext);
-        isSuccess = new SingleUse<>(loadPlaylistResult);
+
+        // log result
+        if(loadPlaylistResult) {
+            Logger.info("Playlist successfully loaded.");
+            //ArrayList<AudioTrack> loadedTracks = new ArrayList(arg0.getTracks());
+            ArrayList<AudioTrack> loadedTracks = new ArrayList<>();
+            arg0.getTracks().stream().forEach(track -> loadedTracks.add(track));
+            this.lastLoadedTracks = new SingleUse<>(loadedTracks);
+        }
+        else Logger.warn("Playlist failed to load!");
+
+        this.isSuccess = new SingleUse<>(loadPlaylistResult);
     }
 
     @Override
@@ -38,6 +52,6 @@ public class YoutubeAudioResultHandler extends KAudioResultHandler {
         else {
             trackScheduler.loadSingleTrack(arg0, this.deprioritizeQueue);
         }
-        isSuccess = new SingleUse<>(true);
+        this.isSuccess = new SingleUse<>(true);
     }
 }
