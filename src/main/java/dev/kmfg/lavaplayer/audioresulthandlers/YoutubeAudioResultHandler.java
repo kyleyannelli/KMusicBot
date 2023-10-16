@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.tinylog.Logger;
 
@@ -52,6 +53,7 @@ public class YoutubeAudioResultHandler extends KAudioResultHandler {
         else {
             trackScheduler.loadSingleTrack(arg0, this.deprioritizeQueue);
         }
+        this.lastLoadedTracks = new SingleUse<>(new ArrayList<>(List.of(arg0)));
         this.isSuccess = new SingleUse<>(true);
     }
 }
