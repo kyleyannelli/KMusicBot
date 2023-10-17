@@ -1,5 +1,6 @@
 package dev.kmfg.sessions;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.javacord.api.DiscordApi;
@@ -40,6 +41,19 @@ public class SessionManager {
 
 	public DiscordApi getDiscordApi() {
 		return this.discordApi;
+	}
+
+	public int getTotalSessionCount() {
+		return this.audioSessions.size();
+	}
+
+	public Optional<AudioSession> getOnlyAudioSession() {
+		// if there isn't just one element, we don't want to return anything
+		if(this.audioSessions.size() != 1) return Optional.empty();
+
+		return Optional.of(
+				this.audioSessions.elements().nextElement()
+				);
 	}
 
 	private void handleAudioSessionShutdown(long associatedServerId) {

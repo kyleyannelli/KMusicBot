@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import dev.kmfg.discordbot.listenerhandlers.SlashCommandListenerHandler;
 import dev.kmfg.discordbot.listenerhandlers.SelectMenuChooseListenerHandler;
 import dev.kmfg.discordbot.listenerhandlers.UserLeaveVoiceListenerHandler;
+import dev.kmfg.discordbot.services.ActivityUpdaterService;
 import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.songrecommender.RecommenderProcessor;
 import dev.kmfg.spotifyapi.ClientCreate;
@@ -26,6 +27,7 @@ public class KMusicBot {
     protected DiscordApiBuilder discordApiBuilder;
     protected DiscordApi discordApi;
     protected SessionManager sessionManager;
+    protected ActivityUpdaterService activityUpdaterService;
 
     public KMusicBot() {
         // pull variables from .env file
@@ -56,6 +58,9 @@ public class KMusicBot {
 
         // Create all listeners
         this.setupListeners();
+
+        // Start the ActivityUpdaterService
+        this.activityUpdaterService.start();
     }
 
     /**
@@ -100,6 +105,8 @@ public class KMusicBot {
         RecommenderProcessor recommenderProcessor = new RecommenderProcessor(this.discordApi, spotifyApi, MAX_RECOMMENDER_THREADS);
         // create session manager for AudioSessions
         this.sessionManager = new SessionManager(this.discordApi, spotifyApi, playerManager, recommenderProcessor);
+        // ready the ActivityUpdaterService
+        this.activityUpdaterService = new ActivityUpdaterService(this.discordApi, this.sessionManager);
     }
 
     /**
