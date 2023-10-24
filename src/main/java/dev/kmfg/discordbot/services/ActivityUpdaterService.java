@@ -82,6 +82,9 @@ public class ActivityUpdaterService {
 
             Logger.info(loggaInfa.toString());
 
+            // Additionally clear the current activity
+            this.discordApi.unsetActivity();
+
             // early return
             return;
         }
