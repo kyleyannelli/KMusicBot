@@ -9,6 +9,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -157,6 +158,19 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
     public long getAssociatedSessionId() {
         return ASSOCIATED_SESSION_ID;
+    }
+
+    public int shufflePriorityQueue() {
+        // convert to arraylist for simple shuffle
+        ArrayList<AudioTrack> priorityQueueList = new ArrayList<>(this.audioQueue);
+        Collections.shuffle(priorityQueueList);
+
+        // create new BlockingQueue to stuff the tracks in, then set it equal to the current queue
+        BlockingQueue<AudioTrack> shufflePriorityQueue = new LinkedBlockingQueue<>(this.audioQueue.size());
+        priorityQueueList.stream().forEach(audioTrack -> { shufflePriorityQueue.add(audioTrack); });
+        this.audioQueue = shufflePriorityQueue;
+
+        return this.audioQueue.size();
     }
 
     private String getSessionIdString() {

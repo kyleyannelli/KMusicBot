@@ -81,6 +81,15 @@ public class LavaSource extends AudioSourceBase {
     }
 
     /**
+     * Shuffles the user priority queue
+     * @return int Of how many items were shuffled
+     */
+    public int shufflePriorityQueue() {
+        // track scheduler priority queue returns the number of items shuffled
+        return this.trackScheduler.shufflePriorityQueue();
+    }
+
+    /**
      * Checks if there is a next frame. If so it applies transformers, else returns null.
      * @return byte[], applied transformers if the next frame exists.
      */
@@ -209,8 +218,8 @@ public class LavaSource extends AudioSourceBase {
         }
         // if given a spotify link
         else if(searchQuery.startsWith("https://open.spotify.com/")) {
-//            lastLoadedTracks = getTracksFromSpotifyLink(searchQuery);
-//            isSuccess = lastLoadedTracks.isPresent() && lastLoadedTracks.get().size() > 0;
+            //            lastLoadedTracks = getTracksFromSpotifyLink(searchQuery);
+            //            isSuccess = lastLoadedTracks.isPresent() && lastLoadedTracks.get().size() > 0;
 
             // @TODO Implement spotify searches
         }

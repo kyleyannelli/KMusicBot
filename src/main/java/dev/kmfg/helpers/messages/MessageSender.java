@@ -19,6 +19,10 @@ public class MessageSender {
         this.embedMessage = embedMessage;
     }
 
+    public EmbedMessage getEmbedMessage() {
+        return this.embedMessage;
+    }
+
     public void sendNothingPlayingEmbed() {
         this.embedMessage
                 .setColor(Color.RED)
