@@ -27,6 +27,7 @@ public class CommandsRegistry {
         this.commandsMap.put(StopCommand.COMMAND_NAME, StopCommand.class);
         this.commandsMap.put(ViewQueueCommand.COMMAND_NAME, ViewQueueCommand.class);
         this.commandsMap.put(SeekCommand.COMMAND_NAME, SeekCommand.class);
+        this.commandsMap.put(ShuffleCommand.COMMAND_NAME, ShuffleCommand.class);
     }
 
     public Command getCommand(String commandName, SessionManager sessionManager, SlashCommandCreateEvent event) {

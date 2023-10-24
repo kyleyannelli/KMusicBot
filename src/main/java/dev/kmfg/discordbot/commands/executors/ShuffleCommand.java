@@ -11,8 +11,8 @@ import dev.kmfg.sessions.AudioSession;
 import dev.kmfg.sessions.SessionManager;
 
 public class ShuffleCommand extends Command {
-	private final String COMMAND_NAME = "shuffle";
-	private final String DESCRIPTION = "Shuffles the user added queue. Auto-queue is uneffected.";
+	public static final String COMMAND_NAME = "shuffle";
+	private static final String DESCRIPTION = "Shuffles the user added queue. Auto-queue is uneffected.";
 
 	public ShuffleCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
 		super(sessionManager, slashCommandEvent);
