@@ -166,8 +166,8 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         Collections.shuffle(priorityQueueList);
 
         // create new BlockingQueue to stuff the tracks in, then set it equal to the current queue
-        BlockingQueue<AudioTrack> shufflePriorityQueue = new LinkedBlockingQueue<>(this.audioQueue.size());
-        priorityQueueList.stream().forEach(audioTrack -> { shufflePriorityQueue.add(audioTrack); });
+        BlockingQueue<AudioTrack> shufflePriorityQueue = new LinkedBlockingQueue<>();
+        priorityQueueList.stream().forEach(shufflePriorityQueue::add);
         this.audioQueue = shufflePriorityQueue;
 
         return this.audioQueue.size();
