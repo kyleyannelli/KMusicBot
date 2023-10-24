@@ -6,7 +6,7 @@
 
     <groupId>kyleyannelli.discordbots.music</groupId>
     <artifactId>KMusicBot</artifactId>
-    <version>3.3.0</version>
+    <version>3.3.0-PREVIEW</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
