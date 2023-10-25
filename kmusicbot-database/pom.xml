@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<modelVersion>4.0.0</modelVersion>
+<parent>
+  <groupId>kyleyannelli.discordbots.music</groupId>
+  <artifactId>KMusicBot</artifactId>
+  <version>3.3.0-PREVIEW</version>
+</parent>
+<groupId>dev.kmfg</groupId>
+<artifactId>kmusicbot-database</artifactId>
+<version>1.0.0-BETA</version>
+<name>kmusicbot-database</name>
+<url>http://maven.apache.org</url>
+
+<dependencies>
+  <dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-core</artifactId>
+    <version>6.0.0.Final</version>
+  </dependency>
+  <dependency>
+    <groupId>org.liquibase</groupId>
+    <artifactId>liquibase-core</artifactId>
+    <version>4.22.0</version>
+  </dependency>
+  <dependency>
+    <groupId>org.mariadb.jdbc</groupId>
+    <artifactId>mariadb-java-client</artifactId>
+    <version>3.1.4</version>
+  </dependency>
+  <dependency>
+    <groupId>org.tinylog</groupId>
+    <artifactId>tinylog-impl</artifactId>
+  </dependency>
+</dependencies>
+</project>
