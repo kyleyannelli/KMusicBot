@@ -58,5 +58,9 @@ public class TrackedSong {
 	public KMusicSong getSong() {
 		return this.kmusicSong;
 	}
+
+	public int getId() {
+		return this.id;
+	}
 }
 

@@ -10,10 +10,10 @@ import org.tinylog.Logger;
 
 import dev.kmfg.database.models.DiscordUser;
 
-public class HibernateDiscordUserRepository {
+public class DiscordUserRepo {
 	private final SessionFactory sessionFactory;
 
-	public HibernateDiscordUserRepository(SessionFactory sessionFactory) {
+	public DiscordUserRepo(SessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 
@@ -46,7 +46,7 @@ public class HibernateDiscordUserRepository {
 
 		Optional<DiscordUser> discordUser = Optional.ofNullable(
 				session
-				.createQuery("FROM DiscordUser WHERE discord_username = :discordUsername", DiscordUser.class)
+				.createQuery("FROM DiscordUser WHERE username = :discordUsername", DiscordUser.class)
 				.setParameter("discordUsername", discordUsername)
 				.uniqueResult()
 				);

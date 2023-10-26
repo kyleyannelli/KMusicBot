@@ -9,55 +9,39 @@ import org.hibernate.Transaction;
 import org.tinylog.Logger;
 
 import dev.kmfg.database.models.KMusicSong;
-import dev.kmfg.database.repositories.interfaces.KMusicSongRepository;
 
-public class HibernateKMusicSongRepository implements KMusicSongRepository {
+public class KMusicSongRepo {
 	private final SessionFactory sessionFactory;
 
-	public HibernateKMusicSongRepository(SessionFactory sessionFactory) {
+	public KMusicSongRepo(SessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 
-	@Override
-	public Optional<KMusicSong> findById(long id) {
-		Session session;
-
-		try {
-			session = this.sessionFactory.openSession();
+	public Optional<KMusicSong> findById(int id) {
+		try(Session session = this.sessionFactory.openSession()) {
+			return Optional.ofNullable(session.find(KMusicSong.class, id));
 		}
 		catch(HibernateException hibernateException) {
-			Logger.error(hibernateException, "Exception occured while opening session to find KMusicSong by ID.");
+			Logger.error(hibernateException, "Exception occurred while opening session to find KMusicSong by ID.");
 			return Optional.empty();
 		}
-
-		Optional<KMusicSong> kmusicSong = Optional.ofNullable(session.find(KMusicSong.class, id));
-		session.close();
-		return kmusicSong;
 	}
 
-	@Override
 	public Optional<KMusicSong> findByYoutubeUrl(String youtubeUrl) {
-		Session session;
-
-		try {
-			session = this.sessionFactory.openSession();
+		try(Session session = this.sessionFactory.openSession()) {
+			return Optional.ofNullable(
+					session
+							.createQuery("FROM KMusicSong WHERE youtubeUrl = :youtubeUrl", KMusicSong.class)
+							.setParameter("youtubeUrl", youtubeUrl)
+							.uniqueResult()
+			);
 		}
 		catch(HibernateException hibernateException) {
-			Logger.error(hibernateException, "Exception occured while opening session to find KMusicSong by YouTube URL.");
+			Logger.error(hibernateException, "Exception occurred while opening session to find KMusicSong by YouTube URL.");
 			return Optional.empty();
 		}
-
-		Optional<KMusicSong> kmusicSong = Optional.ofNullable(
-				session
-				.createQuery("FROM KMusicSong WHERE youtube_url = :youtubeUrl", KMusicSong.class)
-				.setParameter("youtubeUrl", youtubeUrl)
-				.uniqueResult()
-				);
-		session.close();
-		return kmusicSong;
 	}
 
-	@Override
 	public Optional<KMusicSong> save(KMusicSong song) {
 		Session session;
 
