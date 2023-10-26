@@ -46,7 +46,8 @@ CREATE TABLE `songs_playtime` (
   `tracked_song_id` integer NOT NULL,
   `seconds_listened` integer NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE (`discord_user_id`, `tracked_song_id`)
 );
 
 CREATE TABLE `used_commands` (
@@ -56,7 +57,8 @@ CREATE TABLE `used_commands` (
   `used_by_discord_user_id` bigint NOT NULL,
   `times_used` integer NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE (`discord_guild_id`, `used_by_discord_user_id`, `name`)
 );
 
 ALTER TABLE `tracked_songs` ADD FOREIGN KEY (`discord_guild_id`) REFERENCES `discord_guilds` (`discord_id`) ON DELETE CASCADE;
