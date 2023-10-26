@@ -40,3 +40,5 @@ build/
 
 ### VIM ###
 Session.vim
+*.swo
+*.swp
