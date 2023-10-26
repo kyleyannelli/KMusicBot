@@ -1,10 +1,14 @@
 package dev.kmfg.database.models;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -17,6 +21,9 @@ public class KMusicSong extends BaseKMusicTable {
 
 	@Column(name = "youtube_url")
 	private String youtubeUrl;
+
+	@OneToMany(mappedBy = "kmusicSong")
+	Set<TrackedSong> trackedSongs = new HashSet<>();
 
 	public KMusicSong(int id, String youtubeUrl) {
 		this.id = id;

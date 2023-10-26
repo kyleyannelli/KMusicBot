@@ -9,16 +9,14 @@ import org.hibernate.Transaction;
 import org.tinylog.Logger;
 
 import dev.kmfg.database.models.DiscordUser;
-import dev.kmfg.database.repositories.interfaces.DiscordUserRepository;
 
-public class HibernateDiscordUserRepository implements DiscordUserRepository {
+public class HibernateDiscordUserRepository {
 	private final SessionFactory sessionFactory;
 
 	public HibernateDiscordUserRepository(SessionFactory sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
 
-	@Override
 	public Optional<DiscordUser> findByDiscordId(long discordId) {
 		Session session;
 
@@ -35,7 +33,6 @@ public class HibernateDiscordUserRepository implements DiscordUserRepository {
 		return discordUser;
 	}
 
-	@Override
 	public Optional<DiscordUser> findByDiscordUsername(String discordUsername) {
 		Session session;
 
@@ -58,7 +55,6 @@ public class HibernateDiscordUserRepository implements DiscordUserRepository {
 		return discordUser;
 	}
 
-	@Override
 	public Optional<DiscordUser> save(DiscordUser discordUser) {
 		Session session;
 

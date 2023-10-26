@@ -1,5 +1,8 @@
 package dev.kmfg.database.models;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -7,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -24,6 +28,12 @@ public class TrackedSong {
 	@ManyToOne
 	@JoinColumn(name = "kmusic_song_id")
 	private KMusicSong kmusicSong;
+
+	@OneToMany(mappedBy = "trackedSong")
+	Set<SongInitialization> songInitializations = new HashSet<>();
+
+	@OneToMany(mappedBy = "trackedSong")
+	Set<SongPlaytime> songPlaytimes = new HashSet<>();
 
 	@Column(name = "seconds_played")
 	private int secondsPlayed;
