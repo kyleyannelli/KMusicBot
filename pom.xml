@@ -1,26 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    
   
   <modelVersion>4.0.0</modelVersion>
-    
   <groupId>kyleyannelli.discordbots.music</groupId>
-    
   <artifactId>KMusicBot</artifactId>
-    
-  <version>1.0.0-BETA</version>
+  <version>3.3.0-PREVIEW</version>
     
   
   <properties>
-        
     <maven.compiler.source>11</maven.compiler.source>
-        
     <maven.compiler.target>11</maven.compiler.target>
-        
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        
     <dependency-check-maven.version>8.2.1</dependency-check-maven.version>
-      
   </properties>
         
   
@@ -28,31 +19,18 @@
         
   
   <modules>
-        
     <module>kmusicbot-core</module>
-        
     <module>kmusicbot-database</module>
-        
     <module>kmusicbot-spark-api</module>
-      
   </modules>
     
   <dependencyManagement>
-        
     <dependencies>
-            
       <dependency>
-                
         <groupId>org.tinylog</groupId>
-                
         <artifactId>tinylog-impl</artifactId>
-                
         <version>2.6.2</version>
-              
       </dependency>
-          
     </dependencies>
-      
   </dependencyManagement>
-  
 </project>
