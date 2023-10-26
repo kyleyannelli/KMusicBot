@@ -7,20 +7,17 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table( name = "discord_users" )
-public class DiscordUser {
+public class DiscordUser extends BaseKMusicTable {
 	@Id
-	@Column( name = "id" )
+	@Column( name = "discord_id" )
 	private long discordId;
 
-	@Column( name = "discord_username" )
-	private String discordUsername;
+	@Column( name = "username" )
+	private String username;
 
-	// @OneToMany(mappedBy = "discord_user_id", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	// Set<KMusicSong> kmusicSongs;
-
-	public DiscordUser(long discordId, String discordUsername) {
+	public DiscordUser(long discordId, String username) {
 		this.discordId = discordId;
-		this.discordUsername = discordUsername;
+		this.username = username;
 	}
 
 	public long getDiscordId() {
@@ -28,6 +25,6 @@ public class DiscordUser {
 	} 
 
 	public String getDiscordUsername() {
-		return discordUsername;
+		return username;
 	}
 }
