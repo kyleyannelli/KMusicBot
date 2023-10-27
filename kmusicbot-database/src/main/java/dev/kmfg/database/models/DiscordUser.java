@@ -19,7 +19,7 @@ public class DiscordUser extends BaseKMusicTable {
 	@Column(name = "username")
 	private String username;
 
-	@OneToMany(mappedBy = "initDiscordUser")
+	@OneToMany(mappedBy = "initializingDiscordUser")
 	Set<SongInitialization> songInitializations = new HashSet<>();
 
 	@OneToMany(mappedBy = "listeningDiscordUser")
@@ -27,6 +27,10 @@ public class DiscordUser extends BaseKMusicTable {
 
 	@OneToMany(mappedBy = "usedByDiscordUser")
 	Set<UsedCommand> usedCommands = new HashSet<>();
+
+	public DiscordUser() {
+
+	}
 
 	public DiscordUser(long discordId, String username) {
 		this.discordId = discordId;
