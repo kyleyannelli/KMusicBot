@@ -40,7 +40,7 @@ CREATE TABLE `song_initializations` (
   FOREIGN KEY (`init_discord_user_id`) REFERENCES `discord_users` (`discord_id`)
 );
 
-CREATE TABLE `songs_playtime` (
+CREATE TABLE `song_playtimes` (
   `id` integer PRIMARY KEY AUTO_INCREMENT,
   `discord_user_id` bigint NOT NULL,
   `tracked_song_id` integer NOT NULL,
@@ -65,9 +65,9 @@ ALTER TABLE `tracked_songs` ADD FOREIGN KEY (`discord_guild_id`) REFERENCES `dis
 
 ALTER TABLE `tracked_songs` ADD FOREIGN KEY (`kmusic_song_id`) REFERENCES `kmusic_songs` (`id`);
 
-ALTER TABLE `songs_playtime` ADD FOREIGN KEY (`discord_user_id`) REFERENCES `discord_users` (`discord_id`) ON DELETE CASCADE;
+ALTER TABLE `song_playtimes` ADD FOREIGN KEY (`discord_user_id`) REFERENCES `discord_users` (`discord_id`) ON DELETE CASCADE;
 
-ALTER TABLE `songs_playtime` ADD FOREIGN KEY (`tracked_song_id`) REFERENCES `tracked_songs` (`id`);
+ALTER TABLE `song_playtimes` ADD FOREIGN KEY (`tracked_song_id`) REFERENCES `tracked_songs` (`id`);
 
 ALTER TABLE `used_commands` ADD FOREIGN KEY (`discord_guild_id`) REFERENCES `discord_guilds` (`discord_id`) ON DELETE CASCADE;
 
