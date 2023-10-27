@@ -2,6 +2,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+*hibernate.cfg.xml
 
 ### IntelliJ IDEA ###
 .idea/
