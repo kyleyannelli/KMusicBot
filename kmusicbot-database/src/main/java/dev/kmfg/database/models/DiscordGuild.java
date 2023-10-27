@@ -21,4 +21,8 @@ public class DiscordGuild extends BaseKMusicTable {
 
 	@OneToMany(mappedBy = "discordGuild")
 	Set<UsedCommand> usedCommands = new HashSet<>();
+
+	public long getDiscordId() {
+		return this.discordId;
+	}
 }
