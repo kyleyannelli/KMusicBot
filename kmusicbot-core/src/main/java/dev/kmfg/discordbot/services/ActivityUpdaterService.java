@@ -27,6 +27,8 @@ public class ActivityUpdaterService {
     private final SessionManager sessionManager;
     private final ScheduledExecutorService activityUpdateExecutorService;
 
+    private boolean alreadyLoggedCurrentState = false;
+
     public ActivityUpdaterService(DiscordApi discordApi, SessionManager sessionManager) {
         this.discordApi = discordApi;
         this.sessionManager = sessionManager;
@@ -62,6 +64,27 @@ public class ActivityUpdaterService {
                     );
     }
 
+    protected void possiblyLogSkip() {
+        if(!this.alreadyLoggedCurrentState) {
+            String mainTitleReason = "ActivityUpdaterService skipped updating because the only audio";
+            String furtherReasonInfo = "\n\tSessionManager claims a total of ";
+
+            StringBuilder loggaInfa = new StringBuilder()
+                .append(mainTitleReason)
+                .append(furtherReasonInfo)
+                .append(this.sessionManager.getTotalSessionCount())
+                .append(" sessions.");
+
+            Logger.info(loggaInfa.toString());
+
+            // Additionally clear the current activity
+            this.discordApi.unsetActivity();
+
+
+            this.alreadyLoggedCurrentState = true;
+        }
+    }
+
     /**
      * Updates the activity to the current track.
      * Will do nothing if total AudioSessions are > 1 OR < 1
@@ -72,20 +95,7 @@ public class ActivityUpdaterService {
 
         // if we dont have anything, there are either 0 or greater than 1 sessions
         if(onlyAudioSession.isEmpty()) {
-            String mainTitleReason = "ActivityUpdaterService skipped updating because the only audio";
-            String furtherReasonInfo = "\n\tSessionManager claims a total of (sessions)";
-
-            StringBuilder loggaInfa = new StringBuilder()
-                .append(mainTitleReason)
-                .append(furtherReasonInfo)
-                .append(this.sessionManager.getTotalSessionCount());
-
-            Logger.info(loggaInfa.toString());
-
-            // Additionally clear the current activity
-            this.discordApi.unsetActivity();
-
-            // early return
+                      // early return
             return;
         }
 
@@ -116,6 +126,8 @@ public class ActivityUpdaterService {
                 .append(acitivtyNameBuilder.toString())
                 .toString()
                 );
+
+        this.alreadyLoggedCurrentState = false;
 
         this.discordApi.updateActivity(ActivityType.LISTENING, acitivtyNameBuilder.toString());
     }
