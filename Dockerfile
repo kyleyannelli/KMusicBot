@@ -1,8 +1,9 @@
 # FROM MAVEN USING JAVA 11
 FROM maven:3.8.1-openjdk-11-slim AS MAVEN_BUILD
-# COPY SOURCE CODE TO CONTAINER
-COPY target/KMusic.jar /build/
-COPY .env /build/.env
-WORKDIR /build/
+COPY . /build/
+WORKDIR /build
+RUN mvn clean install
+WORKDIR /build/kmusicbot-core/
+COPY ./kmusicbot-core/.env /build/kmusicbot-core/.env
 # RUN THE PROJECT
-ENTRYPOINT ["java", "-jar", "KMusic.jar"]
+ENTRYPOINT ["mvn", "exec:java"]
