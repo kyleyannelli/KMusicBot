@@ -103,8 +103,8 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     }
 
     public void loadSingleTrack(AudioTrackWithUser audioTrackWithUser, boolean deprioritizeQueue) {
+        this.trackUserMap.put(audioTrackWithUser.getAudioTrack(), audioTrackWithUser.getDiscordUser());
         if(this.audioPlayer.getPlayingTrack() == null) {
-            this.trackUserMap.put(audioTrackWithUser.getAudioTrack(), audioTrackWithUser.getDiscordUser());
             this.audioPlayer.playTrack(audioTrackWithUser.getAudioTrack());
         } else {
             this.queue(audioTrackWithUser, deprioritizeQueue);
