@@ -5,8 +5,10 @@ import java.util.Collections;
 
 import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.helpers.slashcommands.EnsuredSlashCommandInteraction;
+import dev.kmfg.database.models.DiscordUser;
 import dev.kmfg.helpers.sessions.QueueResult;
 import org.javacord.api.DiscordApi;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandOption;
@@ -53,7 +55,7 @@ public class PlayCommand extends Command {
 
 		QueueResult queueResult = ensuredInteraction
 			.getAudioSession()
-			.queueSearchQuery(ensuredInteraction.getParameterValue(songParameter));
+			.queueSearchQuery(this.discordUser, ensuredInteraction.getParameterValue(songParameter));
 
 		this.messageSender.sendQueueResultEmbed(queueResult);
 	}

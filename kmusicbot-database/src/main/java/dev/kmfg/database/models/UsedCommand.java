@@ -31,6 +31,10 @@ public class UsedCommand extends BaseKMusicTable {
 	@Column(name = "times_used")
 	private int timesUsed;
 
+	public UsedCommand() {
+
+	}
+
 	public UsedCommand(DiscordGuild discordGuild, DiscordUser discordUser) {
 		this.discordGuild = discordGuild;
 		this.usedByDiscordUser = discordUser;

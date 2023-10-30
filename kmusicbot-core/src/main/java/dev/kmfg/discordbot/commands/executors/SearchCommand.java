@@ -53,7 +53,7 @@ public class SearchCommand extends Command {
         if(ensuredInteraction == null) return;
 
         String searchQuery = ensuredInteraction.getParameterValue("song");
-        QueueResult searchResults = ensuredInteraction.getAudioSession().getLavaSource().getListQueryResults(searchQuery);
+        QueueResult searchResults = ensuredInteraction.getAudioSession().getLavaSource().getListQueryResults(this.discordUser, searchQuery);
 
         // if no tracks were found
         if(searchResults.getQueuedTracks().isEmpty()) {

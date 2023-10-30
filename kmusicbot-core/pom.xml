@@ -5,7 +5,7 @@
 <modelVersion>4.0.0</modelVersion>
 
 <parent>
-    <groupId>kyleyannelli.discordbots.music</groupId>
+    <groupId>dev.kmfg.discordbot</groupId>
     <artifactId>KMusicBot</artifactId>
     <version>3.3.0-PREVIEW</version>
 </parent>
@@ -66,6 +66,11 @@
     </repository>
 </repositories>
 <dependencies>
+    <dependency>
+        <groupId>dev.kmfg</groupId>
+        <artifactId>kmusicbot-database</artifactId>
+        <version>1.0.0-BETA</version>
+    </dependency>
     <dependency>
         <groupId>org.tinylog</groupId>
         <artifactId>tinylog-api</artifactId>

@@ -19,6 +19,22 @@ public class TrackedSongRepo {
     public TrackedSongRepo(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
     }
+    
+    public TrackedSong saveOrGet(TrackedSong trackedSong) {
+        return this.findBySongAndGuild(trackedSong.getGuild(), trackedSong.getSong()).orElseGet(() -> {
+            return this.save(trackedSong).get();
+        });
+    }
+
+    public Optional<TrackedSong> findBySongAndGuild(DiscordGuild discordGuild, KMusicSong kmusicSong) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId AND kmusicSong.id = :kmusicSongId", TrackedSong.class)
+                .setParameter("discordGuildId", discordGuild.getDiscordId())
+                .setParameter("kmusicSongId", kmusicSong.getId())
+                .uniqueResultOptional();
+        }
+    }
 
     public Optional<TrackedSong> findById(int id) {
         try(Session session = this.sessionFactory.openSession()) {

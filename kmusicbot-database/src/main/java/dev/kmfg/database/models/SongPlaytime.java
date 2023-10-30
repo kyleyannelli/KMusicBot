@@ -27,6 +27,10 @@ public class SongPlaytime extends BaseKMusicTable {
 	@Column(name = "seconds_listened")
 	private int secondsListened;
 
+	public SongPlaytime() {
+
+	}
+
 	public SongPlaytime(DiscordUser listeningDiscordUser, TrackedSong trackedSong) {
 		this.listeningDiscordUser = listeningDiscordUser;
 		this.trackedSong = trackedSong;

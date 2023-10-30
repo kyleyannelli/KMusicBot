@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.tinylog.Logger;
 
 import dev.kmfg.database.models.DiscordUser;
@@ -17,6 +18,19 @@ public class SongPlaytimeRepo {
 
     public SongPlaytimeRepo(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
+    }
+
+    public Optional<SongPlaytime> save(SongPlaytime songPlaytime) {
+        try(Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            songPlaytime = session.merge(songPlaytime);
+            transaction.commit();
+            return Optional.ofNullable(songPlaytime);
+        }
+        catch(HibernateException hibernateException) {
+            Logger.error(hibernateException, "Error occured while saving SongPlaytime");
+            return Optional.empty();
+        }
     }
 
     public Optional<SongPlaytime> findById(int id) {

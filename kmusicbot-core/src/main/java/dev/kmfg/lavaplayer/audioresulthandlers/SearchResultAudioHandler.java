@@ -3,7 +3,10 @@ package dev.kmfg.lavaplayer.audioresulthandlers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+
+import dev.kmfg.database.models.DiscordUser;
 import dev.kmfg.helpers.sessions.SingleUse;
+import dev.kmfg.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.lavaplayer.ProperTrackScheduler;
 
 import java.util.*;
@@ -13,8 +16,8 @@ import java.util.*;
  * Track loading should be handled by the AudioPlayer
  */
 public class SearchResultAudioHandler extends KAudioResultHandler {
-    public SearchResultAudioHandler(ProperTrackScheduler trackScheduler) {
-        super(trackScheduler);
+    public SearchResultAudioHandler(ProperTrackScheduler trackScheduler, DiscordUser discordUser) {
+        super(trackScheduler, discordUser);
     }
 
     /**
@@ -30,8 +33,9 @@ public class SearchResultAudioHandler extends KAudioResultHandler {
             return;
         }
 
+        AudioTrackWithUser audioTrackWithUser = new AudioTrackWithUser(audioTrack, discordUser);
         // create SingleUse  for the audio track into arraylist with  List.of
-        this.lastLoadedTracks = new SingleUse<>(new ArrayList<>(List.of(audioTrack)));
+        this.lastLoadedTracks = new SingleUse<>(new ArrayList<>(List.of(audioTrackWithUser)));
         // was a success
         this.isSuccess = new SingleUse<>(true);
     }
@@ -53,12 +57,12 @@ public class SearchResultAudioHandler extends KAudioResultHandler {
             return;
         }
 
-        ArrayList<AudioTrack> foundTracks = new ArrayList<>();
+        ArrayList<AudioTrackWithUser> foundTracks = new ArrayList<>();
         // loop either the size of the tracks List, but 5 at most
         int totalLoopTimes = Math.min(tracks.size(), 5);
         for(int i = 0; i < totalLoopTimes; i++) {
             // add the track from AudioPlaylist into foundTracks
-            foundTracks.add(tracks.get(i));
+            foundTracks.add(new AudioTrackWithUser(tracks.get(i), discordUser));
 
         }
 

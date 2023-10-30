@@ -43,5 +43,5 @@ public class DiscordUser extends BaseKMusicTable {
 
 	public String getDiscordUsername() {
 		return username;
-	}
+	}	
 }

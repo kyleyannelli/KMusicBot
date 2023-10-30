@@ -17,6 +17,12 @@ public class KMusicSongRepo {
 		this.sessionFactory = sessionFactory;
 	}
 
+	public KMusicSong saveOrGet(KMusicSong kmusicSong) {
+		return this.findByYoutubeUrl(kmusicSong.getYoutubeUrl()).orElseGet(() -> {
+            return this.save(kmusicSong).get();
+        });
+	}
+
 	public Optional<KMusicSong> findById(int id) {
 		try(Session session = this.sessionFactory.openSession()) {
 			return Optional.ofNullable(session.find(KMusicSong.class, id));

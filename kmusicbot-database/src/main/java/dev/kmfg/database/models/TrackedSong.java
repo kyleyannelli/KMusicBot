@@ -1,5 +1,7 @@
 package dev.kmfg.database.models;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,6 +40,13 @@ public class TrackedSong {
 	@Column(name = "seconds_played")
 	private int secondsPlayed;
 
+	@Column(name = "updated_at")
+	private Timestamp updatedAt;
+
+	public TrackedSong() {
+
+	}
+
 	public TrackedSong(DiscordGuild discordGuild, KMusicSong kmusicSong) {
 		this.discordGuild = discordGuild;
 		this.kmusicSong = kmusicSong;
@@ -61,6 +70,14 @@ public class TrackedSong {
 
 	public int getId() {
 		return this.id;
+	}
+	
+	public Timestamp getUpdatedAt() {
+		return this.updatedAt;
+	}
+
+	public void refreshUpdatedAt() {
+		this.updatedAt = Timestamp.from(Instant.now());
 	}
 }
 

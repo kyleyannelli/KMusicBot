@@ -1,5 +1,6 @@
 package dev.kmfg.sessions;
 
+import dev.kmfg.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.lavaplayer.LavaSource;
 import dev.kmfg.lavaplayer.PositionalAudioTrack;
 import dev.kmfg.songrecommender.RecommenderProcessor;
@@ -13,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
@@ -21,6 +23,7 @@ import org.tinylog.Logger;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
+import dev.kmfg.database.models.DiscordUser;
 import dev.kmfg.helpers.sessions.LimitedQueue;
 import dev.kmfg.helpers.sessions.QueueResult;
 
@@ -94,24 +97,29 @@ public class AudioSession extends RecommenderSession {
 		int upperRandomBoundMs = 1000 * 60; // ms, 60 seconds aka 1 minute
 
 		for(String title : recommendedTitles) {
-			int randomVariation = lowerRandomBoundMs + secureRandom.nextInt(upperRandomBoundMs - lowerRandomBoundMs); 
+			int randomVariation = lowerRandomBoundMs + secureRandom.nextInt(upperRandomBoundMs - lowerRandomBoundMs);
 
 			Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
 
+			User user = this.audioConnection.getServer().getApi().getYourself();
+			DiscordUser discordUser = new DiscordUser(user.getId(), user.getDiscriminatedName());
+
 			// we want the recommended songs to be on the non priority queue
-			this.lavaSource.queueTrack(title, true, false);
+			this.lavaSource.queueTrack(title, true, false, discordUser);
 		}
 	}
 
 	@Override
 	public ArrayList<AudioTrack> getAudioQueue() {
-		return this.lavaSource.getAudioQueue();
+		return new ArrayList<>(this.lavaSource.getAudioQueue().stream()
+				.map(AudioTrackWithUser::getAudioTrack)
+				.collect(Collectors.toList()));
 	}
 
 	/**
 	 * Toggles the isRecommendingSongs variable and returns new value
 	 * @return boolean, will be of new value
-	*/
+	 */
 	public boolean toggleIsRecommending() {
 		return (isRecommendingSongs = !isRecommendingSongs);
 	}
@@ -124,14 +132,14 @@ public class AudioSession extends RecommenderSession {
 		this.lavaSource = lavaSource;
 	}
 
-	public QueueResult queueSearchQuery(String searchQuery) {
+	public QueueResult queueSearchQuery(DiscordUser discordUser, String searchQuery) {
 		mostRecentSearches.add(searchQuery);
-		return lavaSource.queueTrackAsPriority(searchQuery);
+		return lavaSource.queueTrackAsPriority(searchQuery, discordUser);
 	}
 
-	public QueueResult queueSearchQueryNext(String searchQuery) {
+	public QueueResult queueSearchQueryNext(String searchQuery, DiscordUser discordUser) {
 		mostRecentSearches.add(searchQuery);
-		return lavaSource.queueTrackAsPriorityNext(searchQuery);
+		return lavaSource.queueTrackAsPriorityNext(searchQuery, discordUser);
 	}
 
 	/**
@@ -190,7 +198,7 @@ public class AudioSession extends RecommenderSession {
 	 * Checks if user is in server voice channel and if it is the same server voice channel as the bot.
 	 * @param user, the user we are checking
 	 * @return boolean, true if user is in same voice channel (or voice channel at all), false if not
-	*/
+	 */
 	public boolean isUserInSameServerVoiceChannel(User user) {
 		ServerVoiceChannel botConnectedServerVoiceChannel = this.audioConnection.getChannel();
 
@@ -216,7 +224,7 @@ public class AudioSession extends RecommenderSession {
 		this.disconnectScheduledService.shutdownNow();
 
 		this.sessionCloseHandler.handle(this.getAssociatedServerId());
-		
+
 		Logger.info("SHUTDOWN \n" + this);
 	}
 
@@ -235,6 +243,6 @@ public class AudioSession extends RecommenderSession {
 	}
 
 	private boolean canDisconnectFromVoiceChannel() {
-		return !this.lavaSource.hasCurrentPlayingTrack() && this.lavaSource.isAudioQueueEmpty(); 
+		return !this.lavaSource.hasCurrentPlayingTrack() && this.lavaSource.isAudioQueueEmpty();
 	}
 }

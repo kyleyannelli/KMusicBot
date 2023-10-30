@@ -26,6 +26,12 @@ public class DiscordGuildRepo {
         }
     }
 
+    public DiscordGuild saveOrGet(DiscordGuild discordGuild) {
+        return this.findByDiscordId(discordGuild.getDiscordId()).orElseGet(() -> {
+            return this.save(discordGuild).get();
+        });
+    }
+
     public Optional<DiscordGuild> save(DiscordGuild discordGuild) {
         try(Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();

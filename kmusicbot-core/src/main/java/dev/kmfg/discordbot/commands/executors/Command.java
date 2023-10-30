@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 
 import dev.kmfg.helpers.messages.MessageSender;
 import org.javacord.api.DiscordApi;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
 import org.tinylog.Logger;
@@ -12,6 +13,7 @@ import org.tinylog.Logger;
 import dev.kmfg.sessions.AudioSession;
 import dev.kmfg.helpers.messages.EmbedMessage;
 import dev.kmfg.sessions.SessionManager;
+import dev.kmfg.database.models.DiscordUser;
 import dev.kmfg.exceptions.BadAudioConnectionException;
 import dev.kmfg.exceptions.EmptyParameterException;
 import dev.kmfg.exceptions.EmptyServerException;
@@ -21,6 +23,7 @@ public abstract class Command {
 	protected final SessionManager sessionManager;
 	protected final SlashCommandCreateEvent slashCommandEvent;
 	protected final MessageSender messageSender;
+	protected final DiscordUser discordUser;
 
 	public Command(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
 		this.sessionManager = sessionManager;
@@ -30,8 +33,18 @@ public abstract class Command {
 		EmbedMessage embedMessage = new EmbedMessage(this.slashCommandEvent.getSlashCommandInteraction().getUser(), getRespondLater());
 		this.messageSender = new MessageSender(embedMessage);
 
+		this.discordUser = this.generateDiscordUser();
+
 		// finally register the command
 		this.register(this.sessionManager.getDiscordApi());
+	}
+
+	/**
+	 * Generates the DiscordUser from interaction (statistics tracking)
+	 */
+	public DiscordUser generateDiscordUser() {
+		User user = this.slashCommandEvent.getInteraction().getUser();
+		return new DiscordUser(user.getId(), user.getDiscriminatedName());
 	}
 
 	/**

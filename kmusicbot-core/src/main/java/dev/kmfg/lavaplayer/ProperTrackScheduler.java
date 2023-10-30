@@ -3,14 +3,19 @@ package dev.kmfg.lavaplayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+
+import dev.kmfg.database.models.DiscordUser;
+import dev.kmfg.lavaplayer.events.TrackStatisticRecorder;
+
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ProperTrackScheduler extends AudioEventAdapter {
@@ -18,9 +23,11 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     private final long ASSOCIATED_SESSION_ID;
     private int currentRetries = 0;
     private final AudioPlayer audioPlayer;
+    private final TrackStatisticRecorder trackStatisticRecorder;
 
-    private BlockingQueue<AudioTrack> audioQueue;
-    private BlockingQueue<AudioTrack> recommenderAudioQueue;
+    private BlockingQueue<AudioTrackWithUser> audioQueue;
+    private BlockingQueue<AudioTrackWithUser> recommenderAudioQueue;
+    private ConcurrentHashMap<AudioTrack, DiscordUser> trackUserMap;
     public AudioTrack lastTrack;
 
     public ProperTrackScheduler(AudioPlayer audioPlayer, long associatedSessionId) {
@@ -29,6 +36,9 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
         this.audioQueue = new LinkedBlockingQueue<>();
         this.recommenderAudioQueue = new LinkedBlockingQueue<>();
+        this.trackUserMap = new ConcurrentHashMap<>();
+
+        trackStatisticRecorder = new TrackStatisticRecorder(null);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }
@@ -58,7 +68,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         }
 
         // first attempt to get the audioQueue head, if not present pull from the recommender queue
-        AudioTrack nextTrack = audioQueue.peek() == null ? recommenderAudioQueue.poll() : audioQueue.poll();
+        AudioTrack nextTrack = audioQueue.peek() == null ? recommenderAudioQueue.poll().getAudioTrack() : audioQueue.poll().getAudioTrack();
         if(nextTrack != null) this.audioPlayer.playTrack(nextTrack);
         // clone the track for the ability to replay
         lastTrack = track.makeClone();
@@ -83,7 +93,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         else {
             Logger.warn(getSessionIdString() + " AudioTrack " + track.getInfo().uri + " is stuck after " + thresholdMs + "ms!. Maximum retries (" + MAX_RETRIES + ") has been reached! Moving onto next track (if it's queued).");
             currentRetries = 0;
-            AudioTrack nextTrack = audioQueue.poll();
+            AudioTrack nextTrack = audioQueue.poll().getAudioTrack();
             if(nextTrack != null) this.audioPlayer.playTrack(nextTrack);
         }
     }
@@ -92,18 +102,19 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         return this.audioPlayer.getPlayingTrack() != null;
     }
 
-    public void loadSingleTrack(AudioTrack track, boolean deprioritizeQueue) {
+    public void loadSingleTrack(AudioTrackWithUser audioTrackWithUser, boolean deprioritizeQueue) {
         if(this.audioPlayer.getPlayingTrack() == null) {
-            this.audioPlayer.playTrack(track);
+            this.trackUserMap.put(audioTrackWithUser.getAudioTrack(), audioTrackWithUser.getDiscordUser());
+            this.audioPlayer.playTrack(audioTrackWithUser.getAudioTrack());
         } else {
-            this.queue(track, deprioritizeQueue);
+            this.queue(audioTrackWithUser, deprioritizeQueue);
         }
     }
 
-    public boolean loadPlaylist(AudioPlaylist audioPlaylist, boolean deprioritizeQueue, boolean playNext) {
-        boolean isSuccess = audioPlaylist != null && audioPlaylist.getTracks() != null;
+    public boolean loadPlaylist(List<AudioTrackWithUser> audioTracks, boolean deprioritizeQueue, boolean playNext) {
+        boolean isSuccess = audioTracks != null;
         if(isSuccess) {
-            for(AudioTrack audioTrack : audioPlaylist.getTracks()) {
+            for(AudioTrackWithUser audioTrack : audioTracks) {
                 if(playNext) {
                     queueNext(audioTrack);
                 }
@@ -115,8 +126,8 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         return isSuccess;
     }
 
-    public ArrayList<AudioTrack> getFullAudioQueue() {
-        ArrayList<AudioTrack> combined = new ArrayList<>(this.audioQueue);
+    public ArrayList<AudioTrackWithUser> getFullAudioQueue() {
+        ArrayList<AudioTrackWithUser> combined = new ArrayList<>(this.audioQueue);
         combined.addAll(this.recommenderAudioQueue);
         return combined;
     }
@@ -133,26 +144,26 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         ArrayList<PositionalAudioTrack> queuedTracks = new ArrayList<>(queueSizeTotal);
 
         int position = 1;
-        for(AudioTrack userQueuedTrack : this.audioQueue) {
+        for(AudioTrackWithUser audioTrackWithUser : this.audioQueue) {
             queuedTracks.add(
-                    new PositionalAudioTrack(userQueuedTrack, true, position++)
+                    new PositionalAudioTrack(audioTrackWithUser.getAudioTrack(), true, position++)
             );
         }
 
-        for(AudioTrack autoQueuedTrack : this.recommenderAudioQueue) {
+        for(AudioTrackWithUser audioTrackWithUser : this.recommenderAudioQueue) {
             queuedTracks.add(
-                    new PositionalAudioTrack(autoQueuedTrack, false, position++)
+                    new PositionalAudioTrack(audioTrackWithUser.getAudioTrack(), false, position++)
             );
         }
 
         return queuedTracks;
     }
 
-    public ArrayList<AudioTrack> getRecommenderQueue() {
+    public ArrayList<AudioTrackWithUser> getRecommenderQueue() {
         return new ArrayList<>(this.recommenderAudioQueue);
     }
 
-    public ArrayList<AudioTrack> getUserQueue() {
+    public ArrayList<AudioTrackWithUser> getUserQueue() {
         return new ArrayList<>(this.audioQueue);
     }
 
@@ -162,11 +173,11 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
     public int shufflePriorityQueue() {
         // convert to arraylist for simple shuffle
-        ArrayList<AudioTrack> priorityQueueList = new ArrayList<>(this.audioQueue);
+        ArrayList<AudioTrackWithUser> priorityQueueList = new ArrayList<>(this.audioQueue);
         Collections.shuffle(priorityQueueList);
 
         // create new BlockingQueue to stuff the tracks in, then set it equal to the current queue
-        BlockingQueue<AudioTrack> shufflePriorityQueue = new LinkedBlockingQueue<>();
+        BlockingQueue<AudioTrackWithUser> shufflePriorityQueue = new LinkedBlockingQueue<>();
         priorityQueueList.stream().forEach(shufflePriorityQueue::add);
         this.audioQueue = shufflePriorityQueue;
 
@@ -177,22 +188,36 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         return "|| Session ID: " + ASSOCIATED_SESSION_ID + " ||";
     }
 
-    private void queue(AudioTrack track, boolean deprioritizeQueue) {
+    private void queue(AudioTrackWithUser audioTrackWithUser, boolean deprioritizeQueue) {
+        StringBuilder stringBuilder = new StringBuilder()
+            .append(getSessionIdString())
+            .append(" ")
+            .append(audioTrackWithUser.getDiscordUser().getDiscordUsername())
+            .append("/")
+            .append(audioTrackWithUser.getDiscordUser().getDiscordId())
+            .append(" added ")
+            .append(audioTrackWithUser.getAudioTrack().getInfo().uri);
+
         if(deprioritizeQueue) {
-            recommenderAudioQueue.add(track);
-            Logger.info(getSessionIdString() + " added \"" + track.getInfo().uri + "\" to the deprioritized queue.");
+            recommenderAudioQueue.add(audioTrackWithUser);
+            stringBuilder.append(" to the deprioritized queue");
         }
         else {
-            audioQueue.add(track);
-            Logger.info(getSessionIdString() + " added \"" + track.getInfo().uri + "\" to the priority queue.");
+            audioQueue.add(audioTrackWithUser);
+            stringBuilder.append(" to the priority queue");
         }
+
+        this.trackUserMap.put(audioTrackWithUser.getAudioTrack(), audioTrackWithUser.getDiscordUser());
+
+        Logger.info(stringBuilder.toString());
     }
 
-    public void queueNext(AudioTrack track) {
-        BlockingQueue<AudioTrack> newBlockingQueue = new LinkedBlockingQueue<>();
-        newBlockingQueue.add(track);
+    public void queueNext(AudioTrackWithUser audioTrackWithUser) {
+        BlockingQueue<AudioTrackWithUser> newBlockingQueue = new LinkedBlockingQueue<>();
+        newBlockingQueue.add(audioTrackWithUser);
         newBlockingQueue.addAll(this.audioQueue);
         audioQueue.clear();
         audioQueue.addAll(newBlockingQueue);
+        this.trackUserMap.put(audioTrackWithUser.getAudioTrack(), audioTrackWithUser.getDiscordUser());
     }
 }

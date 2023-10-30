@@ -25,8 +25,11 @@ public class KMusicSong extends BaseKMusicTable {
 	@OneToMany(mappedBy = "kmusicSong")
 	Set<TrackedSong> trackedSongs = new HashSet<>();
 
-	public KMusicSong(int id, String youtubeUrl) {
-		this.id = id;
+	public KMusicSong() {
+
+	}
+
+	public KMusicSong(String youtubeUrl) {
 		this.youtubeUrl = youtubeUrl;
 	}
 

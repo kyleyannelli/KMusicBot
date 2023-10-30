@@ -1,5 +1,6 @@
 package dev.kmfg.discordbot.listenerhandlers;
 
+import dev.kmfg.database.models.DiscordUser;
 import dev.kmfg.helpers.messages.EmbedMessage;
 import dev.kmfg.helpers.messages.MessageSender;
 import dev.kmfg.helpers.sessions.QueueResult;
@@ -8,6 +9,7 @@ import dev.kmfg.sessions.SessionManager;
 import org.javacord.api.entity.message.component.ActionRow;
 import org.javacord.api.entity.message.component.SelectMenu;
 import org.javacord.api.entity.message.component.SelectMenuOption;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SelectMenuChooseEvent;
 import org.javacord.api.interaction.SelectMenuInteraction;
 import org.javacord.api.interaction.callback.ComponentInteractionOriginalMessageUpdater;
@@ -55,7 +57,9 @@ public class SelectMenuChooseListenerHandler implements SelectMenuChooseListener
         }
 
         String firstYoutubeUri = chosenOptions.get(0).getValue();
-        QueueResult queueResult = audioSession.queueSearchQuery(firstYoutubeUri);
+        User user = event.getInteraction().getUser();
+        DiscordUser discordUser = new DiscordUser(user.getId(), user.getDiscriminatedName());
+        QueueResult queueResult = audioSession.queueSearchQuery(discordUser, firstYoutubeUri);
         messageSender.sendQueueResultEmbed(queueResult);
     }
 

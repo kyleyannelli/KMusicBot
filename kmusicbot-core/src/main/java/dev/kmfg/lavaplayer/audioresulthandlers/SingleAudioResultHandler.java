@@ -1,6 +1,8 @@
 package dev.kmfg.lavaplayer.audioresulthandlers;
 
+import dev.kmfg.database.models.DiscordUser;
 import dev.kmfg.helpers.sessions.SingleUse;
+import dev.kmfg.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.lavaplayer.ProperTrackScheduler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
@@ -13,8 +15,8 @@ import java.util.ArrayList;
  * Intended to solely load just one track. Whether it goes to trackLoaded or playlistLoaded, the first result is always queued.
  */
 public class SingleAudioResultHandler extends KAudioResultHandler {
-    public SingleAudioResultHandler(ProperTrackScheduler trackScheduler) {
-        super(trackScheduler);
+    public SingleAudioResultHandler(ProperTrackScheduler trackScheduler, DiscordUser discordUser) {
+        super(trackScheduler, discordUser);
     }
 
     /**
@@ -40,16 +42,18 @@ public class SingleAudioResultHandler extends KAudioResultHandler {
      */
     @Override
     public void playlistLoaded(AudioPlaylist audioPlaylist) {
-        ArrayList<AudioTrack> loadedTracks = new ArrayList<>();
+        ArrayList<AudioTrackWithUser> loadedTracks = new ArrayList<>();
         // if theres a list of tracks AND first result, play the track
         if(audioPlaylist.getTracks() != null && audioPlaylist.getTracks().get(0) != null) {
+            AudioTrack audioTrack = audioPlaylist.getTracks().get(0);
+            AudioTrackWithUser audioTrackWithUser = new AudioTrackWithUser(audioTrack, discordUser);
             if(this.playNext && this.trackScheduler.hasNowPlaying()) {
-                trackScheduler.queueNext(audioPlaylist.getTracks().get(0));
+                trackScheduler.queueNext(audioTrackWithUser);
             }
             else {
-                trackScheduler.loadSingleTrack(audioPlaylist.getTracks().get(0), this.deprioritizeQueue);
+                trackScheduler.loadSingleTrack(audioTrackWithUser, this.deprioritizeQueue);
             }
-            loadedTracks.add(audioPlaylist.getTracks().get(0));
+            loadedTracks.add(audioTrackWithUser);
             isSuccess = new SingleUse<>(true);
         }
         lastLoadedTracks = new SingleUse<>(loadedTracks);
@@ -62,15 +66,16 @@ public class SingleAudioResultHandler extends KAudioResultHandler {
      */
     @Override
     public void trackLoaded(AudioTrack audioTrack) {
+        AudioTrackWithUser audioTrackWithUser = new AudioTrackWithUser(audioTrack, discordUser);
         if(this.playNext) {
-            trackScheduler.queueNext(audioTrack);
+            trackScheduler.queueNext(audioTrackWithUser);
         }
         else {
-            trackScheduler.loadSingleTrack(audioTrack, this.deprioritizeQueue);
+            trackScheduler.loadSingleTrack(audioTrackWithUser, this.deprioritizeQueue);
         }
         isSuccess = new SingleUse<>(true);
-        ArrayList<AudioTrack> loadedTracks = new ArrayList<>();
-        loadedTracks.add(audioTrack);
+        ArrayList<AudioTrackWithUser> loadedTracks = new ArrayList<>();
+        loadedTracks.add(audioTrackWithUser);
         lastLoadedTracks = new SingleUse<>(loadedTracks);
     }
 }

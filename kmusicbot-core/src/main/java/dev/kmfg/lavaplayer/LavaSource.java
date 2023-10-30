@@ -5,9 +5,11 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import dev.kmfg.lavaplayer.audioresulthandlers.KAudioResultHandler;
 import dev.kmfg.lavaplayer.audioresulthandlers.SearchResultAudioHandler;
 import dev.kmfg.lavaplayer.audioresulthandlers.SingleAudioResultHandler;
 import dev.kmfg.lavaplayer.audioresulthandlers.YoutubeAudioResultHandler;
+import dev.kmfg.database.models.DiscordUser;
 import dev.kmfg.exceptions.AlreadyAccessedException;
 import org.apache.hc.core5.http.ParseException;
 import org.javacord.api.DiscordApi;
@@ -32,11 +34,6 @@ import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 public class LavaSource extends AudioSourceBase {
     private final long ASSOCIATED_SESSION_ID;
 
-    private final SingleAudioResultHandler singleResultHandler;
-
-    private final YoutubeAudioResultHandler youtubeLinkResultHandler;
-    private final SearchResultAudioHandler searchResultAudioHandler;
-
     private final AudioPlayerManager audioPlayerManager;
     private final AudioPlayer audioPlayer;
     private final ProperTrackScheduler trackScheduler;
@@ -57,10 +54,6 @@ public class LavaSource extends AudioSourceBase {
         this.trackScheduler = new ProperTrackScheduler(audioPlayer, associatedSessionId);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
-
-        this.singleResultHandler = new SingleAudioResultHandler(trackScheduler);
-        this.youtubeLinkResultHandler = new YoutubeAudioResultHandler(trackScheduler);
-        this.searchResultAudioHandler = new SearchResultAudioHandler(trackScheduler);
     }
 
     public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, AudioPlayer audioPlayer, long associatedSessionId) {
@@ -70,14 +63,10 @@ public class LavaSource extends AudioSourceBase {
         this.discordApi = discordApi;
 
         this.audioPlayerManager = audioPlayerManager;
-        this.audioPlayer = audioPlayer; 
+        this.audioPlayer = audioPlayer;
         this.trackScheduler = new ProperTrackScheduler(audioPlayer, associatedSessionId);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
-
-        this.singleResultHandler = new SingleAudioResultHandler(trackScheduler);
-        this.youtubeLinkResultHandler = new YoutubeAudioResultHandler(trackScheduler);
-        this.searchResultAudioHandler = new SearchResultAudioHandler(trackScheduler);
     }
 
     /**
@@ -133,12 +122,13 @@ public class LavaSource extends AudioSourceBase {
      * Uses SearchResultAudioHandler to list results for a search query
      * @return QueueResult containing what was found (not loaded)
      */
-    public synchronized QueueResult getListQueryResults(String searchQuery) {
-        Future<Void> searchResultAudioHandlerFuture = audioPlayerManager.loadItem("ytsearch:" + searchQuery, this.searchResultAudioHandler);
-        return handleSearchResultFuture(searchResultAudioHandlerFuture);
+    public synchronized QueueResult getListQueryResults(DiscordUser discordUser, String searchQuery) {
+        SearchResultAudioHandler searchResultAudioHandler = new SearchResultAudioHandler(trackScheduler, discordUser);
+        Future<Void> searchResultAudioHandlerFuture = audioPlayerManager.loadItem("ytsearch:" + searchQuery, searchResultAudioHandler);
+        return handleSearchResultFuture(searchResultAudioHandlerFuture, searchResultAudioHandler);
     }
 
-    private QueueResult handleSearchResultFuture(Future<Void> searchResultAudioHandlerFuture) {
+    private QueueResult handleSearchResultFuture(Future<Void> searchResultAudioHandlerFuture, KAudioResultHandler kAudioResultHandler) {
         // attempt to wait for future
         try {
             searchResultAudioHandlerFuture.get();
@@ -153,15 +143,15 @@ public class LavaSource extends AudioSourceBase {
             return new QueueResult(false, false, Collections.emptyList());
         }
         // items should be loaded by now.
-        return generateQueueResultFromSearch();
+        return generateQueueResultFromSearch(kAudioResultHandler);
     }
 
-    private QueueResult generateQueueResultFromSearch() {
+    private QueueResult generateQueueResultFromSearch(KAudioResultHandler kAudioResultHandler) {
         try {
-            boolean wasSuccess = this.searchResultAudioHandler.getIsSuccess();
+            boolean wasSuccess = kAudioResultHandler.getIsSuccess();
             boolean willPlayNow = false;
-            ArrayList<AudioTrack> foundTracks = this.searchResultAudioHandler.getLastLoadedTracks();
-            return new QueueResult(wasSuccess, willPlayNow, foundTracks);
+            ArrayList<AudioTrack> foundTracksRaw = kAudioResultHandler.getLastLoadedTracksRaw();
+            return new QueueResult(wasSuccess, willPlayNow, foundTracksRaw);
         }
         catch(AlreadyAccessedException alreadyAccessedException) {
             // already accessed exception will contain what value if thrown properly
@@ -187,24 +177,12 @@ public class LavaSource extends AudioSourceBase {
      * @param playNext tells the ResultHandler whether to put the track at the head (true) or tail (false) of the priority queue.
      * @return QueueResult, detailing what tracks were added.
      */
-    public synchronized QueueResult queueTrack(String searchQuery, boolean deprioritizeQueue, boolean playNext) {
-        boolean isYoutubeLink =  false;
+    public synchronized QueueResult queueTrack(String searchQuery, boolean deprioritizeQueue, boolean playNext, DiscordUser discordUser) {
         boolean willPlayNow = this.audioPlayer.getPlayingTrack() == null;
 
         Future<Void> playerManagerFuture = null;
 
-        // update the queue priority
-        if(deprioritizeQueue) {
-            this.youtubeLinkResultHandler.deprioritizeQueue();
-            this.singleResultHandler.deprioritizeQueue();
-        } else {
-            this.youtubeLinkResultHandler.prioritizeQueue();
-            this.singleResultHandler.prioritizeQueue();
-        }
-
-        // update playNext
-        this.youtubeLinkResultHandler.setPlayNext(playNext);
-        this.singleResultHandler.setPlayNext(playNext);
+        KAudioResultHandler kAudioResultHandler;
 
         // if given a youtube link
         if(this.isYoutubeLink(searchQuery)) {
@@ -212,27 +190,28 @@ public class LavaSource extends AudioSourceBase {
             // chop off any parameters
             String parameterlessSearchQuery = indexOfFirstParameter != -1 ?
                 searchQuery.substring(0, indexOfFirstParameter) : searchQuery;
+            // setup audiohandler
+            kAudioResultHandler = new YoutubeAudioResultHandler(this.trackScheduler, discordUser);
+            if(deprioritizeQueue) kAudioResultHandler.deprioritizeQueue();
+            else kAudioResultHandler.prioritizeQueue();
+            kAudioResultHandler.setPlayNext(playNext);
             // is success is set by result handler
-            playerManagerFuture = audioPlayerManager.loadItem(parameterlessSearchQuery, youtubeLinkResultHandler);
-            isYoutubeLink = true;
-        }
-        // if given a spotify link
-        else if(searchQuery.startsWith("https://open.spotify.com/")) {
-            //            lastLoadedTracks = getTracksFromSpotifyLink(searchQuery);
-            //            isSuccess = lastLoadedTracks.isPresent() && lastLoadedTracks.get().size() > 0;
-
-            // @TODO Implement spotify searches
+            playerManagerFuture = audioPlayerManager.loadItem(parameterlessSearchQuery, kAudioResultHandler);
         }
         // otherwise it will be treated as a text search
         else {
             // update search query to use ytsearch
             searchQuery = "ytsearch:" + searchQuery;
             // find by singleResultHandler
+            kAudioResultHandler = new SingleAudioResultHandler(this.trackScheduler, discordUser);
+            if(deprioritizeQueue) kAudioResultHandler.deprioritizeQueue();
+            else kAudioResultHandler.prioritizeQueue();
+            kAudioResultHandler.setPlayNext(playNext);
             // is success is set by result handler
-            playerManagerFuture = audioPlayerManager.loadItem(searchQuery, singleResultHandler);
+            playerManagerFuture = audioPlayerManager.loadItem(searchQuery, kAudioResultHandler);
         }
 
-        return handlePlayerManagerFuture(playerManagerFuture, isYoutubeLink, willPlayNow);
+        return handlePlayerManagerFuture(playerManagerFuture, kAudioResultHandler, willPlayNow);
     }
 
     /**
@@ -240,10 +219,10 @@ public class LavaSource extends AudioSourceBase {
      * @param searchQuery The track you would like to find
      * @return QueueResult, detailing what was added to the queue.
      */
-    public synchronized QueueResult queueTrackAsPriority(String searchQuery) {
+    public synchronized QueueResult queueTrackAsPriority(String searchQuery, DiscordUser discordUser) {
         // 2nd parameter states we want to prioritize this query
         // 3rd parameter states we want to send the track to the tail of the queue
-        return queueTrack(searchQuery, false, false);
+        return queueTrack(searchQuery, false, false, discordUser);
     }
 
     /**
@@ -251,10 +230,10 @@ public class LavaSource extends AudioSourceBase {
      * @param searchQuery the track you want to search for
      * @return QueueResult, detailing what was added to the queue.
      */
-    public synchronized QueueResult queueTrackAsPriorityNext(String searchQuery) {
+    public synchronized QueueResult queueTrackAsPriorityNext(String searchQuery, DiscordUser discordUser) {
         // 2nd parameter states we want to prioritize this query
         // 3rd parameter states we want to send the track to the head of the queue
-        return queueTrack(searchQuery, false, true);
+        return queueTrack(searchQuery, false, true, discordUser);
     }
 
     /**
@@ -262,7 +241,7 @@ public class LavaSource extends AudioSourceBase {
      * The priority queue is at the head, deprioritized queue is at the tail.
      * @return ArrayList of AudioTrack
      */
-    public ArrayList<AudioTrack> getAudioQueue() {
+    public ArrayList<AudioTrackWithUser> getAudioQueue() {
         return this.trackScheduler.getFullAudioQueue();
     }
 
@@ -303,9 +282,9 @@ public class LavaSource extends AudioSourceBase {
 
     /**
      * Checks if the AudioPlayer has a track currently playing.
-     * 
+     *
      * @return boolean | True if playingTrack != null. False if playingTrack == null.
-     */ 
+     */
     public boolean hasCurrentPlayingTrack() {
         return this.audioPlayer.getPlayingTrack() != null;
     }
@@ -333,7 +312,7 @@ public class LavaSource extends AudioSourceBase {
      * @param willPlayNow Whether it will play now or got put in the queue, this is relevant to the QueueResult
      * @return QueueResult, detailing what was loaded.
      */
-    private QueueResult handlePlayerManagerFuture(Future<Void> playerManagerFuture, boolean isYouTubeLink, boolean willPlayNow) {
+    private QueueResult handlePlayerManagerFuture(Future<Void> playerManagerFuture, KAudioResultHandler kAudioResultHandler, boolean willPlayNow) {
         if(playerManagerFuture != null) {
             try {
                 // wait for the playerManager to load the track(s)
@@ -350,7 +329,7 @@ public class LavaSource extends AudioSourceBase {
             }
         }
 
-        return generateQueueResultFromResultHandler(isYouTubeLink, willPlayNow);
+        return generateQueueResultFromResultHandler(kAudioResultHandler, willPlayNow);
     }
 
     /**
@@ -359,15 +338,10 @@ public class LavaSource extends AudioSourceBase {
      * @param willPlayNow Whether it will play now or got put in the queue. This is relevant to the QueueResult.
      * @return QueueResult, detailing what was loaded.
      */
-    private QueueResult generateQueueResultFromResultHandler(boolean isYouTubeLink, boolean willPlayNow) {
+    private QueueResult generateQueueResultFromResultHandler(KAudioResultHandler kAudioResultHandler, boolean willPlayNow) {
         // if it was youtube link, pull from YoutubeResultHandler
         try {
-            if(isYouTubeLink) {
-                return new QueueResult(youtubeLinkResultHandler.getIsSuccess(), willPlayNow, youtubeLinkResultHandler.getLastLoadedTracks());
-            }
-            else {
-                return new QueueResult(singleResultHandler.getIsSuccess(), willPlayNow, singleResultHandler.getLastLoadedTracks());
-            }
+            return new QueueResult(kAudioResultHandler.getIsSuccess(), willPlayNow, kAudioResultHandler.getLastLoadedTracksRaw());
         }
         catch(AlreadyAccessedException alreadyAccessedException) {
             Logger.warn(alreadyAccessedException, "Value for Result Handler was already accessed!");
@@ -385,7 +359,7 @@ public class LavaSource extends AudioSourceBase {
      * @return
      */
     private Optional<List<String>> getTracksFromSpotifyLink(String spotifyLink) {
-        Optional<List<String>> trackNamesFromSpotify = Optional.empty(); 
+        Optional<List<String>> trackNamesFromSpotify = Optional.empty();
 
         try {
             trackNamesFromSpotify = Optional.ofNullable(HandleSpotifyLink.getCollectionFromSpotifyLink(spotifyApi, spotifyLink));
