@@ -20,6 +20,26 @@ public class SongPlaytimeRepo {
         this.sessionFactory = sessionFactory;
     }
 
+    public SongPlaytime saveOrGet(SongPlaytime songPlaytime) {
+        return this.findByTrackedSongAndDiscordUser(songPlaytime).orElseGet(() -> {
+            return this.save(songPlaytime).get();
+        });
+    }
+
+    public Optional<SongPlaytime> findByTrackedSongAndDiscordUser(SongPlaytime songPlaytime) {
+        return this.findByTrackedSongAndDiscordUser(songPlaytime.getTrackedSong(), songPlaytime.getListeningDiscordUser());
+    }
+
+    public Optional<SongPlaytime> findByTrackedSongAndDiscordUser(TrackedSong trackedSong, DiscordUser discordUser) {
+        try(Session session = sessionFactory.openSession()) {
+            return session
+                .createQuery("FROM SongPlaytime WHERE listeningDiscordUser.discordId := discordUserId AND trackedSong.id := trackedSongId", SongPlaytime.class)
+                .setParameter("discordUserId", discordUser.getDiscordId())
+                .setParameter("trackedSongId", trackedSong.getId())
+                .uniqueResultOptional();
+        }
+    }
+
     public Optional<SongPlaytime> save(SongPlaytime songPlaytime) {
         try(Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();

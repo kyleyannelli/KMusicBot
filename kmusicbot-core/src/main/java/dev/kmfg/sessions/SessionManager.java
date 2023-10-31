@@ -28,8 +28,8 @@ public class SessionManager {
 	}
 
 	public AudioSession createAudioSession(long serverId) {
-		AudioSession audioSession = new AudioSession(this.recommenderProcessor, serverId, this::handleAudioSessionShutdown);
-		LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioSession.getSessionId());
+		AudioSession audioSession = new AudioSession(this.discordApi, this.recommenderProcessor, serverId, this::handleAudioSessionShutdown);
+		LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioSession.getSessionId(), audioSession);
 		audioSession.setLavaSource(lavaSource);
 		this.audioSessions.put(serverId, audioSession);
 		return audioSession;

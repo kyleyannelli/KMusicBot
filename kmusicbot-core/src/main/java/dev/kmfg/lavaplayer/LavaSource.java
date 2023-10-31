@@ -9,6 +9,7 @@ import dev.kmfg.lavaplayer.audioresulthandlers.KAudioResultHandler;
 import dev.kmfg.lavaplayer.audioresulthandlers.SearchResultAudioHandler;
 import dev.kmfg.lavaplayer.audioresulthandlers.SingleAudioResultHandler;
 import dev.kmfg.lavaplayer.audioresulthandlers.YoutubeAudioResultHandler;
+import dev.kmfg.sessions.AudioSession;
 import dev.kmfg.database.models.DiscordUser;
 import dev.kmfg.exceptions.AlreadyAccessedException;
 import org.apache.hc.core5.http.ParseException;
@@ -41,9 +42,10 @@ public class LavaSource extends AudioSourceBase {
 
     private final SpotifyApi spotifyApi;
     private final DiscordApi discordApi;
+    private final AudioSession audioSession;
 
 
-    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, long associatedSessionId) {
+    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, long associatedSessionId, AudioSession audioSession) {
         super(discordApi);
 
         this.spotifyApi = spotifyApi;
@@ -51,12 +53,13 @@ public class LavaSource extends AudioSourceBase {
 
         this.audioPlayerManager = audioPlayerManager;
         this.audioPlayer = audioPlayerManager.createPlayer();
-        this.trackScheduler = new ProperTrackScheduler(audioPlayer, associatedSessionId);
+        this.audioSession = audioSession;
+        this.trackScheduler = new ProperTrackScheduler(this.audioSession, audioPlayer, associatedSessionId);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }
 
-    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, AudioPlayer audioPlayer, long associatedSessionId) {
+    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, AudioPlayer audioPlayer, long associatedSessionId, AudioSession audioSession) {
         super(discordApi);
 
         this.spotifyApi = spotifyApi;
@@ -64,7 +67,8 @@ public class LavaSource extends AudioSourceBase {
 
         this.audioPlayerManager = audioPlayerManager;
         this.audioPlayer = audioPlayer;
-        this.trackScheduler = new ProperTrackScheduler(audioPlayer, associatedSessionId);
+        this.audioSession = audioSession;
+        this.trackScheduler = new ProperTrackScheduler(this.audioSession, audioPlayer, associatedSessionId);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }
@@ -115,7 +119,7 @@ public class LavaSource extends AudioSourceBase {
      */
     @Override
     public AudioSource copy() {
-        return new LavaSource(discordApi, spotifyApi,audioPlayerManager, audioPlayer, ASSOCIATED_SESSION_ID);
+        return new LavaSource(discordApi, spotifyApi,audioPlayerManager, audioPlayer, ASSOCIATED_SESSION_ID, this.audioSession);
     }
 
     /**

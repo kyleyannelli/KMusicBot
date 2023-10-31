@@ -41,6 +41,10 @@ public class SongInitialization extends BaseKMusicTable {
 		return this.timesInitialized;
 	}
 
+	public int getId() {
+		return this.id;
+	}
+
 	public TrackedSong getTrackedSong() {
 		return this.trackedSong;
 	}

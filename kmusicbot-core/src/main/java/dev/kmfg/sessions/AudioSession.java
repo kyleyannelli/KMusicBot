@@ -16,6 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioConnection;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.user.User;
@@ -34,13 +35,14 @@ public class AudioSession extends RecommenderSession {
 	private final LimitedQueue<String> mostRecentSearches;
 	private final ScheduledExecutorService disconnectScheduledService;
 	private final SessionCloseHandler sessionCloseHandler;
+	private final DiscordApi discordApi;
 
 	private LavaSource lavaSource;
 	private AudioConnection audioConnection;
 
 	private boolean isRecommendingSongs;
 
-	public AudioSession(RecommenderProcessor recommenderProcessor, LavaSource lavaSource, long associatedServerId, SessionCloseHandler sessionCloseHandler) {
+	public AudioSession(DiscordApi discordApi, RecommenderProcessor recommenderProcessor, LavaSource lavaSource, long associatedServerId, SessionCloseHandler sessionCloseHandler) {
 		super(recommenderProcessor, associatedServerId);
 
 		this.mostRecentSearches = new LimitedQueue<>(MAX_SEARCH_QUEUE_SIZE);
@@ -52,9 +54,11 @@ public class AudioSession extends RecommenderSession {
 		this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS, DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
 
 		this.sessionCloseHandler = sessionCloseHandler;
+
+		this.discordApi = discordApi;
 	}
 
-	public AudioSession(RecommenderProcessor recommenderProcessor, long associatedServerId, SessionCloseHandler sessionCloseHandler) {
+	public AudioSession(DiscordApi discordApi, RecommenderProcessor recommenderProcessor, long associatedServerId, SessionCloseHandler sessionCloseHandler) {
 		super(recommenderProcessor, associatedServerId);
 
 		this.mostRecentSearches = new LimitedQueue<>(MAX_SEARCH_QUEUE_SIZE);
@@ -65,6 +69,8 @@ public class AudioSession extends RecommenderSession {
 		this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS, DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
 
 		this.sessionCloseHandler = sessionCloseHandler;
+
+		this.discordApi = discordApi;
 	}
 
 	/**
@@ -230,6 +236,10 @@ public class AudioSession extends RecommenderSession {
 
 	public void properlyDisconnectFromVoiceChannel() {
 		this.audioConnection.close().thenRun(this::shutdown);
+	}
+
+	public DiscordApi getDiscordApi() {
+		return this.discordApi;
 	}
 
 	private void handleDisconnectService() {

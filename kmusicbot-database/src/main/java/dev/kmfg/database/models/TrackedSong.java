@@ -1,7 +1,5 @@
 package dev.kmfg.database.models;
 
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,12 +15,12 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "tracked_songs")
-public class TrackedSong {
+public class TrackedSong extends BaseKMusicTable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
 	private int id;
-	
+
 	@ManyToOne
 	@JoinColumn(name = "discord_guild_id")
 	private DiscordGuild discordGuild;
@@ -39,9 +37,6 @@ public class TrackedSong {
 
 	@Column(name = "seconds_played")
 	private int secondsPlayed;
-
-	@Column(name = "updated_at")
-	private Timestamp updatedAt;
 
 	public TrackedSong() {
 
@@ -70,14 +65,6 @@ public class TrackedSong {
 
 	public int getId() {
 		return this.id;
-	}
-	
-	public Timestamp getUpdatedAt() {
-		return this.updatedAt;
-	}
-
-	public void refreshUpdatedAt() {
-		this.updatedAt = Timestamp.from(Instant.now());
 	}
 }
 

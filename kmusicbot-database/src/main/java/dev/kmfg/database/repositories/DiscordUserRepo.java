@@ -17,6 +17,12 @@ public class DiscordUserRepo {
 		this.sessionFactory = sessionFactory;
 	}
 
+	public DiscordUser saveOrGet(DiscordUser discordUser) {
+        return this.findByDiscordId(discordUser.getDiscordId()).orElseGet(() -> {
+            return this.save(discordUser).get();
+        });
+	}
+
 	public Optional<DiscordUser> findByDiscordId(long discordId) {
 		Session session;
 

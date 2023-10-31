@@ -1,12 +1,11 @@
 package dev.kmfg.lavaplayer.events;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-
+import dev.kmfg.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.sessions.AudioSession;
 
 public class TrackStartEvent extends TrackEvent {
-    public TrackStartEvent(AudioSession audioSession, AudioTrack audioTrack) {
-        super(audioSession, audioTrack);
+    public TrackStartEvent(AudioSession audioSession, AudioTrackWithUser audioTrackWithUser) {
+        super(audioSession, audioTrackWithUser);
     }
 
 }

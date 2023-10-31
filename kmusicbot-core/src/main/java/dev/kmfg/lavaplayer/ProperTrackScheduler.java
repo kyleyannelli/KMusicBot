@@ -7,7 +7,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 
 import dev.kmfg.database.models.DiscordUser;
+import dev.kmfg.lavaplayer.events.TrackEvent;
+import dev.kmfg.lavaplayer.events.TrackStartEvent;
 import dev.kmfg.lavaplayer.events.TrackStatisticRecorder;
+import dev.kmfg.sessions.AudioSession;
 
 import org.tinylog.Logger;
 
@@ -22,6 +25,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     private static final int MAX_RETRIES = 2; // maximum amount of times a track will attempt to be played.
     private final long ASSOCIATED_SESSION_ID;
     private int currentRetries = 0;
+    private final AudioSession audioSession;
     private final AudioPlayer audioPlayer;
     private final TrackStatisticRecorder trackStatisticRecorder;
 
@@ -30,7 +34,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     private ConcurrentHashMap<AudioTrack, DiscordUser> trackUserMap;
     public AudioTrack lastTrack;
 
-    public ProperTrackScheduler(AudioPlayer audioPlayer, long associatedSessionId) {
+    public ProperTrackScheduler(AudioSession audioSession, AudioPlayer audioPlayer, long associatedSessionId) {
         this.audioPlayer = audioPlayer;
         this.audioPlayer.addListener(this);
 
@@ -38,7 +42,9 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         this.recommenderAudioQueue = new LinkedBlockingQueue<>();
         this.trackUserMap = new ConcurrentHashMap<>();
 
-        trackStatisticRecorder = new TrackStatisticRecorder(null);
+        this.audioSession = audioSession;
+
+        this.trackStatisticRecorder = new TrackStatisticRecorder(null);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }
@@ -55,8 +61,18 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        Logger.info(getSessionIdString() + " Starting track: \"" + track.getInfo().uri + "\"");
-        if(lastTrack == null) lastTrack = track.makeClone();
+        this.handleTrackStart(player, track);
+        this.handleTrackStartStatistics(track);
+    }
+
+    public void handleTrackStartStatistics(AudioTrack audioTrack) {
+        TrackEvent trackEvent = new TrackStartEvent(this.audioSession, new AudioTrackWithUser(audioTrack, trackUserMap.get(audioTrack)));
+        this.trackStatisticRecorder.onTrackEvent(trackEvent);
+    }
+
+    protected void handleTrackStart(AudioPlayer audioPlayer, AudioTrack audioTrack) {
+        Logger.info(getSessionIdString() + " Starting track: \"" + audioTrack.getInfo().uri + "\"");
+        if(lastTrack == null) lastTrack = audioTrack.makeClone();
         currentRetries = 0;
     }
 

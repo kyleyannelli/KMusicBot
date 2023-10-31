@@ -1,6 +1,7 @@
 package dev.kmfg.database.models;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
@@ -19,4 +20,9 @@ public abstract class BaseKMusicTable {
 	public Timestamp getUpdatedAt() {
 		return this.updatedAt;
 	}
+
+	public void refreshUpdatedAt() {
+		this.updatedAt = Timestamp.from(Instant.now());
+	}
 }
+
