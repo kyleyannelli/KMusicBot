@@ -95,7 +95,8 @@ public class ActivityUpdaterService {
 
         // if we dont have anything, there are either 0 or greater than 1 sessions
         if(onlyAudioSession.isEmpty()) {
-                      // early return
+            possiblyLogSkip();
+            // early return
             return;
         }
 
