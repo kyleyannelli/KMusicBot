@@ -180,6 +180,7 @@ public class RecommenderRequester {
 		ArrayList<String> foundSongSpotifyIds = new ArrayList<>();
 		ObjectMapper objectMapper = new ObjectMapper();
 		for(String song : listOfSongs) {
+			song = song.replaceAll("[^a-zA-Z0-9 ]", "");
 			// request is made here so possiblyBackOffApiCallAndUpdateDelay
 			possiblyBackOffApiCallAndUpdateDelay();
 			JsonNode jsonNode = objectMapper.readValue(spotifyApi.searchTracks(song).limit(1).market(CountryCode.US).build().getJson(), JsonNode.class).path("tracks").path("items");
