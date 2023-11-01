@@ -2,6 +2,8 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+*hibernate.cfg.xml
+*liquibase.properties
 
 ### IntelliJ IDEA ###
 .idea/
@@ -40,3 +42,5 @@ build/
 
 ### VIM ###
 Session.vim
+*.swo
+*.swp

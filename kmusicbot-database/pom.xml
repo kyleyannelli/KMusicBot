@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<modelVersion>4.0.0</modelVersion>
+<parent>
+  <groupId>dev.kmfg.discordbot</groupId>
+  <artifactId>KMusicBot</artifactId>
+  <version>3.3.0-PREVIEW</version>
+</parent>
+<groupId>dev.kmfg</groupId>
+<artifactId>kmusicbot-database</artifactId>
+<version>1.0.0-BETA</version>
+<name>kmusicbot-database</name>
+<url>http://maven.apache.org</url>
+
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>exec-maven-plugin</artifactId>
+      <version>3.1.0</version>
+      <configuration>
+        <mainClass>dev.kmfg.database.Main</mainClass>
+      </configuration>
+    </plugin>
+    <plugin>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-maven-plugin</artifactId>
+      <version>4.22.0</version>
+      <configuration>
+        <propertyFile>src/main/resources/liquibase.properties</propertyFile>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+
+<dependencies>
+  <dependency>
+    <groupId>com.mchange</groupId>
+    <artifactId>c3p0</artifactId>
+    <version>0.9.5.5</version>
+  </dependency>
+  <dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.4.11</version>
+  </dependency>
+  <dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-core</artifactId>
+    <version>6.0.0.Final</version>
+  </dependency>
+  <dependency>
+    <groupId>org.liquibase</groupId>
+    <artifactId>liquibase-core</artifactId>
+    <version>4.22.0</version>
+  </dependency>
+  <dependency>
+    <groupId>org.mariadb.jdbc</groupId>
+    <artifactId>mariadb-java-client</artifactId>
+    <version>3.1.4</version>
+  </dependency>
+  <dependency>
+    <groupId>org.tinylog</groupId>
+    <artifactId>tinylog-impl</artifactId>
+  </dependency>
+</dependencies>
+</project>
