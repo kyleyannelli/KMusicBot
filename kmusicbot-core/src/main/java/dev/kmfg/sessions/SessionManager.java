@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.javacord.api.DiscordApi;
 import org.tinylog.Logger;
 
+import org.hibernate.SessionFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 
 import dev.kmfg.lavaplayer.LavaSource;
@@ -18,17 +19,19 @@ public class SessionManager {
 	private final DiscordApi discordApi;
 	private final SpotifyApi spotifyApi;
 	private final AudioPlayerManager audioPlayerManager;
+	private final SessionFactory sessionFactory;
 
-	public SessionManager(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, RecommenderProcessor recommenderProcessor) {
+	public SessionManager(SessionFactory sessionFactory, DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager, RecommenderProcessor recommenderProcessor) {
 		this.audioSessions = new ConcurrentHashMap<>();
 		this.recommenderProcessor = recommenderProcessor;
 		this.audioPlayerManager = audioPlayerManager;
+		this.sessionFactory = sessionFactory;
 		this.discordApi = discordApi;
 		this.spotifyApi = spotifyApi;
 	}
 
 	public AudioSession createAudioSession(long serverId) {
-		AudioSession audioSession = new AudioSession(this.discordApi, this.recommenderProcessor, serverId, this::handleAudioSessionShutdown);
+		AudioSession audioSession = new AudioSession(this.sessionFactory, this.discordApi, this.recommenderProcessor, serverId, this::handleAudioSessionShutdown);
 		LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioSession.getSessionId(), audioSession);
 		audioSession.setLavaSource(lavaSource);
 		this.audioSessions.put(serverId, audioSession);

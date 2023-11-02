@@ -54,7 +54,7 @@ public class LavaSource extends AudioSourceBase {
         this.audioPlayerManager = audioPlayerManager;
         this.audioPlayer = audioPlayerManager.createPlayer();
         this.audioSession = audioSession;
-        this.trackScheduler = new ProperTrackScheduler(this.audioSession, audioPlayer, associatedSessionId);
+        this.trackScheduler = new ProperTrackScheduler(this.audioSession, audioPlayer);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }
@@ -68,7 +68,7 @@ public class LavaSource extends AudioSourceBase {
         this.audioPlayerManager = audioPlayerManager;
         this.audioPlayer = audioPlayer;
         this.audioSession = audioSession;
-        this.trackScheduler = new ProperTrackScheduler(this.audioSession, audioPlayer, associatedSessionId);
+        this.trackScheduler = new ProperTrackScheduler(this.audioSession, audioPlayer);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }

@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import dev.kmfg.discordbot.listenerhandlers.SlashCommandListenerHandler;
+import dev.kmfg.database.HibernateUtil;
 import dev.kmfg.discordbot.listenerhandlers.SelectMenuChooseListenerHandler;
 import dev.kmfg.discordbot.listenerhandlers.UserLeaveVoiceListenerHandler;
 import dev.kmfg.discordbot.services.ActivityUpdaterService;
@@ -11,6 +12,8 @@ import dev.kmfg.sessions.SessionManager;
 import dev.kmfg.songrecommender.RecommenderProcessor;
 import dev.kmfg.spotifyapi.ClientCreate;
 import io.github.cdimascio.dotenv.Dotenv;
+
+import org.hibernate.SessionFactory;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.tinylog.Logger;
@@ -103,8 +106,10 @@ public class KMusicBot {
         SpotifyApi spotifyApi = ClientCreate.clientCredentials_Sync();
         // create the recommender processor for RecommenderSessions (and its child classes)
         RecommenderProcessor recommenderProcessor = new RecommenderProcessor(this.discordApi, spotifyApi, MAX_RECOMMENDER_THREADS);
+        // create a hibernate session factory
+        SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
         // create session manager for AudioSessions
-        this.sessionManager = new SessionManager(this.discordApi, spotifyApi, playerManager, recommenderProcessor);
+        this.sessionManager = new SessionManager(sessionFactory, this.discordApi, spotifyApi, playerManager, recommenderProcessor);
         // ready the ActivityUpdaterService
         this.activityUpdaterService = new ActivityUpdaterService(this.discordApi, this.sessionManager);
     }

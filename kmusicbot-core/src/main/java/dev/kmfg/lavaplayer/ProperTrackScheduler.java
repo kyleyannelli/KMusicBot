@@ -23,7 +23,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class ProperTrackScheduler extends AudioEventAdapter {
     private static final int MAX_RETRIES = 2; // maximum amount of times a track will attempt to be played.
-    private final long ASSOCIATED_SESSION_ID;
     private int currentRetries = 0;
     private final AudioSession audioSession;
     private final AudioPlayer audioPlayer;
@@ -34,7 +33,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     private ConcurrentHashMap<AudioTrack, DiscordUser> trackUserMap;
     public AudioTrack lastTrack;
 
-    public ProperTrackScheduler(AudioSession audioSession, AudioPlayer audioPlayer, long associatedSessionId) {
+    public ProperTrackScheduler(AudioSession audioSession, AudioPlayer audioPlayer) {
         this.audioPlayer = audioPlayer;
         this.audioPlayer.addListener(this);
 
@@ -44,9 +43,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
         this.audioSession = audioSession;
 
-        this.trackStatisticRecorder = new TrackStatisticRecorder(null);
-
-        this.ASSOCIATED_SESSION_ID = associatedSessionId;
+        this.trackStatisticRecorder = new TrackStatisticRecorder(this.audioSession.getSessionFactory());
     }
 
     @Override
@@ -183,8 +180,12 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         return new ArrayList<>(this.audioQueue);
     }
 
+    public AudioSession getAudioSession() {
+        return this.audioSession;
+    }
+
     public long getAssociatedSessionId() {
-        return ASSOCIATED_SESSION_ID;
+        return this.audioSession.getSessionId();
     }
 
     public int shufflePriorityQueue() {
@@ -201,7 +202,11 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     }
 
     private String getSessionIdString() {
-        return "|| Session ID: " + ASSOCIATED_SESSION_ID + " ||";
+        StringBuilder stringBuilder = new StringBuilder()
+            .append("|| Session ID: ")
+            .append(this.getAssociatedSessionId())
+            .append(" ||");
+        return stringBuilder.toString();
     }
 
     private void queue(AudioTrackWithUser audioTrackWithUser, boolean deprioritizeQueue) {
