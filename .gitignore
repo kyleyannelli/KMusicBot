@@ -4,6 +4,7 @@ target/
 !**/src/test/**/target/
 *hibernate.cfg.xml
 *liquibase.properties
+*tinylog.log.txt
 
 ### IntelliJ IDEA ###
 .idea/
