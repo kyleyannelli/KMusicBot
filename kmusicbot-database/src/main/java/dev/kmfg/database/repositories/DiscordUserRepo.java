@@ -24,19 +24,17 @@ public class DiscordUserRepo {
 	}
 
 	public Optional<DiscordUser> findByDiscordId(long discordId) {
-		Session session;
-
-		try {
-			session = sessionFactory.openSession();
+		try(Session session = this.sessionFactory.openSession()) {
+			return Optional.ofNullable(session.get(DiscordUser.class, discordId));
 		}
 		catch(HibernateException hibernateException) {
-			Logger.error(hibernateException, "Exception occured while opening session to find DiscordUser by id.");
+			Logger.error(hibernateException, "Exception occurred while opening session to find DiscordUser by id.");
 			return Optional.empty();
 		}
-
-		Optional<DiscordUser> discordUser = Optional.ofNullable(session.get(DiscordUser.class, discordId));
-		session.close();
-		return discordUser;
+		catch(Exception e) {
+			Logger.error(e, "Error occurred while finding by discord id");
+			return Optional.empty();
+		}
 	}
 
 	public Optional<DiscordUser> findByDiscordUsername(String discordUsername) {

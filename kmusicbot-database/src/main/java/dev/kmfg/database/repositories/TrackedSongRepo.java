@@ -34,6 +34,14 @@ public class TrackedSongRepo {
                 .setParameter("kmusicSongId", kmusicSong.getId())
                 .uniqueResultOptional();
         }
+        catch(HibernateException hibernateException) {
+            Logger.error(hibernateException, "Error occurred while attempting to find by DiscordGuild and KMusicSong");
+            return Optional.empty();
+        }
+        catch(Exception e) {
+            Logger.error(e, "Error occurred while attempting to find by DiscordGuild and KMusicSong");
+            return Optional.empty();
+        }
     }
 
     public Optional<TrackedSong> findById(int id) {

@@ -18,7 +18,7 @@ public class KMusicSongRepo {
 	}
 
 	public KMusicSong saveOrGet(KMusicSong kmusicSong) {
-		return this.findByYoutubeUrl(kmusicSong.getYoutubeUrl()).orElseGet(() -> {
+		return this.findById(kmusicSong.getId()).orElseGet(() -> {
             return this.save(kmusicSong).get();
         });
 	}
@@ -29,6 +29,10 @@ public class KMusicSongRepo {
 		}
 		catch(HibernateException hibernateException) {
 			Logger.error(hibernateException, "Exception occurred while opening session to find KMusicSong by ID.");
+			return Optional.empty();
+		}
+		catch(Exception e) {
+			Logger.error(e, "Error occurred while finding by id");
 			return Optional.empty();
 		}
 	}

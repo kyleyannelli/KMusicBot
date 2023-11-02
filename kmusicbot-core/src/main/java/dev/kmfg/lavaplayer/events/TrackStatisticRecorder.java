@@ -1,5 +1,6 @@
 package dev.kmfg.lavaplayer.events;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import org.hibernate.SessionFactory;
 import org.javacord.api.entity.channel.ServerVoiceChannel;
 import org.javacord.api.entity.user.User;
@@ -20,6 +21,10 @@ import dev.kmfg.database.repositories.TrackedSongRepo;
 import dev.kmfg.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.sessions.AudioSession;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+
 public class TrackStatisticRecorder implements TrackEventListener {
     private final KMusicSongRepo kmusicSongRepo;
     private final TrackedSongRepo trackedSongRepo;
@@ -27,6 +32,8 @@ public class TrackStatisticRecorder implements TrackEventListener {
     private final SongInitializationRepo songInitializationRepo;
     private final SongPlaytimeRepo songPlaytimeRepo;
     private final DiscordUserRepo discordUserRepo;
+    private final ExecutorService executorService;
+    private static final int DEFAULT_MAX_THREADS = 10;
 
     public TrackStatisticRecorder(SessionFactory sessionFactory) {
         this.kmusicSongRepo = new KMusicSongRepo(sessionFactory);
@@ -35,10 +42,19 @@ public class TrackStatisticRecorder implements TrackEventListener {
         this.songInitializationRepo = new SongInitializationRepo(sessionFactory);
         this.discordUserRepo = new DiscordUserRepo(sessionFactory);
         this.songPlaytimeRepo = new SongPlaytimeRepo(sessionFactory);
+        this.executorService = Executors.newFixedThreadPool(
+                Dotenv.load().get("MAX_COMMAND_THREADS") == null ?
+                        DEFAULT_MAX_THREADS : Integer.parseInt(Dotenv.load().get("MAX_COMMAND_THREADS")));
     }
 
     @Override
     public void onTrackEvent(TrackEvent trackEvent) {
+        executorService.submit(() -> {
+            handleEvents(trackEvent);
+        });
+    }
+
+    private void handleEvents(TrackEvent trackEvent) {
         if(trackEvent instanceof TrackStartEvent) {
             this.handleTrackStartEvent((TrackStartEvent) trackEvent);
         }
@@ -47,8 +63,8 @@ public class TrackStatisticRecorder implements TrackEventListener {
         }
         else {
             StringBuilder stringBuilder = new StringBuilder()
-                .append(trackEvent.getClass().toString())
-                .append(" was uncaught in TrackStatisticRecorder. It is likely missing from the onTrackEvent method!");
+                    .append(trackEvent.getClass().toString())
+                    .append(" was uncaught in TrackStatisticRecorder. It is likely missing from the onTrackEvent method!");
             Logger.warn(stringBuilder.toString());
         }
     }
@@ -93,7 +109,7 @@ public class TrackStatisticRecorder implements TrackEventListener {
         trackedSong.refreshUpdatedAt(); // the updated_at column signifies the last time the track was played.
         trackedSong = trackedSongRepo.save(trackedSong).get();
         // generate or get the initialization
-        songInitializationRepo.saveOrGet(new SongInitialization(trackedSong, discordUser));
+        SongInitialization songInitialization = songInitializationRepo.saveOrGet(new SongInitialization(trackedSong, discordUser));
         return trackedSong;
     }
 }

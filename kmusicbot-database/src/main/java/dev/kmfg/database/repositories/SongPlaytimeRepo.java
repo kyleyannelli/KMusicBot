@@ -33,10 +33,18 @@ public class SongPlaytimeRepo {
     public Optional<SongPlaytime> findByTrackedSongAndDiscordUser(TrackedSong trackedSong, DiscordUser discordUser) {
         try(Session session = sessionFactory.openSession()) {
             return session
-                .createQuery("FROM SongPlaytime WHERE listeningDiscordUser.discordId := discordUserId AND trackedSong.id := trackedSongId", SongPlaytime.class)
+                .createQuery("FROM SongPlaytime WHERE listeningDiscordUser.discordId = :discordUserId AND trackedSong.id = :trackedSongId", SongPlaytime.class)
                 .setParameter("discordUserId", discordUser.getDiscordId())
                 .setParameter("trackedSongId", trackedSong.getId())
                 .uniqueResultOptional();
+        }
+        catch(HibernateException hibernateException) {
+            Logger.error(hibernateException, "Error occurred while attempting to find SongInitialization by TrackedSong and InitDiscordUser");
+            return Optional.empty();
+        }
+        catch(Exception e) {
+            Logger.error(e, "Error occurred while finding by TrackedSong and DiscordUser");
+            return Optional.empty();
         }
     }
 

@@ -32,13 +32,17 @@ public class SongInitializationRepo {
     public Optional<SongInitialization> findByTrackedSongAndDiscordUser(TrackedSong trackedSong, DiscordUser discordUser) {
         try(Session session = this.sessionFactory.openSession()) {
             return Optional.ofNullable(session
-                    .createQuery("FROM SongInitialization WHERE trackedSong.id := trackedSongId AND initializingDiscordUser.discordId := initializingDiscordUserId", SongInitialization.class)
+                    .createQuery("FROM SongInitialization WHERE trackedSong.id = :trackedSongId AND initializingDiscordUser.discordId = :initializingDiscordUserId", SongInitialization.class)
                     .setParameter("trackedSongId", trackedSong.getId())
                     .setParameter("initializingDiscordUserId", discordUser.getDiscordId())
                     .getSingleResult());
         }
         catch(HibernateException hibernateException) {
-            Logger.error(hibernateException, "Error occured while attemping to find SongInitialization by TrackedSong and InitDiscordUser");
+            Logger.error(hibernateException, "Error occurred while attempting to find SongInitialization by TrackedSong and InitDiscordUser");
+            return Optional.empty();
+        }
+        catch(Exception e) {
+            Logger.error(e, "Error occurred while finding by TrackedSong and DiscordUser");
             return Optional.empty();
         }
     }

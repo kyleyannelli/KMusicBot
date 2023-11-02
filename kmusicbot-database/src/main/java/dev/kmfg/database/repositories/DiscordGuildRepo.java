@@ -24,6 +24,10 @@ public class DiscordGuildRepo {
             Logger.error(hibernateException, "Exception occurred while opening session to find DiscordGuild by id.");
             return Optional.empty();
         }
+        catch(Exception e) {
+            Logger.error(e, "Error occurred while finding by discord id");
+            return Optional.empty();
+        }
     }
 
     public DiscordGuild saveOrGet(DiscordGuild discordGuild) {

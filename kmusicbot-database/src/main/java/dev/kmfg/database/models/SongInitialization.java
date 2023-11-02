@@ -33,6 +33,10 @@ public class SongInitialization extends BaseKMusicTable {
 		this.initializingDiscordUser = initDiscordUser;
 	}
 
+	public SongInitialization() {
+
+	}
+
 	public void incTimesInitialized() {
 		this.timesInitialized++;
 	}
