@@ -45,3 +45,4 @@ build/
 Session.vim
 *.swo
 *.swp
+*.swm
