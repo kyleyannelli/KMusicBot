@@ -25,13 +25,13 @@
         <property name="hibernate.show_sql">true</property>
 
         <!-- Mention annotated class files -->
-        <mapping class="dev.kmfg.database.models.DiscordGuild"/>
-        <mapping class="dev.kmfg.database.models.DiscordUser"/>
-        <mapping class="dev.kmfg.database.models.TrackedSong"/>
-        <mapping class="dev.kmfg.database.models.KMusicSong"/>
-        <mapping class="dev.kmfg.database.models.SongPlaytime"/>
-        <mapping class="dev.kmfg.database.models.SongInitialization"/>
-        <mapping class="dev.kmfg.database.models.UsedCommand"/>
+        <mapping class="models.dev.kmfg.musicbot.database.DiscordGuild"/>
+        <mapping class="models.dev.kmfg.musicbot.database.DiscordUser"/>
+        <mapping class="models.dev.kmfg.musicbot.database.TrackedSong"/>
+        <mapping class="models.dev.kmfg.musicbot.database.KMusicSong"/>
+        <mapping class="models.dev.kmfg.musicbot.database.SongPlaytime"/>
+        <mapping class="models.dev.kmfg.musicbot.database.SongInitialization"/>
+        <mapping class="models.dev.kmfg.musicbot.database.UsedCommand"/>
     </session-factory>
 </hibernate-configuration>
 
