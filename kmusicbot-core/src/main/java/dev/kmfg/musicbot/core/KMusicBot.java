@@ -17,8 +17,12 @@ import io.github.cdimascio.dotenv.Dotenv;
 import org.hibernate.SessionFactory;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
+import org.javacord.api.entity.permission.RoleBuilder;
+import org.javacord.api.entity.server.Server;
 import org.tinylog.Logger;
 import se.michaelthelin.spotify.SpotifyApi;
+
+import java.awt.*;
 
 /**
  * KMusicBot fully allows for a music bot to operate. After initializing, calling start() on the object will launch the bot.
@@ -27,7 +31,7 @@ public class KMusicBot {
     private static final Dotenv dotenv = Dotenv.load();
     // if the .env file does not have MAX_RECOMMENDER_THREADS, use default value of 10, else, use the .env value
     protected static final int MAX_RECOMMENDER_THREADS = dotenv.get("MAX_RECOMMENDER_THREADS") == null ?
-            10 : Integer.parseInt(dotenv.get("MAX_RECOMMENDER_THREADS"));;
+            10 : Integer.parseInt(dotenv.get("MAX_RECOMMENDER_THREADS"));
     protected DiscordApiBuilder discordApiBuilder;
     protected DiscordApi discordApi;
     protected SessionManager sessionManager;
@@ -68,6 +72,13 @@ public class KMusicBot {
         this.setupCommandsListener(commandsRegistry);
         Logger.info("CommandsListener setup and listening.");
 
+        // Initialize each server the bot is in to create the DJ role
+        for (Server server : this.discordApi.getServers())
+        {
+            if (server.getRolesByName("DJ").isEmpty())
+                this.setupServer(server);
+        }
+
         // Create all listeners
         this.setupListeners();
 
@@ -82,6 +93,19 @@ public class KMusicBot {
     protected void setupListeners() {
         this.listenForServerVoiceChannelLeaves();
         this.listenForMenuSelection();
+    }
+
+    /**
+     * Setup each server with a DJ role giving users permission to use the bot.
+     */
+    protected void setupServer(Server server) {
+        RoleBuilder roleBuilder = server.createRoleBuilder();
+
+        roleBuilder
+                .setName("DJ")
+                .setMentionable(true)
+                .setColor(Color.blue)
+                .create();
     }
 
     /**
