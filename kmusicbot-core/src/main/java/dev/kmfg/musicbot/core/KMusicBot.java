@@ -3,7 +3,6 @@ package dev.kmfg.musicbot.core;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
-import dev.kmfg.musicbot.core.commands.intermediates.CommandsRegistry;
 import dev.kmfg.musicbot.core.listenerhandlers.SelectMenuChooseListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.SlashCommandListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.UserLeaveVoiceListenerHandler;
@@ -57,19 +56,11 @@ public class KMusicBot {
         this.discordApiBuilder = null;
         Logger.info("Bot logged into discord.");
 
-        CommandsRegistry commandsRegistry = new CommandsRegistry();
-        try{
-            commandsRegistry.registerCommands(this.discordApi);
-        }
-        catch(Exception e) {
-            Logger.error(e, "Exception occurred while registering slash commands. This is likely a breaking issue and should be reported!");
-        }
-
         // setup session manager, this must be done before setting up the CommandsListener
         this.setupSessionManager();
         Logger.info("SessionManager setup.");
         // now we can listen for the commands
-        this.setupCommandsListener(commandsRegistry);
+        this.setupCommandsListener();
         Logger.info("CommandsListener setup and listening.");
 
         // Initialize each server the bot is in to create the DJ role
@@ -151,7 +142,7 @@ public class KMusicBot {
      * This MUST be called after the discordApi and sessionManager objects are properly initialized.
      * Initializes the CommandsListener with the SessionManager, then sets it to listen for the commands.
      */
-    protected void setupCommandsListener(CommandsRegistry commandsRegistry) {
-        this.discordApi.addSlashCommandCreateListener(new SlashCommandListenerHandler(this.sessionManager, commandsRegistry));
+    protected void setupCommandsListener() {
+        this.discordApi.addSlashCommandCreateListener(new SlashCommandListenerHandler(this.sessionManager));
     }
 }
