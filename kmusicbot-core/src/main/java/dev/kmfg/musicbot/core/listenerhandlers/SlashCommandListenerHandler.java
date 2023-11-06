@@ -38,7 +38,7 @@ public class SlashCommandListenerHandler implements SlashCommandCreateListener {
 		String slashCommandName = event.getSlashCommandInteraction().getCommandName();
 
 		Command command = this.commandsRegistry.getCommand(slashCommandName, sessionManager, event);
-		if(command != null && userHasPermission(event)) {
+		if(command != null && userHasPermission(event, command)) {
 			commandExecutorService.submit((() -> { command.execute(); }));
 		}
 	}
@@ -58,7 +58,7 @@ public class SlashCommandListenerHandler implements SlashCommandCreateListener {
 		}
 	}
 
-	protected boolean userHasPermission(SlashCommandCreateEvent event) {
+	protected boolean userHasPermission(SlashCommandCreateEvent event, Command command) {
 		User user = event.getInteraction().getUser();
 		//noinspection OptionalGetWithoutIsPresent
 		Role djRole = event.getInteraction().getServer().get().getRolesByName("DJ").get(0);
@@ -66,10 +66,14 @@ public class SlashCommandListenerHandler implements SlashCommandCreateListener {
 		if (user.getRoles(event.getInteraction().getServer().get()).contains(djRole))
 			return true;
 
-		event.getInteraction().createImmediateResponder().respond().thenAccept(action -> {
+		// pull the responder from the embed message in command as it has already taken response ownership.
+		command.getRespondLaterFromEmbed().thenAccept(action -> {
 			action.addEmbed(new EmbedBuilder()
-					.addField("Permission denied", "You must have the " + djRole.getMentionTag() + " role I created", false))
+							.addField("Permission denied", "You must have the " + djRole.getMentionTag() + " role I created", false))
 					.update();
+		}).exceptionally(throwable -> {
+			Logger.error(throwable, "Error occurred while responding to user without DJ role.");
+			return null;
 		});
 
 		return false;

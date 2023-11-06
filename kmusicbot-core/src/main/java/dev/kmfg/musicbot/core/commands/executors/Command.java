@@ -44,6 +44,13 @@ public abstract class Command {
 	}
 
 	/**
+	 * Allows the respondLater Object to be accessed for message responses
+	 */
+	public CompletableFuture<InteractionOriginalResponseUpdater> getRespondLaterFromEmbed(){
+		return this.messageSender.getEmbedMessage().getRespondLater();
+	}
+
+	/**
 	 * Generates the DiscordUser from interaction (statistics tracking)
 	 */
 	public DiscordUser generateDiscordUser() {
