@@ -60,6 +60,8 @@ public class KMusicBot {
         CommandsRegistry commandsRegistry = new CommandsRegistry();
         try{
             commandsRegistry.registerCommands(this.discordApi);
+            // as this wasn't working properly in previous versions this is an easy log to let viewer know
+            Logger.info("Commands registered successfully.");
         }
         catch(Exception e) {
             Logger.error(e, "Exception occurred while registering slash commands. This is likely a breaking issue and should be reported!");
