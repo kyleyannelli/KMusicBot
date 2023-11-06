@@ -15,6 +15,10 @@ public class StopCommand extends Command {
         super(sessionManager, slashCommandEvent);
     }
 
+    public StopCommand() {
+        super();
+    }
+
     @Override
     public void register(DiscordApi discordApi) {
         SlashCommand.with(COMMAND_NAME, DESCRIPTION).createGlobal(discordApi);

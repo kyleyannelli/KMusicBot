@@ -22,6 +22,10 @@ public class ViewQueueCommand extends Command {
         super(sessionManager, slashCommandCreateEvent);
     }
 
+    public ViewQueueCommand() {
+       super();
+    }
+
     @Override
     public void register(DiscordApi discordApi) {
         SlashCommand.with(COMMAND_NAME, DESCRIPTION,

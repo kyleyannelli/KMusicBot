@@ -20,6 +20,10 @@ public class SeekCommand extends Command {
         super(sessionManager, slashCommandEvent);
     }
 
+    public SeekCommand() {
+        super();
+    }
+
     @Override
     public void register(DiscordApi discordApi) {
         ArrayList<SlashCommandOption> options = new ArrayList<>();

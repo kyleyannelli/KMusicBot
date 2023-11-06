@@ -19,6 +19,10 @@ public class PlayNextCommand extends Command {
         super(sessionManager, slashCommandEvent);
     }
 
+    public PlayNextCommand() {
+        super();
+    }
+
     @Override
     public void register(DiscordApi discordApi) {
         SlashCommand.with(COMMAND_NAME, DESCRIPTION,

@@ -15,6 +15,11 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 public class PlayCommand extends Command {
 	public static final String COMMAND_NAME = "play";
 	private static final String DESCRIPTION = "Play a song";
+
+	public PlayCommand() {
+		super();
+	}
+
 	public PlayCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
 		super(sessionManager, slashCommandEvent);
 	}

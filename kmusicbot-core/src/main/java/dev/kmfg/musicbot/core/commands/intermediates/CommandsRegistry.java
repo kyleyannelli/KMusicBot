@@ -2,6 +2,7 @@ package dev.kmfg.musicbot.core.commands.intermediates;
 
 import dev.kmfg.musicbot.core.commands.executors.*;
 import dev.kmfg.musicbot.core.sessions.SessionManager;
+import org.javacord.api.DiscordApi;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.tinylog.Logger;
 
@@ -28,6 +29,15 @@ public class CommandsRegistry {
         this.commandsMap.put(ViewQueueCommand.COMMAND_NAME, ViewQueueCommand.class);
         this.commandsMap.put(SeekCommand.COMMAND_NAME, SeekCommand.class);
         this.commandsMap.put(ShuffleCommand.COMMAND_NAME, ShuffleCommand.class);
+    }
+
+    public void registerCommands(DiscordApi discordApi) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        for(Class<? extends Command> commandClass : commandsMap.values()) {
+            Constructor<? extends Command> constructor = commandClass.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            Command command = constructor.newInstance();
+            command.register(discordApi);
+        }
     }
 
     public Command getCommand(String commandName, SessionManager sessionManager, SlashCommandCreateEvent event) {
