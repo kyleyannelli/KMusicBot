@@ -66,11 +66,10 @@ public class SlashCommandListenerHandler implements SlashCommandCreateListener {
 		if (user.getRoles(event.getInteraction().getServer().get()).contains(djRole))
 			return true;
 
-		event.getInteraction().createImmediateResponder().respond().thenAccept(action -> {
-			action.addEmbed(new EmbedBuilder()
+		event.getInteraction().createImmediateResponder().respond().thenAccept(action -> action.addEmbed(new EmbedBuilder()
+					.setColor(Color.red)
 					.addField("Permission denied", "You must have the " + djRole.getMentionTag() + " role I created", false))
-					.update();
-		});
+				.update());
 
 		return false;
 	}
