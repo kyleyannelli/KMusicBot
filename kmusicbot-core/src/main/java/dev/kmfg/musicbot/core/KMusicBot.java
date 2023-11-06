@@ -26,7 +26,7 @@ public class KMusicBot {
     private static final Dotenv dotenv = Dotenv.load();
     // if the .env file does not have MAX_RECOMMENDER_THREADS, use default value of 10, else, use the .env value
     protected static final int MAX_RECOMMENDER_THREADS = dotenv.get("MAX_RECOMMENDER_THREADS") == null ?
-            10 : Integer.parseInt(dotenv.get("MAX_RECOMMENDER_THREADS"));;
+            10 : Integer.parseInt(dotenv.get("MAX_RECOMMENDER_THREADS"));
     protected DiscordApiBuilder discordApiBuilder;
     protected DiscordApi discordApi;
     protected SessionManager sessionManager;
