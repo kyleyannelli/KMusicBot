@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import dev.kmfg.musicbot.core.commands.intermediates.CommandsRegistry;
+import dev.kmfg.musicbot.core.listenerhandlers.JoinServerListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.SelectMenuChooseListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.SlashCommandListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.UserLeaveVoiceListenerHandler;
@@ -95,6 +96,7 @@ public class KMusicBot {
     protected void setupListeners() {
         this.listenForServerVoiceChannelLeaves();
         this.listenForMenuSelection();
+        this.listenForServerJoin();
     }
 
     /**
@@ -115,6 +117,13 @@ public class KMusicBot {
      */
     protected void listenForMenuSelection() {
         this.discordApi.addSelectMenuChooseListener(new SelectMenuChooseListenerHandler(this.sessionManager));
+    }
+
+    /**
+     * Listens for server joins and adds DJ role if not present.
+     */
+    protected void listenForServerJoin() {
+        this.discordApi.addServerJoinListener(new JoinServerListenerHandler(this.discordApi));
     }
 
     /**
