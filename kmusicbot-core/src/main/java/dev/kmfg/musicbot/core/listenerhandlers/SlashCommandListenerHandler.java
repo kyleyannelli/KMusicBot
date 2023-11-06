@@ -5,9 +5,13 @@ import dev.kmfg.musicbot.core.sessions.SessionManager;
 import dev.kmfg.musicbot.core.commands.executors.Command;
 import io.github.cdimascio.dotenv.Dotenv;
 
+import java.awt.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.javacord.api.entity.message.embed.EmbedBuilder;
+import org.javacord.api.entity.permission.Role;
+import org.javacord.api.entity.user.User;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.listener.interaction.SlashCommandCreateListener;
 import org.tinylog.Logger;
@@ -34,7 +38,7 @@ public class SlashCommandListenerHandler implements SlashCommandCreateListener {
 		String slashCommandName = event.getSlashCommandInteraction().getCommandName();
 
 		Command command = this.commandsRegistry.getCommand(slashCommandName, sessionManager, event);
-		if(command != null) {
+		if(command != null && userHasPermission(event)) {
 			commandExecutorService.submit((() -> { command.execute(); }));
 		}
 	}
@@ -52,5 +56,20 @@ public class SlashCommandListenerHandler implements SlashCommandCreateListener {
 			System.exit(1);
 			throw numberFormatException;
 		}
+	}
+
+	protected boolean userHasPermission(SlashCommandCreateEvent event) {
+		User user = event.getInteraction().getUser();
+		//noinspection OptionalGetWithoutIsPresent
+		Role djRole = event.getInteraction().getServer().get().getRolesByName("DJ").get(0);
+
+		if (user.getRoles(event.getInteraction().getServer().get()).contains(djRole))
+			return true;
+
+		event.getInteraction().getChannel().get().sendMessage(new EmbedBuilder()
+				.setColor(Color.red)
+				.addField("Permission denied", "You must have the " + djRole.getMentionTag() + " role I created", false));
+
+		return false;
 	}
 }
