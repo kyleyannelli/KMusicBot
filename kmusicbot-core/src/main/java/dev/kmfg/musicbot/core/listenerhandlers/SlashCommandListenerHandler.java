@@ -19,9 +19,9 @@ public class SlashCommandListenerHandler implements SlashCommandCreateListener {
 	private final CommandsRegistry commandsRegistry;
 	private final ExecutorService commandExecutorService;
 
-	public SlashCommandListenerHandler(SessionManager sessionManager) {
+	public SlashCommandListenerHandler(SessionManager sessionManager, CommandsRegistry commandsRegistry) {
 		this.sessionManager = sessionManager;
-		this.commandsRegistry = new CommandsRegistry();
+		this.commandsRegistry = commandsRegistry;
 
 		Dotenv.load().get("MAX_COMMAND_THREADS");
 

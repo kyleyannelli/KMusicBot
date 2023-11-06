@@ -34,9 +34,13 @@ public abstract class Command {
 		this.messageSender = new MessageSender(embedMessage);
 
 		this.discordUser = this.generateDiscordUser();
+	}
 
-		// finally register the command
-		this.register(this.sessionManager.getDiscordApi());
+	public Command() {
+		this.slashCommandEvent = null;
+		this.messageSender = null;
+		this.discordUser = null;
+		this.sessionManager = null;
 	}
 
 	/**

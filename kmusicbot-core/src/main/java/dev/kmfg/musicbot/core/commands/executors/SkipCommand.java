@@ -14,6 +14,10 @@ public class SkipCommand extends Command {
         super(sessionManager, slashCommandEvent);
     }
 
+    public SkipCommand() {
+       super();
+    }
+
     @Override
     public void register(DiscordApi discordApi) {
         SlashCommand.with(COMMAND_NAME, DESCRIPTION).createGlobal(discordApi);

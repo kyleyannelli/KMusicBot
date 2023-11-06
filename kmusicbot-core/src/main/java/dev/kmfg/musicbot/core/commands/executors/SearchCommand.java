@@ -23,6 +23,10 @@ public class SearchCommand extends Command {
         super(sessionManager, slashCommandEvent);
     }
 
+    public SearchCommand() {
+        super();
+    }
+
     @Override
     public void register(DiscordApi discordApi) {
         SlashCommand.with(COMMAND_NAME, DESCRIPTION,
