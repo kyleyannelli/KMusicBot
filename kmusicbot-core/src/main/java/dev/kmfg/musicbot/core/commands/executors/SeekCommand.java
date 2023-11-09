@@ -94,16 +94,16 @@ public class SeekCommand extends Command {
 
            if(seconds.isPresent()) {
                temp = Long.parseLong(seconds.get());
-               if(temp <= 0) throw new NumberFormatException();
+               if(temp < 0) throw new NumberFormatException();
            }
 
            if(minutes.isPresent()) {
                temp = Long.parseLong(minutes.get());
-               if(temp <= 0) throw new NumberFormatException();
+               if(temp < 0) throw new NumberFormatException();
            }
            if(hours.isPresent()) {
                temp = Long.parseLong(hours.get());
-               if(temp <= 0) throw new NumberFormatException();
+               if(temp < 0) throw new NumberFormatException();
            }
 
            return false;
