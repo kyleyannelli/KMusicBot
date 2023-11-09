@@ -1,6 +1,7 @@
 package dev.kmfg.musicbot.api.routes;
 
 import dev.kmfg.musicbot.api.controllers.HealthCheckController;
+import dev.kmfg.musicbot.api.sockets.CoreSocket;
 import spark.Spark;
 
 public class ApiV1 {
@@ -10,6 +11,7 @@ public class ApiV1 {
     }
 
     private void setupRoutes(HealthCheckController healthCheckController) {
+        Spark.webSocket("/api/socket", CoreSocket.class);
         Spark.path("/api", () -> {
             // route to update the last communicated time
             Spark.post("/health", healthCheckController::updateLastCommTime);
