@@ -79,7 +79,7 @@ public class SeekCommand extends Command {
 
         long seekMs = seekToPositionInNowPlayingTrack(relevantAudioTrack,seconds, minutes, hours);
 
-        if(seekMs <= 0) {
+        if(seekMs < 0) {
             this.messageSender.sendBadParameterEmbed("HMS");
             return;
         }
