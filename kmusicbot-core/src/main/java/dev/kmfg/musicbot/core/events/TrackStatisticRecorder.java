@@ -111,5 +111,9 @@ public class TrackStatisticRecorder implements TrackEventListener {
         SongInitialization songInitialization = songInitializationRepo.saveOrGet(new SongInitialization(trackedSong, discordUser));
         return trackedSong;
     }
+
+    public void shutdown() {
+        this.executorService.shutdown();
+    }
 }
 

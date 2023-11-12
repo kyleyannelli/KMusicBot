@@ -285,6 +285,14 @@ public class LavaSource extends AudioSourceBase {
     }
 
     /**
+     * Shutdown anything that can fire after session isn't active 
+     */
+    public void shutdown() {
+        this.audioPlayerManager.shutdown();
+        this.trackScheduler.shutdown();
+    }
+
+    /**
      * Checks if the AudioPlayer has a track currently playing.
      *
      * @return boolean | True if playingTrack != null. False if playingTrack == null.

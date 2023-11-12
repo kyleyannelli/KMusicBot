@@ -236,6 +236,8 @@ public class AudioSession extends RecommenderSession {
 		super.shutdown();
 		// now shutdown our new services
 		this.disconnectScheduledService.shutdownNow();
+		// shutdown the trackscheduler
+		this.lavaSource.shutdown();
 
 		this.sessionCloseHandler.handle(this.getAssociatedServerId());
 

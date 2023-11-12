@@ -241,4 +241,13 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         audioQueue.addAll(newBlockingQueue);
         this.trackUserMap.put(audioTrackWithUser.getAudioTrack(), audioTrackWithUser.getDiscordUser());
     }
+
+    public void shutdown() {
+       this.audioPlayer.stopTrack();
+       this.audioQueue = null;
+       this.recommenderAudioQueue = null;
+       this.trackUserMap = null;
+       this.lastTrack = null;
+       this.trackStatisticRecorder.shutdown();
+    }
 }
