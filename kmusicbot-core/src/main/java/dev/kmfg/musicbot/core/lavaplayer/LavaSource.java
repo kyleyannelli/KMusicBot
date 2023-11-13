@@ -289,7 +289,6 @@ public class LavaSource extends AudioSourceBase {
      */
     public void shutdown() {
         this.trackScheduler.shutdown();
-        this.audioPlayerManager.shutdown();
     }
 
     /**
