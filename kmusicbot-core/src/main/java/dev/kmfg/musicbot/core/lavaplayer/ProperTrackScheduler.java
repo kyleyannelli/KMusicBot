@@ -140,8 +140,24 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     }
 
     public ArrayList<AudioTrackWithUser> getFullAudioQueue() {
-        ArrayList<AudioTrackWithUser> combined = new ArrayList<>(this.audioQueue);
-        combined.addAll(this.recommenderAudioQueue);
+        ArrayList<AudioTrackWithUser> combined = new ArrayList<>();
+
+        if(this.audioQueue != null  && this.recommenderAudioQueue != null) {
+            combined = new ArrayList<>(this.audioQueue);
+            combined.addAll(this.recommenderAudioQueue);
+        }
+        else if(this.audioQueue == null && this.recommenderAudioQueue != null) {
+            Logger.warn("AudioQueue null, but RecommenderQueue NOT null in Session " + this + "\n\t Possibly running past shutdown!");
+            combined.addAll(this.recommenderAudioQueue);
+        }
+        else if(this.audioQueue != null && this.recommenderAudioQueue == null) {
+            Logger.warn("AudioQueue NOT null, but RecommenderQueue null in Session " + this + "\n\t Possibly running past shutdown!");
+            combined.addAll(this.audioQueue);
+        }
+        else {
+            Logger.warn("Both AudioQueue & RecommenderQueue are null in Session " + this + "\n\t Possibly running past shutdown!");
+        }
+
         return combined;
     }
 
