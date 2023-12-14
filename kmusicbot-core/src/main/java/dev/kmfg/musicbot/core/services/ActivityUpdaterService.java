@@ -27,6 +27,7 @@ public class ActivityUpdaterService {
     private final ScheduledExecutorService activityUpdateExecutorService;
 
     private boolean alreadyLoggedCurrentState = false;
+    private String lastActivity = "";
 
     public ActivityUpdaterService(DiscordApi discordApi, SessionManager sessionManager) {
         this.discordApi = discordApi;
@@ -120,15 +121,17 @@ public class ActivityUpdaterService {
             .append(" by ")
             .append(currentTrackAuthor);
 
-        Logger.info(
-                new StringBuilder()
-                .append("Activity updated to \n\t")
-                .append(acitivtyNameBuilder.toString())
-                .toString()
-                );
+        if(!acitivtyNameBuilder.toString().equals(this.lastActivity)) {
+            Logger.info(
+                    new StringBuilder()
+                    .append("Activity updated to \n\t")
+                    .append(acitivtyNameBuilder.toString())
+                    .toString()
+                    );
 
-        this.alreadyLoggedCurrentState = false;
-
-        this.discordApi.updateActivity(ActivityType.LISTENING, acitivtyNameBuilder.toString());
+            this.alreadyLoggedCurrentState = false;
+            this.discordApi.updateActivity(ActivityType.LISTENING, acitivtyNameBuilder.toString());
+            this.lastActivity = acitivtyNameBuilder.toString();
+        }
     }
 }
