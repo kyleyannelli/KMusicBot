@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Optional;
 
 public class ProperTrackScheduler extends AudioEventAdapter {
     private static final int MAX_RETRIES = 2; // maximum amount of times a track will attempt to be played.
@@ -137,6 +138,35 @@ public class ProperTrackScheduler extends AudioEventAdapter {
             }
         }
         return isSuccess;
+    }
+
+    public Optional<AudioTrackWithUser> remove(int position) {
+        position--;
+        int i = 0;
+        AudioTrackWithUser removedTrack = null;
+        for(AudioTrackWithUser audioTrackWithUser : this.getFullAudioQueue()) {
+            if(i == position) {
+                removedTrack = audioTrackWithUser;
+                break;
+            }
+            i++;
+        }
+
+        if(removedTrack != null && position < this.audioQueue.size() - 1) {
+            this.audioQueue.remove(removedTrack);
+        }
+        else if(removedTrack != null && position < this.getFullAudioQueue().size() - 1) {
+            this.recommenderAudioQueue.remove(removedTrack);
+        }
+        else if(removedTrack != null) {
+            Logger.warn("Attempted to remove track, but position was not inbounds despite the track being found.This is likely a logic error!");
+        }
+        else {
+            Logger.warn("Attempted to remove track, but track is null! Position was likely out of bounds!\n\tRequested Position: "
+                    + position + " | Available Range: 0 through" + (this.getFullAudioQueue().size() - 1));
+        }
+
+        return Optional.ofNullable(removedTrack);
     }
 
     public ArrayList<AudioTrackWithUser> getFullAudioQueue() {

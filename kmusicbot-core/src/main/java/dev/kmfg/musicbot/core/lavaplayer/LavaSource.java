@@ -316,6 +316,10 @@ public class LavaSource extends AudioSourceBase {
         return this.hasCurrentPlayingTrack() ? this.audioPlayer.getPlayingTrack().getInfo().title + " | " + this.audioPlayer.getPlayingTrack().getInfo().author + " | " + this.audioPlayer.getPlayingTrack().getInfo().uri  : "!Nothing Playing!";
     }
 
+    public Optional<AudioTrackWithUser> remove(int position) {
+        return this.trackScheduler.remove(position);
+    }
+
     /**
      * Handles the future from the player manager. Generates a QueueResult whether it fails (this is detailed by the QueueResult)
      * @param playerManagerFuture The future from the audioPlayerManager

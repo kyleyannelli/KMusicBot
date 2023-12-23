@@ -244,6 +244,10 @@ public class AudioSession extends RecommenderSession {
 		Logger.info("SHUTDOWN \n" + this);
 	}
 
+    public Optional<AudioTrackWithUser> remove(int position) {
+        return this.lavaSource.remove(position);
+    }
+
 	public void properlyDisconnectFromVoiceChannel() {
 		this.audioConnection.close().thenRun(this::shutdown);
 	}

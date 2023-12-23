@@ -1,6 +1,8 @@
 package dev.kmfg.musicbot.core.util.messages;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+
+import dev.kmfg.musicbot.core.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.musicbot.core.lavaplayer.PositionalAudioTrack;
 import dev.kmfg.musicbot.core.util.sessions.QueueResult;
 import org.javacord.api.entity.message.component.ActionRow;
@@ -232,5 +234,13 @@ public class MessageSender {
 
     public void setForcedTitle(String forcedTitle) {
         this.embedMessage.setForcedTitle(forcedTitle);
+    }
+
+    public void sendRemovedEmbed(AudioTrackWithUser audioTrackWithUser) {
+        this.embedMessage
+            .setTitle("Removed Song!")
+            .setContent("Removed track \"" + audioTrackWithUser.getAudioTrack().getInfo().title
+                    + " by " + audioTrackWithUser.getAudioTrack().getInfo().author + "\""
+                    + "\n" + "Originally queued by <@" + audioTrackWithUser.getDiscordUser().getDiscordId() + ">");
     }
 }

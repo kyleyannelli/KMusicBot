@@ -29,6 +29,7 @@ public class CommandsRegistry {
         this.commandsMap.put(ViewQueueCommand.COMMAND_NAME, ViewQueueCommand.class);
         this.commandsMap.put(SeekCommand.COMMAND_NAME, SeekCommand.class);
         this.commandsMap.put(ShuffleCommand.COMMAND_NAME, ShuffleCommand.class);
+        this.commandsMap.put(RemoveCommand.COMMAND_NAME, RemoveCommand.class);
     }
 
     public void registerCommands(DiscordApi discordApi) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
