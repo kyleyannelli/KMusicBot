@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 
+import dev.kmfg.musicbot.core.events.TrackEndEvent;
 import dev.kmfg.musicbot.core.events.TrackEvent;
 import dev.kmfg.musicbot.core.events.TrackStartEvent;
 import dev.kmfg.musicbot.core.events.TrackStatisticRecorder;
@@ -76,6 +77,9 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        TrackEvent trackEvent = new TrackEndEvent(this.audioSession, new AudioTrackWithUser(track, trackUserMap.get(track)));
+        this.trackStatisticRecorder.onTrackEvent(trackEvent);
+        trackUserMap.remove(track);
         // log track end reason if it is not FINISHED
         if(!endReason.equals(AudioTrackEndReason.FINISHED) && !endReason.equals(AudioTrackEndReason.STOPPED)) {
             Logger.warn(getSessionIdString() + " Track \"" + track.getInfo().uri + "\" in server ended due to " + endReason.toString());
