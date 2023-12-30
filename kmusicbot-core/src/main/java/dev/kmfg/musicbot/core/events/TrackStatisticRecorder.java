@@ -87,6 +87,7 @@ public class TrackStatisticRecorder implements TrackEventListener {
             .get();
 
         for(User connectedUser : serverVoiceChannel.getConnectedUsers()) {
+            if(connectedUser.isYourself()) continue;
             trackUserEnd(connectedUser, trackedSong, now);
         }
     }
@@ -112,6 +113,7 @@ public class TrackStatisticRecorder implements TrackEventListener {
             .get();
 
         for(User connectedUser : serverVoiceChannel.getConnectedUsers()) {
+            if(connectedUser.isYourself()) continue;
             trackUserStart(connectedUser, trackedSong);
         }
     }
