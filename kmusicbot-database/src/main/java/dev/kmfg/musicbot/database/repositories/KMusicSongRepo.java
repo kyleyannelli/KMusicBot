@@ -18,7 +18,7 @@ public class KMusicSongRepo {
 	}
 
 	public KMusicSong saveOrGet(KMusicSong kmusicSong) {
-		return this.findById(kmusicSong.getId()).orElseGet(() -> {
+		return this.findByYoutubeUrl(kmusicSong.getYoutubeUrl()).orElseGet(() -> {
             return this.save(kmusicSong).get();
         });
 	}
