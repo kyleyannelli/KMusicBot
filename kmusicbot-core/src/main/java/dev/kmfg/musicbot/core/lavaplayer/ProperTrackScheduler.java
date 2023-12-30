@@ -75,11 +75,15 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         currentRetries = 0;
     }
 
-    @Override
-    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+    protected void handleTrackEndStatistics(AudioTrack track) {
         TrackEvent trackEvent = new TrackEndEvent(this.audioSession, new AudioTrackWithUser(track, trackUserMap.get(track)));
         this.trackStatisticRecorder.onTrackEvent(trackEvent);
         trackUserMap.remove(track);
+    }
+
+    @Override
+    public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        this.handleTrackEndStatistics(track);
         // log track end reason if it is not FINISHED
         if(!endReason.equals(AudioTrackEndReason.FINISHED) && !endReason.equals(AudioTrackEndReason.STOPPED)) {
             Logger.warn(getSessionIdString() + " Track \"" + track.getInfo().uri + "\" in server ended due to " + endReason.toString());
@@ -94,6 +98,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
+        this.handleTrackEndStatistics(track);
         Logger.error(exception, getSessionIdString() + " Track unexceptedly stopped.");
     }
 
@@ -109,6 +114,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
             this.audioPlayer.playTrack(retryTrack);
         }
         else {
+            this.handleTrackEndStatistics(track);
             Logger.warn(getSessionIdString() + " AudioTrack " + track.getInfo().uri + " is stuck after " + thresholdMs + "ms!. Maximum retries (" + MAX_RETRIES + ") has been reached! Moving onto next track (if it's queued).");
             currentRetries = 0;
             AudioTrack nextTrack = audioQueue.poll().getAudioTrack();
