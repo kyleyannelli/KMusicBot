@@ -58,7 +58,7 @@ public class TrackStatisticRecorder implements TrackEventListener {
             this.handleTrackStartEvent((TrackStartEvent) trackEvent);
         }
         else if(trackEvent instanceof TrackEndEvent) {
-
+            this.handleTrackEndEvent((TrackEndEvent) trackEvent);
         }
         else {
             StringBuilder stringBuilder = new StringBuilder()
@@ -68,8 +68,11 @@ public class TrackStatisticRecorder implements TrackEventListener {
         }
     }
 
+    private void handleTrackEndEvent(TrackEndEvent trackEndEvent) {
+    }
+
     private void handleTrackStartEvent(TrackStartEvent trackStartEvent) {
-        TrackedSong trackedSong = this.setupGeneralModels(trackStartEvent);
+        TrackedSong trackedSong = this.startSetupGeneralModels(trackStartEvent);
         this.trackIndividualUsersStart(trackStartEvent.getAudioSession(), trackedSong);
     }
 
@@ -92,7 +95,7 @@ public class TrackStatisticRecorder implements TrackEventListener {
         songPlaytimeRepo.save(songPlaytime);
     }
 
-    protected TrackedSong setupGeneralModels(TrackStartEvent trackStartEvent) {
+    protected TrackedSong startSetupGeneralModels(TrackStartEvent trackStartEvent) {
         AudioTrackWithUser audioTrackWithUser = trackStartEvent.getAudioTrackWithUser();
         AudioSession audioSession = trackStartEvent.getAudioSession();
         DiscordUser discordUser = audioTrackWithUser.getDiscordUser();
