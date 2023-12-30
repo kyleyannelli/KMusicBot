@@ -21,6 +21,8 @@ import dev.kmfg.musicbot.database.repositories.SongPlaytimeRepo;
 import dev.kmfg.musicbot.database.repositories.TrackedSongRepo;
 import dev.kmfg.musicbot.core.lavaplayer.AudioTrackWithUser;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -68,10 +70,36 @@ public class TrackStatisticRecorder implements TrackEventListener {
         }
     }
 
-    private void handleTrackEndEvent(TrackEndEvent trackEndEvent) {
+    protected void handleTrackEndEvent(TrackEndEvent trackEndEvent) {
+        TrackedSong trackedSong = this.endSetupGeneralModels(trackEndEvent);
+        Timestamp now = Timestamp.from(Instant.now());
+        int incBy = trackedSong.getUpdatedAt().compareTo(now) > 0 ? 0 : (int) (now.getTime() - trackedSong.getUpdatedAt().getTime()) / 1000;
+        trackedSong.incrementSecondsPlayed(incBy);
+        trackedSong = trackedSongRepo.save(trackedSong).get();
+        this.trackIndividualUsersEnd(trackEndEvent.getAudioSession(), trackedSong, now);
     }
 
-    private void handleTrackStartEvent(TrackStartEvent trackStartEvent) {
+    protected void trackIndividualUsersEnd(AudioSession audioSession, TrackedSong trackedSong, Timestamp now) {
+        DiscordGuild discordGuild = trackedSong.getGuild();
+        ServerVoiceChannel serverVoiceChannel = audioSession.getDiscordApi()
+            .getServerById(discordGuild.getDiscordId()).get()
+            .getConnectedVoiceChannel(audioSession.getDiscordApi().getYourself())
+            .get();
+
+        for(User connectedUser : serverVoiceChannel.getConnectedUsers()) {
+            trackUserEnd(connectedUser, trackedSong, now);
+        }
+    }
+
+    protected void trackUserEnd(User connectedUser, TrackedSong trackedSong, Timestamp now) {
+        DiscordUser discordUser = this.discordUserRepo.saveOrGet(new DiscordUser(connectedUser.getId(), connectedUser.getDiscriminatedName()));
+        SongPlaytime songPlaytime = this.songPlaytimeRepo.saveOrGet(new SongPlaytime(discordUser, trackedSong));
+        int incBy = songPlaytime.getUpdatedAt().compareTo(now) > 0 ? 0 : (int) (now.getTime() - songPlaytime.getUpdatedAt().getTime()) / 1000;
+        songPlaytime.incSecondsListened(incBy);
+        songPlaytimeRepo.save(songPlaytime);
+    }
+
+    protected void handleTrackStartEvent(TrackStartEvent trackStartEvent) {
         TrackedSong trackedSong = this.startSetupGeneralModels(trackStartEvent);
         this.trackIndividualUsersStart(trackStartEvent.getAudioSession(), trackedSong);
     }
@@ -93,6 +121,22 @@ public class TrackStatisticRecorder implements TrackEventListener {
         SongPlaytime songPlaytime = this.songPlaytimeRepo.saveOrGet(new SongPlaytime(discordUser, trackedSong));
         songPlaytime.refreshUpdatedAt();
         songPlaytimeRepo.save(songPlaytime);
+    }
+
+    protected TrackedSong endSetupGeneralModels(TrackEndEvent trackEndEvent) {
+        AudioTrackWithUser audioTrackWithUser = trackEndEvent.getAudioTrackWithUser();
+        AudioSession audioSession = trackEndEvent.getAudioSession();
+        DiscordUser discordUser = audioTrackWithUser.getDiscordUser();
+        String youtubeUri = audioTrackWithUser.getAudioTrack().getInfo().uri;
+        // generate or get the general song, as of now just a youtubeUri that can be used across different servers.
+        KMusicSong kmusicSong = kmusicSongRepo.saveOrGet(new KMusicSong(youtubeUri));
+        // generate or get the server (guild)
+        DiscordGuild discordGuild = discordGuildRepo.saveOrGet(new DiscordGuild(audioSession.getAssociatedServerId()));
+        // generate or get the discord user
+        discordUser = discordUserRepo.saveOrGet(discordUser);
+        // generate or get TrackedSong, this is the general tracking for the server.
+        TrackedSong trackedSong = trackedSongRepo.saveOrGet(new TrackedSong(discordGuild, kmusicSong));
+        return trackedSong;
     }
 
     protected TrackedSong startSetupGeneralModels(TrackStartEvent trackStartEvent) {
