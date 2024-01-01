@@ -44,6 +44,15 @@ public class UserLeaveVoiceListenerHandler implements ServerVoiceChannelMemberLe
             return;
         }
 
+        AudioSession session = sessionManager.getAudioSession(event.getServer().getId());
+        if(session != null) {
+            // fire track end event for the user that just left
+            session.getLavaSource().fireTrackEndIndividualEvent(event.getUser());
+        }
+        else {
+            Logger.warn("AudioSession is null for server, but bot is connected to voice channel. This is unexpected behavior.");
+        }
+
         // if it is either all bots or the server voice channel is empty, we should disconnect.
         if(isAllBots || isEmptyServerVoiceChannel) {
             // get the server id from the event

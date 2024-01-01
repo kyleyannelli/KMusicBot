@@ -17,6 +17,7 @@ import org.apache.hc.core5.http.ParseException;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioSource;
 import org.javacord.api.audio.AudioSourceBase;
+import org.javacord.api.entity.user.User;
 import org.tinylog.Logger;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -71,6 +72,14 @@ public class LavaSource extends AudioSourceBase {
         this.trackScheduler = new ProperTrackScheduler(this.audioSession, audioPlayer);
 
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
+    }
+
+    public void fireTrackStartIndividualEvent(User user) {
+        this.trackScheduler.trackIndividualStart(user);
+    }
+
+    public void fireTrackEndIndividualEvent(User user) {
+        this.trackScheduler.trackIndividualEnd(user);
     }
 
     /**

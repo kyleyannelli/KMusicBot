@@ -62,12 +62,44 @@ public class TrackStatisticRecorder implements TrackEventListener {
         else if(trackEvent instanceof TrackEndEvent) {
             this.handleTrackEndEvent((TrackEndEvent) trackEvent);
         }
+        else if(trackEvent instanceof TrackStartIndividualEvent) {
+            this.handleTrackIndividualStartEvent((TrackStartIndividualEvent) trackEvent);
+        }
+        else if(trackEvent instanceof TrackEndIndividualEvent) {
+            this.handleTrackIndividualEndEvent((TrackEndIndividualEvent) trackEvent);
+        }
         else {
             StringBuilder stringBuilder = new StringBuilder()
                     .append(trackEvent.getClass().toString())
                     .append(" was uncaught in TrackStatisticRecorder. It is likely missing from the onTrackEvent method!");
             Logger.warn(stringBuilder.toString());
         }
+    }
+
+    protected void handleTrackIndividualEndEvent(TrackEndIndividualEvent endIndividualEvent) {
+        TrackedSong trackedSong = this.individualSetupGeneralModels(endIndividualEvent);
+        this.trackUserEnd(endIndividualEvent.getUser(), trackedSong, Timestamp.from(Instant.now()));
+    }
+
+    protected void handleTrackIndividualStartEvent(TrackStartIndividualEvent startIndividualEvent) {
+        TrackedSong trackedSong = this.individualSetupGeneralModels(startIndividualEvent);
+        this.trackUserStart(startIndividualEvent.getUser(), trackedSong);
+    }
+
+    protected TrackedSong individualSetupGeneralModels(TrackEvent event) {
+        AudioTrackWithUser audioTrackWithUser = event.getAudioTrackWithUser();
+        AudioSession audioSession = event.getAudioSession();
+        DiscordUser discordUser = audioTrackWithUser.getDiscordUser();
+        String youtubeUri = audioTrackWithUser.getAudioTrack().getInfo().uri;
+        // generate or get the general song, as of now just a youtubeUri that can be used across different servers.
+        KMusicSong kmusicSong = kmusicSongRepo.saveOrGet(new KMusicSong(youtubeUri));
+        // generate or get the server (guild)
+        DiscordGuild discordGuild = discordGuildRepo.saveOrGet(new DiscordGuild(audioSession.getAssociatedServerId()));
+        // generate or get the discord user
+        discordUser = discordUserRepo.saveOrGet(discordUser);
+        // generate or get TrackedSong, this is the general tracking for the server.
+        TrackedSong trackedSong = trackedSongRepo.saveOrGet(new TrackedSong(discordGuild, kmusicSong));
+        return trackedSong;
     }
 
     protected void handleTrackEndEvent(TrackEndEvent trackEndEvent) {

@@ -7,12 +7,15 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 
 import dev.kmfg.musicbot.core.events.TrackEndEvent;
+import dev.kmfg.musicbot.core.events.TrackEndIndividualEvent;
 import dev.kmfg.musicbot.core.events.TrackEvent;
 import dev.kmfg.musicbot.core.events.TrackStartEvent;
+import dev.kmfg.musicbot.core.events.TrackStartIndividualEvent;
 import dev.kmfg.musicbot.core.events.TrackStatisticRecorder;
 import dev.kmfg.musicbot.core.sessions.AudioSession;
 import dev.kmfg.musicbot.database.models.DiscordUser;
 
+import org.javacord.api.entity.user.User;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
@@ -62,6 +65,20 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         this.handleTrackStart(player, track);
         this.handleTrackStartStatistics(track);
+    }
+
+    public void trackIndividualEnd(org.javacord.api.entity.user.User user) {
+        TrackEvent trackEvent = new TrackEndIndividualEvent(this.audioSession,
+                    new AudioTrackWithUser(this.audioPlayer.getPlayingTrack(), trackUserMap.get(this.audioPlayer.getPlayingTrack())),
+                    user);
+        this.trackStatisticRecorder.onTrackEvent(trackEvent);
+    }
+
+    public void trackIndividualStart(org.javacord.api.entity.user.User user) {
+        TrackEvent trackEvent = new TrackStartIndividualEvent(this.audioSession,
+                    new AudioTrackWithUser(this.audioPlayer.getPlayingTrack(), trackUserMap.get(this.audioPlayer.getPlayingTrack())),
+                    user);
+        this.trackStatisticRecorder.onTrackEvent(trackEvent);
     }
 
     public void handleTrackStartStatistics(AudioTrack audioTrack) {
