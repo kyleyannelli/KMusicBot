@@ -6,12 +6,16 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 
+import dev.kmfg.musicbot.core.events.TrackEndEvent;
+import dev.kmfg.musicbot.core.events.TrackEndIndividualEvent;
 import dev.kmfg.musicbot.core.events.TrackEvent;
 import dev.kmfg.musicbot.core.events.TrackStartEvent;
+import dev.kmfg.musicbot.core.events.TrackStartIndividualEvent;
 import dev.kmfg.musicbot.core.events.TrackStatisticRecorder;
 import dev.kmfg.musicbot.core.sessions.AudioSession;
 import dev.kmfg.musicbot.database.models.DiscordUser;
 
+import org.javacord.api.entity.user.User;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
@@ -63,6 +67,20 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         this.handleTrackStartStatistics(track);
     }
 
+    public void trackIndividualEnd(org.javacord.api.entity.user.User user) {
+        TrackEvent trackEvent = new TrackEndIndividualEvent(this.audioSession,
+                    new AudioTrackWithUser(this.audioPlayer.getPlayingTrack(), trackUserMap.get(this.audioPlayer.getPlayingTrack())),
+                    user);
+        this.trackStatisticRecorder.onTrackEvent(trackEvent);
+    }
+
+    public void trackIndividualStart(org.javacord.api.entity.user.User user) {
+        TrackEvent trackEvent = new TrackStartIndividualEvent(this.audioSession,
+                    new AudioTrackWithUser(this.audioPlayer.getPlayingTrack(), trackUserMap.get(this.audioPlayer.getPlayingTrack())),
+                    user);
+        this.trackStatisticRecorder.onTrackEvent(trackEvent);
+    }
+
     public void handleTrackStartStatistics(AudioTrack audioTrack) {
         TrackEvent trackEvent = new TrackStartEvent(this.audioSession, new AudioTrackWithUser(audioTrack, trackUserMap.get(audioTrack)));
         this.trackStatisticRecorder.onTrackEvent(trackEvent);
@@ -74,8 +92,15 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         currentRetries = 0;
     }
 
+    protected void handleTrackEndStatistics(AudioTrack track) {
+        TrackEvent trackEvent = new TrackEndEvent(this.audioSession, new AudioTrackWithUser(track, trackUserMap.get(track)));
+        this.trackStatisticRecorder.onTrackEvent(trackEvent);
+        trackUserMap.remove(track);
+    }
+
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        this.handleTrackEndStatistics(track);
         // log track end reason if it is not FINISHED
         if(!endReason.equals(AudioTrackEndReason.FINISHED) && !endReason.equals(AudioTrackEndReason.STOPPED)) {
             Logger.warn(getSessionIdString() + " Track \"" + track.getInfo().uri + "\" in server ended due to " + endReason.toString());
@@ -90,6 +115,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
+        this.handleTrackEndStatistics(track);
         Logger.error(exception, getSessionIdString() + " Track unexceptedly stopped.");
     }
 
@@ -105,6 +131,7 @@ public class ProperTrackScheduler extends AudioEventAdapter {
             this.audioPlayer.playTrack(retryTrack);
         }
         else {
+            this.handleTrackEndStatistics(track);
             Logger.warn(getSessionIdString() + " AudioTrack " + track.getInfo().uri + " is stuck after " + thresholdMs + "ms!. Maximum retries (" + MAX_RETRIES + ") has been reached! Moving onto next track (if it's queued).");
             currentRetries = 0;
             AudioTrack nextTrack = audioQueue.poll().getAudioTrack();

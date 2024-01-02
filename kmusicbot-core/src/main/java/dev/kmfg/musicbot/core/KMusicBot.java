@@ -7,6 +7,7 @@ import dev.kmfg.musicbot.core.commands.intermediates.CommandsRegistry;
 import dev.kmfg.musicbot.core.listenerhandlers.JoinServerListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.SelectMenuChooseListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.SlashCommandListenerHandler;
+import dev.kmfg.musicbot.core.listenerhandlers.UserJoinVoiceListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.UserLeaveVoiceListenerHandler;
 import dev.kmfg.musicbot.core.services.ActivityUpdaterService;
 import dev.kmfg.musicbot.core.sessions.SessionManager;
@@ -95,6 +96,7 @@ public class KMusicBot {
      */
     protected void setupListeners() {
         this.listenForServerVoiceChannelLeaves();
+        this.listenForServerVoiceChannelJoins();
         this.listenForMenuSelection();
         this.listenForServerJoin();
     }
@@ -124,6 +126,14 @@ public class KMusicBot {
      */
     protected void listenForServerJoin() {
         this.discordApi.addServerJoinListener(new JoinServerListenerHandler(this.discordApi));
+    }
+
+    /**
+     * Listen for ServerVoiceChannel joins and pass the handling to UserJoinVoiceListenerHandler 
+     */
+    protected void listenForServerVoiceChannelJoins() {
+        // UserLeaveVoiceListenerHandler will handle the event
+        this.discordApi.addServerVoiceChannelMemberJoinListener(new UserJoinVoiceListenerHandler(this.sessionManager));
     }
 
     /**
