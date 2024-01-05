@@ -18,7 +18,6 @@ public class LoginController {
     private final static String R_TOKEN = "refresh-token";
 
     public static String callback(Request req, Response res) throws IOException {
-        TokensResponse tokens;
         String code = req.queryParamOrDefault("code", "");
         String state = req.queryParamOrDefault("state", "");
         String accessToken = req.cookie(A_TOKEN);
@@ -32,7 +31,7 @@ public class LoginController {
             return "Logged in...";
         }
         else {
-            tokens = DiscordOAuthHelper.getOAuth().getTokens(code);
+            TokensResponse tokens = DiscordOAuthHelper.getOAuth().getTokens(code);
             DiscordOAuthHelper.setupCookies(res, tokens);
             if(state != "") res.redirect(state);
             return "Logged in...";

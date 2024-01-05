@@ -7,19 +7,44 @@ import dev.kmfg.musicbot.api.controllers.UserController;
 import dev.kmfg.musicbot.api.filters.DiscordOAuthFilter;
 import dev.kmfg.musicbot.api.helpers.DiscordOAuthHelper;
 import dev.kmfg.musicbot.api.helpers.KMTokens;
-
+import dev.kmfg.musicbot.database.repositories.DiscordGuildRepo;
+import dev.kmfg.musicbot.database.repositories.KMusicSongRepo;
+import dev.kmfg.musicbot.database.repositories.TrackedSongRepo;
+import dev.kmfg.musicbot.database.util.HibernateUtil;
 import spark.Spark;
 
 import java.util.Optional;
 
+import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ApiV1 {
+    private static final SessionFactory SESSION_FACTORY = HibernateUtil.getSessionFactory();
+    private static final TrackedSongRepo TRACKED_SONG_REPO = new TrackedSongRepo(SESSION_FACTORY);
+    private static final DiscordGuildRepo DISCORD_GUILD_REPO = new DiscordGuildRepo(SESSION_FACTORY);
+    private static final KMusicSongRepo K_MUSIC_SONG_REPO = new KMusicSongRepo(SESSION_FACTORY);
+
     private final Logger logger = LoggerFactory.getLogger(ApiV1.class);
 
     public ApiV1(HealthCheckController healthCheckController) {
         this.setupRoutes(healthCheckController);
+    }
+
+    public static SessionFactory getSessionFactory() {
+        return SESSION_FACTORY;
+    }
+
+    public static TrackedSongRepo getTrackedSongRepo() {
+        return TRACKED_SONG_REPO;
+    }
+
+    public static DiscordGuildRepo getDiscordGuildRepo() {
+        return DISCORD_GUILD_REPO;
+    }
+
+    public static KMusicSongRepo getKMusicSongRepo() {
+        return K_MUSIC_SONG_REPO;
     }
 
     private void setupRoutes(HealthCheckController healthCheckController) {
@@ -35,6 +60,8 @@ public class ApiV1 {
             //** TOKEN GETTTTAAAA
             //*****
             Spark.before("/*", (req, res) -> {
+                // make sure we are responding in json format
+                res.type("application/json");
                 logger.debug("BEFORE FILTER ACTIVATED FOR PATH " + req.pathInfo());
                 Optional<KMTokens> kmTokens = DiscordOAuthFilter.getTokens(req);
                 if(kmTokens.isEmpty()) {

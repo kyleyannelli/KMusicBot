@@ -1,19 +1,29 @@
 package dev.kmfg.musicbot.api.controllers;
 
 import dev.kmfg.musicbot.api.helpers.GenericHelpers;
+import dev.kmfg.musicbot.api.helpers.GenericHelpers.Result;
+import dev.kmfg.musicbot.api.routes.ApiV1;
 import spark.Request;
 import spark.Response;
 
 public class GuildOverviewController {
-    public static String trackedSongs(Request req, Response res) {
-        String guildId = req.params(":guildId");
+    public static String overview(Request req, Response res) {
+        return null;
+    }
 
-        if(GenericHelpers.isNotNumber(guildId)) {
-            res.status(400);
-            return "Invalid Guild ID";
+    public static String trackedSongs(Request req, Response res) {
+        Result<Long, String> authResult = GenericHelpers.isAuthenticatedAndAvailable(req, res);
+
+        if(authResult.isFail()) {
+            return authResult.getFailure();
         }
 
-        return guildId;
+        return GenericHelpers
+            .provideGson()
+            .toJson(
+                ApiV1.getTrackedSongRepo().findByDiscordGuildId(authResult.getSuccess()
+            )
+        );
     }
 }
 

@@ -3,6 +3,8 @@ package dev.kmfg.musicbot.database.models;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.gson.annotations.Expose;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,14 +21,17 @@ public class TrackedSong extends BaseKMusicTable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
+    @Expose
 	private int id;
 
 	@ManyToOne
 	@JoinColumn(name = "discord_guild_id")
+    @Expose
 	private DiscordGuild discordGuild;
 
 	@ManyToOne
 	@JoinColumn(name = "kmusic_song_id")
+    @Expose
 	private KMusicSong kmusicSong;
 
 	@OneToMany(mappedBy = "trackedSong")
@@ -36,6 +41,7 @@ public class TrackedSong extends BaseKMusicTable {
 	Set<SongPlaytime> songPlaytimes = new HashSet<>();
 
 	@Column(name = "seconds_played")
+    @Expose
 	private int secondsPlayed;
 
 	public TrackedSong() {

@@ -3,6 +3,8 @@ package dev.kmfg.musicbot.database.models;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.gson.annotations.Expose;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -17,9 +19,11 @@ public class KMusicSong extends BaseKMusicTable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id")
+    @Expose
 	private int id;
 
 	@Column(name = "youtube_url")
+    @Expose
 	private String youtubeUrl;
 
 	@OneToMany(mappedBy = "kmusicSong")
