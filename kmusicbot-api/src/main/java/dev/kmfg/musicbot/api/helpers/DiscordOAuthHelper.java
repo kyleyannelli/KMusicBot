@@ -57,13 +57,21 @@ public class DiscordOAuthHelper {
         return stringBuilder.toString();
     }
 
-    public static void setupCookies(Response res, TokensResponse tokens) {
-        res.cookie("/", DiscordOAuthFilter.A_TOKEN, tokens.getAccessToken(), COOKIE_EXPIRE_SECONDS, false, true);
-        res.cookie("/", DiscordOAuthFilter.R_TOKEN, tokens.getRefreshToken(), COOKIE_EXPIRE_SECONDS, false, true);
+    public static void setupCookies(Response res, TokensResponse tokens) throws Exception {
+        String[] accessTokenAndSalt = CryptoHelper.encrypt(tokens.getAccessToken());
+        String[] refreshTokenAndSalt = CryptoHelper.encrypt(tokens.getRefreshToken());
+        res.cookie("/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie("/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie("/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie("/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, false, true);
     }
 
-    public static void setupCookies(Response res, KMTokens tokens) {
-        res.cookie("/", DiscordOAuthFilter.A_TOKEN, tokens.getAccessToken(), COOKIE_EXPIRE_SECONDS, false, true);
-        res.cookie("/", DiscordOAuthFilter.R_TOKEN, tokens.getRefreshToken(), COOKIE_EXPIRE_SECONDS, false, true);
+    public static void setupCookies(Response res, KMTokens tokens) throws Exception {
+        String[] accessTokenAndSalt = CryptoHelper.encrypt(tokens.getAccessToken());
+        String[] refreshTokenAndSalt = CryptoHelper.encrypt(tokens.getRefreshToken());
+        res.cookie("/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie("/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie("/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie("/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, false, true);
     }
 }

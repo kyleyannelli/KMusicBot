@@ -1,15 +1,21 @@
 package dev.kmfg.musicbot.api.helpers;
 
+import java.io.IOException;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import balbucio.discordoauth.DiscordAPI;
+import balbucio.discordoauth.model.Guild;
 import spark.Request;
 import spark.Response;
 
-import dev.kmfg.musicbot.database.repositories.DiscordGuildRepo;
 import dev.kmfg.musicbot.api.routes.ApiV1;
 
 public class GenericHelpers {
+    private static final Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+    private static final Gson gsonUnsafe = new Gson();
+
     public static class Result<A, B> {
         private final A first;
         private final B second;
@@ -44,8 +50,6 @@ public class GenericHelpers {
         }
     }
 
-    private static final Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-    private static final Gson gsonUnsafe = new Gson();
 
     public static boolean isNotNumber(String s) {
         return s == null || s == "" || !s.matches("-?\\d+(\\.\\d+)?");
@@ -63,7 +67,7 @@ public class GenericHelpers {
         return gson;
     }
 
-    public static Result<Long, String> isAuthenticatedAndAvailable(Request req, Response res) {
+    public static Result<Long, String> isAuthenticatedAndAvailable(Request req, Response res) throws IOException {
         String guildId = req.params(":guildId");
 
         if(GenericHelpers.isNotNumber(guildId)) {
@@ -74,6 +78,12 @@ public class GenericHelpers {
 
         long discordGuildId = Long.parseLong(guildId);
 
+        if(!isUserInGuild(req, discordGuildId)) {
+            res.status(403);
+            res.type("text");
+            return Result.fromFailure("User is not in this Guild!");
+        }
+
         if(ApiV1.getDiscordGuildRepo().findByDiscordId(discordGuildId).isEmpty()) {
             res.status(404);
             res.type("text");
@@ -81,5 +91,15 @@ public class GenericHelpers {
         }
 
         return Result.fromSuccess(discordGuildId);
+    }
+
+    private static boolean isUserInGuild(Request req, long guildId) throws IOException {
+        KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
+
+        for(Guild guild : new DiscordAPI(kmTokens.getAccessToken()).fetchGuilds()) {
+            if(Long.valueOf(guild.getId()) == guildId) return true;
+        }
+
+        return false;
     }
 }

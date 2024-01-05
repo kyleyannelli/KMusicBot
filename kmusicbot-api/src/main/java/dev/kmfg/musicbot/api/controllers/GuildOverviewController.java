@@ -1,5 +1,7 @@
 package dev.kmfg.musicbot.api.controllers;
 
+import java.io.IOException;
+
 import dev.kmfg.musicbot.api.helpers.GenericHelpers;
 import dev.kmfg.musicbot.api.helpers.GenericHelpers.Result;
 import dev.kmfg.musicbot.api.routes.ApiV1;
@@ -11,7 +13,7 @@ public class GuildOverviewController {
         return null;
     }
 
-    public static String trackedSongs(Request req, Response res) {
+    public static String trackedSongs(Request req, Response res) throws IOException {
         Result<Long, String> authResult = GenericHelpers.isAuthenticatedAndAvailable(req, res);
 
         if(authResult.isFail()) {

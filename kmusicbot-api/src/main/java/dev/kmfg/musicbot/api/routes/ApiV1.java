@@ -53,6 +53,8 @@ public class ApiV1 {
             Spark.get("/login", LoginController::login);
             // callback
             Spark.get("/callback", LoginController::callback);
+            // logout unsecure
+            Spark.get("/logout", LoginController::logout);
         });
 
         Spark.path("/api/secure", () -> {
@@ -69,9 +71,16 @@ public class ApiV1 {
                     return;
                 }
                 else if(!req.pathInfo().toLowerCase().contains("logout")){
-                    logger.debug("Updated cookies!");
-                    DiscordOAuthHelper.setupCookies(res, kmTokens.get());
+                    //DiscordOAuthHelper.setupCookies(res, kmTokens.get());
+                    req.attribute("km-tokens", kmTokens.get());
                 }
+            });
+            //*****
+            //** TOKEN SETTA
+            //*****
+            Spark.after("/*", (req, res) -> {
+                KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
+                DiscordOAuthHelper.setupCookies(res, kmTokens);
             });
 
             //*****

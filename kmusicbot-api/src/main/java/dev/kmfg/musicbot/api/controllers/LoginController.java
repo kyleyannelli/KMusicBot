@@ -9,26 +9,19 @@ import balbucio.discordoauth.DiscordAPI;
 import balbucio.discordoauth.model.TokensResponse;
 import balbucio.discordoauth.model.User;
 import dev.kmfg.musicbot.api.helpers.DiscordOAuthHelper;
+import dev.kmfg.musicbot.api.helpers.KMTokens;
 import spark.Request;
 import spark.Response;
 
 public class LoginController {
     private final static Logger logger = LoggerFactory.getLogger(LoginController.class);
-    private final static String A_TOKEN = "access-token";
-    private final static String R_TOKEN = "refresh-token";
 
-    public static String callback(Request req, Response res) throws IOException {
+    public static String callback(Request req, Response res) throws Exception {
         String code = req.queryParamOrDefault("code", "");
         String state = req.queryParamOrDefault("state", "");
-        String accessToken = req.cookie(A_TOKEN);
-        String refreshToken = req.cookie(R_TOKEN);
-        if(code == "" && accessToken == null && refreshToken == null) {
+        if(code == null || code == "") {
             res.status(400);
             return "Bad Request! Missing code parameter...";
-        }
-        else if(code == "" && accessToken != null && refreshToken != null) {
-            if(state != "") res.redirect(state);
-            return "Logged in...";
         }
         else {
             TokensResponse tokens = DiscordOAuthHelper.getOAuth().getTokens(code);
@@ -60,7 +53,8 @@ public class LoginController {
     }
 
     public static String getMe(Request req, Response res) {
-        DiscordAPI discordAPI = new DiscordAPI(req.cookie(A_TOKEN));
+        KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
+        DiscordAPI discordAPI = new DiscordAPI(kmTokens.getAccessToken());
         try {
             User usa = discordAPI.fetchUser();
             return usa.toString();
