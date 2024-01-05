@@ -9,6 +9,8 @@ import io.github.cdimascio.dotenv.Dotenv;
 import spark.Response;
 
 public class DiscordOAuthHelper {
+    private static final int COOKIE_EXPIRE_SECONDS = 3600 * 24 * 7;
+
     private static final String[] SCOPES = {
         "identify",
         "guilds"
@@ -56,12 +58,12 @@ public class DiscordOAuthHelper {
     }
 
     public static void setupCookies(Response res, TokensResponse tokens) {
-        res.cookie("/", DiscordOAuthFilter.A_TOKEN, tokens.getAccessToken(), 3600, false, true);
-        res.cookie("/", DiscordOAuthFilter.R_TOKEN, tokens.getRefreshToken(), 3600, false, true);
+        res.cookie("/", DiscordOAuthFilter.A_TOKEN, tokens.getAccessToken(), COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie("/", DiscordOAuthFilter.R_TOKEN, tokens.getRefreshToken(), COOKIE_EXPIRE_SECONDS, false, true);
     }
 
     public static void setupCookies(Response res, KMTokens tokens) {
-        res.cookie("/", DiscordOAuthFilter.A_TOKEN, tokens.getAccessToken(), 3600, false, true);
-        res.cookie("/", DiscordOAuthFilter.R_TOKEN, tokens.getRefreshToken(), 3600, false, true);
+        res.cookie("/", DiscordOAuthFilter.A_TOKEN, tokens.getAccessToken(), COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie("/", DiscordOAuthFilter.R_TOKEN, tokens.getRefreshToken(), COOKIE_EXPIRE_SECONDS, false, true);
     }
 }
