@@ -26,6 +26,24 @@ public class TrackedSongRepo {
         });
     }
 
+    public Long getPlaytimeByGuild(DiscordGuild discordGuild) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("SELECT SUM(secondsPlayed) FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId", Long.class)
+                .setParameter("discordGuildId", discordGuild.getDiscordId())
+                .uniqueResult();
+        }
+    }
+
+    public Long getSongCountByGuild(DiscordGuild discordGuild) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("SELECT COUNT(*) FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId", Long.class)
+                .setParameter("discordGuildId", discordGuild.getDiscordId())
+                .uniqueResult();
+        }
+    }
+
     public Optional<TrackedSong> findBySongAndGuild(DiscordGuild discordGuild, KMusicSong kmusicSong) {
         try(Session session = this.sessionFactory.openSession()) {
             return session

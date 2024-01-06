@@ -70,7 +70,7 @@ public class ApiV1 {
                     LoginController.login(req, res, req.pathInfo());
                     return;
                 }
-                else if(!req.pathInfo().toLowerCase().contains("logout")){
+                else if(!req.pathInfo().toLowerCase().contains("logout")) {
                     //DiscordOAuthHelper.setupCookies(res, kmTokens.get());
                     req.attribute("km-tokens", kmTokens.get());
                 }
@@ -79,8 +79,14 @@ public class ApiV1 {
             //** TOKEN SETTA
             //*****
             Spark.after("/*", (req, res) -> {
-                KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
-                DiscordOAuthHelper.setupCookies(res, kmTokens);
+                if(req.attribute("areTokensNew") != null && (boolean) req.attribute("areTokensNew")) {
+                    KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
+                    DiscordOAuthHelper.setupCookies(res, kmTokens);
+                }
+                else if(req.attribute("areTokensNew") == null) {
+                    KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
+                    DiscordOAuthHelper.setupCookies(res, kmTokens);
+                }
             });
 
             //*****
@@ -88,6 +94,8 @@ public class ApiV1 {
             //*****
             // get TrackedSongs for a Guild
             Spark.get("/guild/:guildId/tracked-songs", GuildOverviewController::trackedSongs);
+            // general stat overview for a Guild
+            Spark.get("/guild/:guildId", GuildOverviewController::overview);
 
             //*****
             //** LOGIN CONTROLLER

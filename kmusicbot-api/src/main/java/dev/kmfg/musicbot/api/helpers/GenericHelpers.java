@@ -1,6 +1,7 @@
 package dev.kmfg.musicbot.api.helpers;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -11,6 +12,7 @@ import spark.Request;
 import spark.Response;
 
 import dev.kmfg.musicbot.api.routes.ApiV1;
+import dev.kmfg.musicbot.database.models.DiscordGuild;
 
 public class GenericHelpers {
     private static final Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
@@ -50,7 +52,6 @@ public class GenericHelpers {
         }
     }
 
-
     public static boolean isNotNumber(String s) {
         return s == null || s == "" || !s.matches("-?\\d+(\\.\\d+)?");
     }
@@ -67,7 +68,7 @@ public class GenericHelpers {
         return gson;
     }
 
-    public static Result<Long, String> isAuthenticatedAndAvailable(Request req, Response res) throws IOException {
+    public static Result<DiscordGuild, String> isAuthenticatedAndAvailable(Request req, Response res) throws IOException {
         String guildId = req.params(":guildId");
 
         if(GenericHelpers.isNotNumber(guildId)) {
@@ -84,13 +85,14 @@ public class GenericHelpers {
             return Result.fromFailure("User is not in this Guild!");
         }
 
-        if(ApiV1.getDiscordGuildRepo().findByDiscordId(discordGuildId).isEmpty()) {
+        Optional<DiscordGuild> guild = ApiV1.getDiscordGuildRepo().findByDiscordId(discordGuildId);
+        if(guild.isEmpty()) {
             res.status(404);
             res.type("text");
             return Result.fromFailure("KMusic is not in this guild or hasn't played any songs in this guild.");
         }
 
-        return Result.fromSuccess(discordGuildId);
+        return Result.fromSuccess(guild.get());
     }
 
     private static boolean isUserInGuild(Request req, long guildId) throws IOException {

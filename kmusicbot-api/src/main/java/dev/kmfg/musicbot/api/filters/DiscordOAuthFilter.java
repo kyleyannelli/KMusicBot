@@ -27,6 +27,7 @@ public class DiscordOAuthFilter {
         String refreshToken = req.cookie(R_TOKEN);
         String aSalt = req.cookie(A_SALT);
         String rSalt = req.cookie(R_SALT);
+        req.attribute("areTokensNew", false);
 
         boolean noSalts = (aSalt == null || aSalt == "") || (rSalt == null || rSalt == "");
         if(accessToken == null && refreshToken == null || noSalts) {
@@ -36,6 +37,7 @@ public class DiscordOAuthFilter {
             try {
                 refreshToken = CryptoHelper.decrypt(refreshToken, rSalt);
                 TokensResponse tokensResponse = DiscordOAuthHelper.getOAuth().refreshTokens(refreshToken);
+                req.attribute("areTokensNew", true);
                 return Optional.of(KMTokens.generate(tokensResponse));
             }
             catch(IOException ioException) {
@@ -65,6 +67,7 @@ public class DiscordOAuthFilter {
             }
 
             try {
+                req.attribute("areTokensNew", true);
                 return Optional.of(
                         KMTokens.generate(
                             DiscordOAuthHelper.getOAuth().refreshTokens(refreshToken)
