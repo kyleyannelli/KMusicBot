@@ -5,6 +5,10 @@ import java.util.Optional;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 import balbucio.discordoauth.DiscordAPI;
 import balbucio.discordoauth.model.Guild;
@@ -14,8 +18,19 @@ import spark.Response;
 import dev.kmfg.musicbot.api.routes.ApiV1;
 import dev.kmfg.musicbot.database.models.DiscordGuild;
 
+import java.lang.reflect.Type;
+
 public class GenericHelpers {
-    private static final Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+    private static class SafeTypeAdapter implements JsonSerializer<Long> {
+        @Override
+        public JsonElement serialize(Long src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.toString());
+        }
+    }
+    private static final Gson gson = new GsonBuilder()
+        .registerTypeAdapter(Long.class, new SafeTypeAdapter())
+        .excludeFieldsWithoutExposeAnnotation()
+        .create();
     private static final Gson gsonUnsafe = new Gson();
 
     public static class Result<A, B> {
