@@ -120,6 +120,8 @@ public class ApiV1 {
             //*****
             // route to get yourself
             Spark.get("/me", UserController::me);
+            // route to get yourself in a specific guild
+            Spark.get("/me/:guildId", UserController::meGuild);
             // route to get guilds you're in 
             Spark.get("/guilds", UserController::guilds);
         });

@@ -35,6 +35,16 @@ public class SongPlaytimeRepo {
         }
     }
 
+    public long getTotalUserPlaytime(long discordUserId, long discordGuildId) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("SELECT SUM(secondsListened) FROM SongPlaytime WHERE listeningDiscordUser.discordId = :discordId AND trackedSong.discordGuild.discordId = :discordGuildId", Long.class)
+                .setParameter("discordId", discordUserId)
+                .setParameter("discordGuildId", discordGuildId)
+                .uniqueResult();
+        }
+    }
+
     public Optional<SongPlaytime> findByTrackedSongAndDiscordUser(SongPlaytime songPlaytime) {
         return this.findByTrackedSongAndDiscordUser(songPlaytime.getTrackedSong(), songPlaytime.getListeningDiscordUser());
     }

@@ -34,6 +34,16 @@ public class SongInitializationRepo {
         }
     }
 
+    public long getTotalUserInits(long discordUserId, long discordGuildId) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("SELECT SUM(timesInitialized) FROM SongInitialization WHERE initializingDiscordUser.discordId = :discordId AND trackedSong.discordGuild.discordId = :discordGuildId", Long.class)
+                .setParameter("discordId", discordUserId)
+                .setParameter("discordGuildId", discordGuildId)
+                .uniqueResult();
+        }
+    }
+
     public Optional<SongInitialization> findByTrackedSongAndDiscordUser(SongInitialization songInitialization) {
         return this.findByTrackedSongAndDiscordUser(songInitialization.getTrackedSong(), songInitialization.getInitDiscordUser());
     }

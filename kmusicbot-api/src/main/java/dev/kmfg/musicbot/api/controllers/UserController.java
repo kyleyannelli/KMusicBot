@@ -34,6 +34,26 @@ public class UserController {
         }
     }
 
+    /***
+     * Gets total listen time and initializations for a user for SPECIFIC GUILD
+     */
+    public static String meGuild(Request req, Response res) {
+        try {
+            KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
+            DiscordAPI discordAPI = new DiscordAPI(kmTokens.getAccessToken());
+            User discordAPIUser = discordAPI.fetchUser();
+            long discordAPIUserId = Long.valueOf(discordAPIUser.getId());
+            long discordAPIGuildId = Long.valueOf(req.params(":guildId"));
+            long totalUserPlaytime = ApiV1.getSongPlaytimeRepo().getTotalUserPlaytime(discordAPIUserId, discordAPIGuildId);
+            long totalUserInitializations = ApiV1.getSongInitRepo().getTotalUserInits(discordAPIUserId, discordAPIGuildId);
+            return GenericHelpers.provideGson().toJson(new UserMetrics(discordAPIUser, totalUserPlaytime, totalUserInitializations));
+        }
+        catch(IOException ioe) {
+            res.status(404);
+            return "Not Found";
+        }
+    }
+
     public static String guilds(Request req, Response res) {
         try {
             KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
