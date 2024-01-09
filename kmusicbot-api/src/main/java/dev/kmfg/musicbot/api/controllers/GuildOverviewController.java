@@ -33,12 +33,24 @@ public class GuildOverviewController {
             return authResult.getFailure();
         }
 
+        int size = 20, page = 0;
+
+        if(req.queryParamsValues("size") != null && req.queryParamsValues("size")[0] != null && GenericHelpers.isNumber(req.queryParamsValues("size")[0])) {
+            size = Integer.valueOf(req.queryParamsValues("size")[0]);
+        }
+
+        if(req.queryParamsValues("page") != null && req.queryParamsValues("page")[0] != null && GenericHelpers.isNumber(req.queryParamsValues("page")[0])) {
+            page = Integer.valueOf(req.queryParamsValues("page")[0]);
+        }
+
         return GenericHelpers
             .provideGson()
             .toJson(
                 ApiV1.getTrackedSongRepo()
                 .findByDiscordGuildId(
-                    authResult.getSuccess().getDiscordId()
+                    authResult.getSuccess().getDiscordId(),
+                    page,
+                    size
                 )
         );
     }

@@ -14,12 +14,13 @@ import com.google.gson.annotations.Expose;
 @Entity
 @Table(name = "discord_users")
 public class DiscordUser extends BaseKMusicTable {
-    @Expose
 	@Id
 	@Column(name = "discord_id")
+    @Expose
 	private long discordId;
 
 	@Column(name = "username")
+    @Expose
 	private String username;
 
 	@OneToMany(mappedBy = "initializingDiscordUser")
