@@ -9,6 +9,8 @@ import dev.kmfg.musicbot.api.helpers.DiscordOAuthHelper;
 import dev.kmfg.musicbot.api.helpers.KMTokens;
 import dev.kmfg.musicbot.database.repositories.DiscordGuildRepo;
 import dev.kmfg.musicbot.database.repositories.KMusicSongRepo;
+import dev.kmfg.musicbot.database.repositories.SongInitializationRepo;
+import dev.kmfg.musicbot.database.repositories.SongPlaytimeRepo;
 import dev.kmfg.musicbot.database.repositories.TrackedSongRepo;
 import dev.kmfg.musicbot.database.util.HibernateUtil;
 import spark.Spark;
@@ -24,6 +26,8 @@ public class ApiV1 {
     private static final TrackedSongRepo TRACKED_SONG_REPO = new TrackedSongRepo(SESSION_FACTORY);
     private static final DiscordGuildRepo DISCORD_GUILD_REPO = new DiscordGuildRepo(SESSION_FACTORY);
     private static final KMusicSongRepo K_MUSIC_SONG_REPO = new KMusicSongRepo(SESSION_FACTORY);
+    private static final SongPlaytimeRepo SONG_PLAYTIME_REPO = new SongPlaytimeRepo(SESSION_FACTORY);
+    private static final SongInitializationRepo SONG_INITIALIZATION_REPO = new SongInitializationRepo(SESSION_FACTORY);
 
     private final Logger logger = LoggerFactory.getLogger(ApiV1.class);
 
@@ -33,6 +37,14 @@ public class ApiV1 {
 
     public static SessionFactory getSessionFactory() {
         return SESSION_FACTORY;
+    }
+
+    public static SongPlaytimeRepo getSongPlaytimeRepo() {
+        return SONG_PLAYTIME_REPO;
+    } 
+
+    public static SongInitializationRepo getSongInitRepo() {
+        return SONG_INITIALIZATION_REPO;
     }
 
     public static TrackedSongRepo getTrackedSongRepo() {

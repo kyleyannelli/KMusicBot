@@ -5,19 +5,28 @@ import java.util.ArrayList;
 
 import balbucio.discordoauth.DiscordAPI;
 import balbucio.discordoauth.model.Guild;
+import balbucio.discordoauth.model.User;
 import dev.kmfg.musicbot.api.helpers.GenericHelpers;
 import dev.kmfg.musicbot.api.helpers.KMTokens;
+import dev.kmfg.musicbot.api.routes.ApiV1;
 import dev.kmfg.musicbot.api.stateless.models.DiscordGuildIds;
+import dev.kmfg.musicbot.api.stateless.models.UserMetrics;
 import spark.Request;
 import spark.Response;
 
 public class UserController {
+    /***
+     * Gets total listen time and initializations for a user across all their guilds
+     */
     public static String me(Request req, Response res) {
-
         try {
             KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
             DiscordAPI discordAPI = new DiscordAPI(kmTokens.getAccessToken());
-            return GenericHelpers.provideUnsafeGson().toJson(discordAPI.fetchUser());
+            User discordAPIUser = discordAPI.fetchUser();
+            long discordAPIUserId = Long.valueOf(discordAPIUser.getId());
+            long totalUserPlaytime = ApiV1.getSongPlaytimeRepo().getTotalUserPlaytime(discordAPIUserId);
+            long totalUserInitializations = ApiV1.getSongInitRepo().getTotalUserInits(discordAPIUserId);
+            return GenericHelpers.provideGson().toJson(new UserMetrics(discordAPIUser, totalUserPlaytime, totalUserInitializations));
         }
         catch(IOException ioe) {
             res.status(404);

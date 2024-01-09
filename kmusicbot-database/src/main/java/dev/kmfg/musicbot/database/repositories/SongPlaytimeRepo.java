@@ -26,6 +26,15 @@ public class SongPlaytimeRepo {
         });
     }
 
+    public long getTotalUserPlaytime(long discordUserId) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("SELECT SUM(secondsListened) FROM SongPlaytime WHERE listeningDiscordUser.discordId = :discordId", Long.class)
+                .setParameter("discordId", discordUserId)
+                .uniqueResult();
+        }
+    }
+
     public Optional<SongPlaytime> findByTrackedSongAndDiscordUser(SongPlaytime songPlaytime) {
         return this.findByTrackedSongAndDiscordUser(songPlaytime.getTrackedSong(), songPlaytime.getListeningDiscordUser());
     }
