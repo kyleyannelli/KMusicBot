@@ -32,6 +32,7 @@ public class LoginController {
     }
 
     public static String login(Request req, Response res, String returnUrl) {
+        res.type("text");
         return DiscordOAuthHelper.generateAuthUrl(returnUrl)[0];
     }
 
