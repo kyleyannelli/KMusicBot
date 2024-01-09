@@ -190,6 +190,8 @@ public class TrackStatisticRecorder implements TrackEventListener {
         trackedSong = trackedSongRepo.save(trackedSong).get();
         // generate or get the initialization
         SongInitialization songInitialization = songInitializationRepo.saveOrGet(new SongInitialization(trackedSong, discordUser));
+        songInitialization.incTimesInitialized();
+        songInitialization = songInitializationRepo.save(songInitialization).get();
         return trackedSong;
     }
 

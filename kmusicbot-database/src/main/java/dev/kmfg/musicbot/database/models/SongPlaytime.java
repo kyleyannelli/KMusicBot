@@ -1,5 +1,7 @@
 package dev.kmfg.musicbot.database.models;
 
+import com.google.gson.annotations.Expose;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,6 +20,7 @@ public class SongPlaytime extends BaseKMusicTable {
 
 	@ManyToOne
 	@JoinColumn(name = "discord_user_id")
+    @Expose
 	private DiscordUser listeningDiscordUser;
 
 	@ManyToOne
@@ -25,6 +28,7 @@ public class SongPlaytime extends BaseKMusicTable {
 	private TrackedSong trackedSong;
 
 	@Column(name = "seconds_listened")
+    @Expose
 	private int secondsListened;
 
 	public SongPlaytime() {

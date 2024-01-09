@@ -3,6 +3,8 @@ package dev.kmfg.musicbot.database.models;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.gson.annotations.Expose;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -14,6 +16,7 @@ import jakarta.persistence.Table;
 public class DiscordGuild extends BaseKMusicTable {
 	@Id
 	@Column(name = "discord_id")
+    @Expose
 	private long discordId;
 
 	@OneToMany(mappedBy = "discordGuild")
@@ -33,4 +36,8 @@ public class DiscordGuild extends BaseKMusicTable {
 	public long getDiscordId() {
 		return this.discordId;
 	}
+
+    public Set<TrackedSong> getTrackedSongs() {
+        return this.trackedSongs;
+    }
 }

@@ -11,7 +11,12 @@ import org.tinylog.Logger;
 
 import dev.kmfg.musicbot.database.models.DiscordGuild;
 import dev.kmfg.musicbot.database.models.KMusicSong;
+import dev.kmfg.musicbot.database.models.PaginatedResponse;
 import dev.kmfg.musicbot.database.models.TrackedSong;
+import jakarta.persistence.Query;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 public class TrackedSongRepo {
     private final SessionFactory sessionFactory;
@@ -24,6 +29,24 @@ public class TrackedSongRepo {
         return this.findBySongAndGuild(trackedSong.getGuild(), trackedSong.getSong()).orElseGet(() -> {
             return this.save(trackedSong).get();
         });
+    }
+
+    public Long getPlaytimeByGuild(DiscordGuild discordGuild) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("SELECT SUM(secondsPlayed) FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId", Long.class)
+                .setParameter("discordGuildId", discordGuild.getDiscordId())
+                .uniqueResult();
+        }
+    }
+
+    public Long getSongCountByGuild(DiscordGuild discordGuild) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("SELECT COUNT(*) FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId", Long.class)
+                .setParameter("discordGuildId", discordGuild.getDiscordId())
+                .uniqueResult();
+        }
     }
 
     public Optional<TrackedSong> findBySongAndGuild(DiscordGuild discordGuild, KMusicSong kmusicSong) {
@@ -41,6 +64,16 @@ public class TrackedSongRepo {
         catch(Exception e) {
             Logger.error(e, "Error occurred while attempting to find by DiscordGuild and KMusicSong");
             return Optional.empty();
+        }
+    }
+
+    public Optional<TrackedSong> findByIdAndGuildId(int id, long discordGuildId) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId AND id = :id", TrackedSong.class)
+                .setParameter(":discordGuildId", discordGuildId)
+                .setParameter(":id", id)
+                .uniqueResultOptional();
         }
     }
 
@@ -83,6 +116,35 @@ public class TrackedSongRepo {
         catch(HibernateException hibernateException) {
             Logger.error(hibernateException, "Error occurred while finding TrackedSongs by Discord Guild id");
             return List.of();
+        }
+    }
+
+    public PaginatedResponse<TrackedSong> findByDiscordGuildId(long discordId, int page, int size) {
+        try(Session session = this.sessionFactory.openSession()) {
+            // Query to find the total number of TrackedSong records
+            Query countQuery = session.createQuery("SELECT COUNT(ts) FROM TrackedSong ts WHERE ts.discordGuild.discordId = :discordGuildId", Long.class);
+            countQuery.setParameter("discordGuildId", discordId);
+            long totalItems = (long) countQuery.getSingleResult();
+
+            // Query to get the paginated list of TrackedSong
+            List<TrackedSong> songs = session
+                .createQuery("FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId", TrackedSong.class)
+                .setParameter("discordGuildId", discordId)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
+                .getResultList();
+
+            // Calculate the total number of pages
+            int totalPages = (int) Math.ceil((double) totalItems / size);
+
+            // Construct and return the paginated response
+            PaginatedResponse<TrackedSong> response = new PaginatedResponse<>(songs, page, totalPages, totalItems, size);
+
+            return response;        
+        }
+        catch(HibernateException hibernateException) {
+            Logger.error(hibernateException, "Error occurred while finding TrackedSongs by Discord Guild id");
+            return new PaginatedResponse<>(null, 0, 0, 0L, 0);
         }
     }
 
