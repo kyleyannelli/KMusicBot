@@ -25,7 +25,7 @@ public class SongInitialization extends BaseKMusicTable {
 	@JoinColumn(name = "init_discord_user_id")
 	private DiscordUser initializingDiscordUser;
 
-	@Column(name = "times_init")
+	@Column(name = "times_init", updatable = true)
 	private int timesInitialized;
 
 	public SongInitialization(TrackedSong trackedSong, DiscordUser initDiscordUser) {
