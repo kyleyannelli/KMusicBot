@@ -9,9 +9,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import com.google.gson.annotations.Expose;
+
 @Entity
 @Table(name = "discord_users")
 public class DiscordUser extends BaseKMusicTable {
+    @Expose
 	@Id
 	@Column(name = "discord_id")
 	private long discordId;

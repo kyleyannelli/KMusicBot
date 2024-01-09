@@ -95,7 +95,7 @@ public class GenericHelpers {
         return Result.fromSuccess(guild.get());
     }
 
-    private static boolean isUserInGuild(Request req, long guildId) throws IOException {
+    public static boolean isUserInGuild(Request req, long guildId) throws IOException {
         KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
 
         for(Guild guild : new DiscordAPI(kmTokens.getAccessToken()).fetchGuilds()) {

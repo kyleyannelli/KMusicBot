@@ -3,6 +3,7 @@ package dev.kmfg.musicbot.api.routes;
 import dev.kmfg.musicbot.api.controllers.GuildOverviewController;
 import dev.kmfg.musicbot.api.controllers.HealthCheckController;
 import dev.kmfg.musicbot.api.controllers.LoginController;
+import dev.kmfg.musicbot.api.controllers.TrackedSongController;
 import dev.kmfg.musicbot.api.controllers.UserController;
 import dev.kmfg.musicbot.api.filters.DiscordOAuthFilter;
 import dev.kmfg.musicbot.api.helpers.DiscordOAuthHelper;
@@ -100,6 +101,11 @@ public class ApiV1 {
                     DiscordOAuthHelper.setupCookies(res, kmTokens);
                 }
             });
+
+            //*****
+            //** TRACKED SONG CONTROLLER
+            //*****
+            Spark.get("/tracked-song/:trackedSongId", TrackedSongController::get);
 
             //*****
             //** GUILD OVERVIEW CONTROLLER

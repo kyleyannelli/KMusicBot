@@ -62,6 +62,16 @@ public class TrackedSongRepo {
         }
     }
 
+    public Optional<TrackedSong> findByIdAndGuildId(int id, long discordGuildId) {
+        try(Session session = this.sessionFactory.openSession()) {
+            return session
+                .createQuery("FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId AND id = :id", TrackedSong.class)
+                .setParameter(":discordGuildId", discordGuildId)
+                .setParameter(":id", id)
+                .uniqueResultOptional();
+        }
+    }
+
     public Optional<TrackedSong> findById(int id) {
         try(Session session = this.sessionFactory.openSession()) {
             return Optional.ofNullable(
