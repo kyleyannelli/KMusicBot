@@ -32,9 +32,7 @@ public class LoginController {
     }
 
     public static String login(Request req, Response res, String returnUrl) {
-        String redirectUrl = DiscordOAuthHelper.generateAuthUrl(returnUrl)[0];
-        res.redirect(redirectUrl);
-        return "Redirecting...";
+        return DiscordOAuthHelper.generateAuthUrl(returnUrl)[0];
     }
 
     public static String login(Request req, Response res) {

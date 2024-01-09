@@ -80,7 +80,9 @@ public class ApiV1 {
                 logger.debug("BEFORE FILTER ACTIVATED FOR PATH " + req.pathInfo());
                 Optional<KMTokens> kmTokens = DiscordOAuthFilter.getTokens(req);
                 if(kmTokens.isEmpty()) {
-                    LoginController.login(req, res, req.pathInfo());
+                    Spark.halt(401);
+                    // I think we should just use 401 states instead of redirecting to login
+                    // LoginController.login(req, res, req.pathInfo());
                     return;
                 }
                 else if(!req.pathInfo().toLowerCase().contains("logout")) {
