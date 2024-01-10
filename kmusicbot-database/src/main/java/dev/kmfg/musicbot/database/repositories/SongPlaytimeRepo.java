@@ -43,6 +43,9 @@ public class SongPlaytimeRepo {
                 .setParameter("discordGuildId", discordGuildId)
                 .uniqueResult();
         }
+        catch(NullPointerException npe) {
+            return 0;
+        }
     }
 
     public Optional<SongPlaytime> findByTrackedSongAndDiscordUser(SongPlaytime songPlaytime) {
