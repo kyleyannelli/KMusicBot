@@ -29,13 +29,14 @@ public class UserController {
             long totalUserPlaytime = ApiV1.getSongPlaytimeRepo().getTotalUserPlaytime(discordAPIUserId);
             long totalUserInitializations = ApiV1.getSongInitRepo().getTotalUserInits(discordAPIUserId);
             List<DiscordGuildUserPlaytimeMetric> guildPlaytimes = new ArrayList<>();
-            for(Guild guild : discordAPI.fetchGuilds()) {
+            for(Guild guild : GenericHelpers.getFromCacheOrAPI(kmTokens)) {
                 long guildId = Long.valueOf(guild.getId());
                 guildPlaytimes.add(
                         new DiscordGuildUserPlaytimeMetric(guild.getName(),
                             guildId,
                             ApiV1.getSongPlaytimeRepo().getTotalUserPlaytime(discordAPIUserId, guildId),
-                            ApiV1.getSongInitRepo().getTotalUserInits(discordAPIUserId, guildId)
+                            ApiV1.getSongInitRepo().getTotalUserInits(discordAPIUserId, guildId),
+                            guild.getIcon()
                         )
                 );
             }
@@ -72,12 +73,11 @@ public class UserController {
     public static String guilds(Request req, Response res) {
         try {
             KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
-            DiscordAPI discordAPI = new DiscordAPI(kmTokens.getAccessToken());
             ArrayList<DiscordGuildIds> guilds = new ArrayList<>();
-            for(Guild guild : discordAPI.fetchGuilds()) {
+            for(Guild guild : GenericHelpers.getFromCacheOrAPI(kmTokens)) {
                 guilds.add(
-                        new DiscordGuildIds(guild.getName(), Long.valueOf(guild.getId()))
-                        );
+                        new DiscordGuildIds(guild.getName(), Long.valueOf(guild.getId()), guild.getIcon())
+                );
             }
             return GenericHelpers.provideGson().toJson(guilds);
         }
