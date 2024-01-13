@@ -42,6 +42,9 @@ public class SongInitializationRepo {
                 .setParameter("discordGuildId", discordGuildId)
                 .uniqueResult();
         }
+        catch(NullPointerException npe) {
+            return 0;
+        }
     }
 
     public Optional<SongInitialization> findByTrackedSongAndDiscordUser(SongInitialization songInitialization) {

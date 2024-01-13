@@ -1,10 +1,13 @@
 package dev.kmfg.musicbot.core.commands.executors;
 
 import dev.kmfg.musicbot.core.sessions.SessionManager;
+import dev.kmfg.musicbot.core.util.slashcommands.EnsuredSlashCommandInteraction;
+
 import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
+import org.tinylog.Logger;
 
 import java.util.Optional;
 
@@ -39,8 +42,16 @@ public class StopCommand extends Command {
         Optional<Server> serverOptional = this.slashCommandEvent.getSlashCommandInteraction().getServer();
 
         if(serverOptional.isPresent() && isInVoiceChannel(serverOptional.get())) {
-            getEnsuredInteraction(null).getAudioSession().properlyDisconnectFromVoiceChannel();
-            this.messageSender.sendStoppedEmbed();
+            EnsuredSlashCommandInteraction ensuredInteraction = getEnsuredInteraction(null);
+            ensuredInteraction.getAudioSession().getLavaSource().stop();
+            ensuredInteraction.getAudioSession().skipCurrentPlaying();
+            try {
+                Thread.sleep(1500L);
+                this.messageSender.sendStoppedEmbed();
+            }
+            catch(InterruptedException iE) {
+                Logger.error(iE, "Occured while stopping...");
+            }
         }
         else {
             this.messageSender.sendNothingPlayingEmbed();

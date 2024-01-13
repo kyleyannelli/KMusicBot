@@ -16,11 +16,19 @@ import dev.kmfg.musicbot.database.repositories.TrackedSongRepo;
 import dev.kmfg.musicbot.database.util.HibernateUtil;
 import spark.Spark;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import balbucio.discordoauth.model.Guild;
+import balbucio.discordoauth.model.User;
 
 public class ApiV1 {
     private static final SessionFactory SESSION_FACTORY = HibernateUtil.getSessionFactory();
@@ -29,11 +37,23 @@ public class ApiV1 {
     private static final KMusicSongRepo K_MUSIC_SONG_REPO = new KMusicSongRepo(SESSION_FACTORY);
     private static final SongPlaytimeRepo SONG_PLAYTIME_REPO = new SongPlaytimeRepo(SESSION_FACTORY);
     private static final SongInitializationRepo SONG_INITIALIZATION_REPO = new SongInitializationRepo(SESSION_FACTORY);
+    private static final Cache<String, List<Guild>> apiGuildsCache = Caffeine.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .build();
 
     private final Logger logger = LoggerFactory.getLogger(ApiV1.class);
 
     public ApiV1(HealthCheckController healthCheckController) {
         this.setupRoutes(healthCheckController);
+    }
+
+    public static List<Guild> getCachedGuilds(String refreshToken) {
+        return apiGuildsCache.getIfPresent(refreshToken);
+    }
+
+    public static void addToGuildsCache(String refreshToken, List<Guild> guilds) {
+        apiGuildsCache.put(refreshToken, guilds);
     }
 
     public static SessionFactory getSessionFactory() {
@@ -102,6 +122,9 @@ public class ApiV1 {
                     KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
                     DiscordOAuthHelper.setupCookies(res, kmTokens);
                 }
+                res.header("Access-Control-Allow-Origin", "http://192.168.1.70:5173");
+                res.header("Origin", "http://192.168.1.70:5173");
+                res.header("Access-Control-Allow-Credentials", "true");
             });
 
             //*****

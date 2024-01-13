@@ -128,7 +128,7 @@ public class TrackedSongRepo {
 
             // Query to get the paginated list of TrackedSong
             List<TrackedSong> songs = session
-                .createQuery("FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId", TrackedSong.class)
+                .createQuery("FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId ORDER BY secondsPlayed DESC", TrackedSong.class)
                 .setParameter("discordGuildId", discordId)
                 .setFirstResult(page * size)
                 .setMaxResults(size)

@@ -139,6 +139,11 @@ public class ProperTrackScheduler extends AudioEventAdapter {
         }
     }
 
+    public void clearQueue() {
+        this.audioQueue = new LinkedBlockingQueue<>();
+        this.recommenderAudioQueue = new LinkedBlockingQueue<>();
+    }
+
     public boolean hasNowPlaying() {
         return this.audioPlayer.getPlayingTrack() != null;
     }

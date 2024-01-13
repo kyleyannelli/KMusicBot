@@ -1,6 +1,7 @@
 package dev.kmfg.musicbot.api.helpers;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import com.google.gson.Gson;
@@ -113,10 +114,22 @@ public class GenericHelpers {
     public static boolean isUserInGuild(Request req, long guildId) throws IOException {
         KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
 
-        for(Guild guild : new DiscordAPI(kmTokens.getAccessToken()).fetchGuilds()) {
+        List<Guild> guilds = getFromCacheOrAPI(kmTokens);
+
+        for(Guild guild : guilds) {
             if(Long.valueOf(guild.getId()) == guildId) return true;
         }
 
         return false;
+    }
+
+    public static List<Guild> getFromCacheOrAPI(KMTokens kmTokens) throws IOException {
+        if(ApiV1.getCachedGuilds(kmTokens.getRefreshToken()) == null) {
+            ApiV1.addToGuildsCache(kmTokens.getRefreshToken(), new DiscordAPI(kmTokens.getAccessToken()).fetchGuilds());
+            return getFromCacheOrAPI(kmTokens);
+        }
+        else {
+            return ApiV1.getCachedGuilds(kmTokens.getRefreshToken());
+        }
     }
 }
