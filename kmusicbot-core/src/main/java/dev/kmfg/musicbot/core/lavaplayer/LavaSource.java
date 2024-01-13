@@ -329,6 +329,11 @@ public class LavaSource extends AudioSourceBase {
         return this.trackScheduler.remove(position);
     }
 
+    public void stop() {
+        this.trackScheduler.clearQueue();
+        this.skipCurrentTrack();
+    }
+
     /**
      * Handles the future from the player manager. Generates a QueueResult whether it fails (this is detailed by the QueueResult)
      * @param playerManagerFuture The future from the audioPlayerManager

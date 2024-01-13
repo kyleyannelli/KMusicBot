@@ -122,6 +122,9 @@ public class ApiV1 {
                     KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
                     DiscordOAuthHelper.setupCookies(res, kmTokens);
                 }
+                res.header("Access-Control-Allow-Origin", "http://192.168.1.70:5173");
+                res.header("Origin", "http://192.168.1.70:5173");
+                res.header("Access-Control-Allow-Credentials", "true");
             });
 
             //*****
