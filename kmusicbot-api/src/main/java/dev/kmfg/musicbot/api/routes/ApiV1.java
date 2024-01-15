@@ -81,6 +81,11 @@ public class ApiV1 {
     }
 
     private void setupRoutes(HealthCheckController healthCheckController) {
+        Spark.before("/*", (req, res) -> {
+            res.header("Access-Control-Allow-Origin", "http://192.168.1.70:5173");
+            res.header("Origin", "http://192.168.1.70:5173");
+            res.header("Access-Control-Allow-Credentials", "true");
+        });
         Spark.path("/api", () -> {
             // login
             Spark.get("/login", LoginController::login);
@@ -122,9 +127,6 @@ public class ApiV1 {
                     KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
                     DiscordOAuthHelper.setupCookies(res, kmTokens);
                 }
-                res.header("Access-Control-Allow-Origin", "http://192.168.1.70:5173");
-                res.header("Origin", "http://192.168.1.70:5173");
-                res.header("Access-Control-Allow-Credentials", "true");
             });
 
             //*****
