@@ -14,6 +14,7 @@ import dev.kmfg.musicbot.database.repositories.SongInitializationRepo;
 import dev.kmfg.musicbot.database.repositories.SongPlaytimeRepo;
 import dev.kmfg.musicbot.database.repositories.TrackedSongRepo;
 import dev.kmfg.musicbot.database.util.HibernateUtil;
+import io.github.cdimascio.dotenv.Dotenv;
 import spark.Spark;
 
 import java.util.List;
@@ -41,6 +42,8 @@ public class ApiV1 {
         .maximumSize(100)
         .expireAfterWrite(30, TimeUnit.SECONDS)
         .build();
+
+    private static final String CORS_URI = Dotenv.load().get("CORS_URI");
 
     private final Logger logger = LoggerFactory.getLogger(ApiV1.class);
 
@@ -81,6 +84,11 @@ public class ApiV1 {
     }
 
     private void setupRoutes(HealthCheckController healthCheckController) {
+        Spark.before("/*", (req, res) -> {
+            res.header("Access-Control-Allow-Origin", CORS_URI);
+            res.header("Origin", CORS_URI);
+            res.header("Access-Control-Allow-Credentials", "true");
+        });
         Spark.path("/api", () -> {
             // login
             Spark.get("/login", LoginController::login);
@@ -122,9 +130,6 @@ public class ApiV1 {
                     KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
                     DiscordOAuthHelper.setupCookies(res, kmTokens);
                 }
-                res.header("Access-Control-Allow-Origin", "http://192.168.1.70:5173");
-                res.header("Origin", "http://192.168.1.70:5173");
-                res.header("Access-Control-Allow-Credentials", "true");
             });
 
             //*****

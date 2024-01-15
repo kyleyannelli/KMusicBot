@@ -38,7 +38,7 @@ public class LoginController {
 
     public static String login(Request req, Response res) {
         res.type("text");
-        return DiscordOAuthHelper.generateAuthUrl()[0];
+        return DiscordOAuthHelper.generateAuthUrl(req.queryParamOrDefault("state", ""))[0];
     }
 
     public static String logout(Request req, Response res) {

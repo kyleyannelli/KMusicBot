@@ -35,7 +35,8 @@ public class TrackedSong extends BaseKMusicTable {
     @Expose
 	private KMusicSong kmusicSong;
 
-	@OneToMany(mappedBy = "trackedSong")
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "trackedSong")
+    @Expose
 	Set<SongInitialization> songInitializations = new HashSet<>();
 
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "trackedSong")

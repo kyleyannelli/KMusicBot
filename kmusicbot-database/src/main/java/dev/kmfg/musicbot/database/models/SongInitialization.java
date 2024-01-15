@@ -1,5 +1,7 @@
 package dev.kmfg.musicbot.database.models;
 
+import com.google.gson.annotations.Expose;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,9 +25,11 @@ public class SongInitialization extends BaseKMusicTable {
 
 	@ManyToOne
 	@JoinColumn(name = "init_discord_user_id")
+    @Expose
 	private DiscordUser initializingDiscordUser;
 
 	@Column(name = "times_init", updatable = true)
+    @Expose
 	private int timesInitialized;
 
 	public SongInitialization(TrackedSong trackedSong, DiscordUser initDiscordUser) {
