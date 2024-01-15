@@ -5,6 +5,7 @@ import java.security.SecureRandom;
 import balbucio.discordoauth.DiscordOAuth;
 import balbucio.discordoauth.model.TokensResponse;
 import dev.kmfg.musicbot.api.filters.DiscordOAuthFilter;
+import dev.kmfg.musicbot.api.routes.ApiV1;
 import io.github.cdimascio.dotenv.Dotenv;
 import spark.Response;
 
@@ -60,18 +61,18 @@ public class DiscordOAuthHelper {
     public static void setupCookies(Response res, TokensResponse tokens) throws Exception {
         String[] accessTokenAndSalt = CryptoHelper.encrypt(tokens.getAccessToken());
         String[] refreshTokenAndSalt = CryptoHelper.encrypt(tokens.getRefreshToken());
-        res.cookie("/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, false, true);
-        res.cookie("/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, false, true);
-        res.cookie("/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, false, true);
-        res.cookie("/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
     }
 
     public static void setupCookies(Response res, KMTokens tokens) throws Exception {
         String[] accessTokenAndSalt = CryptoHelper.encrypt(tokens.getAccessToken());
         String[] refreshTokenAndSalt = CryptoHelper.encrypt(tokens.getRefreshToken());
-        res.cookie("/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, false, true);
-        res.cookie("/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, false, true);
-        res.cookie("/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, false, true);
-        res.cookie("/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, false, true);
+        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
     }
 }
