@@ -232,6 +232,16 @@ public class AudioSession extends RecommenderSession {
 
 	@Override
 	public void shutdown() {
+        // make sure we properly get tracking completed
+        this.lavaSource.stop();
+        this.skipCurrentPlaying();
+        try {
+            Thread.sleep(1500);
+        }
+        catch(InterruptedException iE) {
+            Logger.error(iE, "AudioSession shutdown was interrupted!");
+            Thread.currentThread().interrupt();
+        }
 		// shutdown the super classes stuff! This is important!
 		super.shutdown();
 		// now shutdown our new services
