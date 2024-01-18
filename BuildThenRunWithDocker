@@ -1,8 +1,8 @@
 #!/bin/bash
-docker build -t kmusic_bot_snapshot .
+docker build -t kmusic_bot .
 # check if script was run with -d flag
 if [[ $1 == "-d" ]]; then
-    docker run -d --name KMusic-v4.0.0-SNAPSHOT --restart always kmusic_bot_snapshot
+    docker run -d --name KMusic-v3.3.0 --restart always kmusic_bot
 else
-    docker run kmusic_bot_snapshot
+    docker run kmusic_bot
 fi
