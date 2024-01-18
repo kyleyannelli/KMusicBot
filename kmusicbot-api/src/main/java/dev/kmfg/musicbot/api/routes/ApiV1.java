@@ -88,6 +88,7 @@ public class ApiV1 {
             res.header("Access-Control-Allow-Origin", CORS_URI);
             res.header("Origin", CORS_URI);
             res.header("Access-Control-Allow-Credentials", "true");
+            res.header("SameSite", "None");
         });
         Spark.path("/api", () -> {
             // login
