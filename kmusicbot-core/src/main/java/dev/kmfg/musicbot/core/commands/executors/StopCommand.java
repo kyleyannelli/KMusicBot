@@ -43,15 +43,7 @@ public class StopCommand extends Command {
 
         if(serverOptional.isPresent() && isInVoiceChannel(serverOptional.get())) {
             EnsuredSlashCommandInteraction ensuredInteraction = getEnsuredInteraction(null);
-            ensuredInteraction.getAudioSession().getLavaSource().stop();
-            ensuredInteraction.getAudioSession().skipCurrentPlaying();
-            try {
-                Thread.sleep(1500L);
-                this.messageSender.sendStoppedEmbed();
-            }
-            catch(InterruptedException iE) {
-                Logger.error(iE, "Occured while stopping...");
-            }
+            ensuredInteraction.getAudioSession().stopAllTracks();
         }
         else {
             this.messageSender.sendNothingPlayingEmbed();

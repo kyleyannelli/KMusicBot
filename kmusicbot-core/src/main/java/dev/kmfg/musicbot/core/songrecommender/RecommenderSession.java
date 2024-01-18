@@ -81,10 +81,14 @@ public class RecommenderSession {
 	public void shutdown() {
 		this.scheduler.shutdownNow();
 	}
-
+    
 	public long getAssociatedServerId() {
 		return associatedServerId;
 	}
+
+    public void clearSearchHistory() {
+        this.audioQueue = new ArrayList<>();
+    }
 
 	public boolean canQueueSongs() {
 		// Calculate the total duration of all songs in the queue

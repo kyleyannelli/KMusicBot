@@ -55,6 +55,8 @@ public class UserLeaveVoiceListenerHandler implements ServerVoiceChannelMemberLe
 
         // if it is either all bots or the server voice channel is empty, we should disconnect.
         if(isAllBots || isEmptyServerVoiceChannel) {
+            // make sure to clear tracks before disconnecting
+            session.stopAllTracks();
             // get the server id from the event
             long relevantServerId = event.getServer().getId();
             // now disconnect and shutdown the session
