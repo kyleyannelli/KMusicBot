@@ -2,20 +2,29 @@
 ## Built on Maven with [Javacord](https://github.com/Javacord/Javacord) & [dev.kmfg.lavaplayer](https://github.com/sedmelluq/lavaplayer)
 [![CodeQL](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml)
 
+### Table of Contents
+1. [Prerequisites](#prerequisites)
+2. [Running the Discord Bot](#running-the-discord-bot)
+    1. [Without a Database](#without-a-database)
+    2. [With a Database](#with-a-database)
+3. [Running the Web API Service](#running-the-web-api-service)
+4. [Additional Notes](#additional-notes)
+
 ## Prerequisites
-- [Discord Tokens](https://discord.com/developers/applications)
-- [Spotify Tokens](https://developer.spotify.com/dashboard/login)
-## Optional
-- [MariaDB](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-22-04)
+- **Discord Tokens:** Obtain from [Discord Developer Portal](https://discord.com/developers/applications).
+- **Spotify Tokens:** Obtain from [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/login).
+- **Optional:** [MariaDB](https://www.digitalocean.com/community/tutorials/how-to-install-mariadb-on-ubuntu-22-04) for database functionality.
 
 # Running the Discord Bot
 
-## Running without a Database connection
+### Without a Database
 #### Please note, you may see errors or warnings in the logs about Hibernate, SQL, or general Database langauge. If you go this route, please ignore them.
-1. Install Java 11 & Maven. For example, (MacOS) `brew install openjdk@11 maven` (Debian-based/Ubuntu) `sudo apt install openjdk-11-jre maven`.
-2. Create a [Discord Application](https://discord.com/developers/applications). The bot does not need any privileged intents. Write down your bot token here, you will need it in the future.
-3. Create a [Spotify Application](https://developer.spotify.com/dashboard/login). Write down your client & secret IDs. Note: it's possible you can skip the spotify steps, however, I haven't tested it. All these tokens are used for are adding related songs to the queue.
-4. Run `git clone https://github.com/kyleyannelli/KMusicBot && cd KMusicBot`.
+1. Install Java 11 & Maven:
+   - MacOS: `brew install openjdk@11 maven`
+   - Debian/Ubuntu: `sudo apt install openjdk-11-jre maven`
+2. Create a Discord Application [here](https://discord.com/developers/applications). Note down the bot token.
+3. Create a Spotify Application [here](https://developer.spotify.com/dashboard/login). Record client & secret IDs.
+4. Clone the repository: `git clone https://github.com/kyleyannelli/KMusicBot && cd KMusicBot`.
 5. Now, go into the `kmusicbot-core` directory, and create a file called .env, like so:
 ```
 DISCORD_BOT_TOKEN="YOUR_BOT_TOKEN"
@@ -30,25 +39,27 @@ MAX_RECOMMENDER_THREADS=10
 MAX_COMMAND_THREADS=10
 ```
 6. Go to the root directory of the project... `cd ../`
-7. If you have docker, you can simply run ./BuildThenRunWithDocker -d
-If you do not have docker, run `mvn clean install && cd kmusicbot-core && mvn exec:java`. Your bot is now running!
+7. Run the bot:
+- With Docker: `./BuildThenRunWithDocker -d`
+- Without Docker: `mvn clean install && cd kmusicbot-core && mvn exec:java`
+8. Done :)
 
-## Running WITH a Databse Connection
-#### Continuing from step 6 of the previous directions...
-7. If you already setup the SQL user and know what you're doing, skip to step 13. Install MariaDB (or MySQL). On MacOS, `brew install mariadb`. Debian-based/Ubuntu, `sudo apt install mariadb-server`.
-8. Run the command `sudo mysql`.
-9. You are now in the MariaDB/MySQL CLI. You need to create a database and a user. First, the database.
+### With a Database
+1. Follow steps 1-6 from [Without a Database](#without-a-database).
+2. If you already setup the SQL user and know what you're doing, skip to step 13. Install MariaDB (or MySQL). On MacOS, `brew install mariadb`. Debian-based/Ubuntu, `sudo apt install mariadb-server`.
+3. Run the command `sudo mysql`.
+4. You are now in the MariaDB/MySQL CLI. You need to create a database and a user. First, the database.
 `CREATE DATABASE MAKE_YOUR_OWN_NAME_PLEASE;` You now have a database with the name you created!
-10. Now, creating the user. This requires you to be aware of where the database and bot are running from. If they are running on the same machine, we can use localhost.
+5. Now, creating the user. This requires you to be aware of where the database and bot are running from. If they are running on the same machine, we can use localhost.
 `CREATE USER 'kmusic'@'localhost' IDENTIFIED BY 'very-strong-password-please-dont-use-this;' Make SURE to create a STRONG password.
-11. From here we need to ensure this kmusic@localhost user can access MAKE_YOUR_OWN_NAME_PLEASE database, and only that database. Do not grant *.*. 
+6. From here we need to ensure this kmusic@localhost user can access MAKE_YOUR_OWN_NAME_PLEASE database, and only that database. Do not grant *.*. 
 `GRANT ALL PRIVILEGES ON MAKE_YOUR_OWN_NAME_PLEASE.* TO 'kmusic'@'localhost' WITH GRANT OPTION;'
-12. To ensure the changes are in place, finally, run `FLUSH PRIVILEGES;` You can now exit the SQL CLI with `exit;`
-13. Now, make sure you are in the kmusicbot-database directory. From there, in `src/main/resources/`, copy the `hibernate.cfg.xml.example` to `hibernate.cfg.xml` and `liquibase.properties.example` to `liquibase.properties`
-14. Begin with the hibernate file. Adjust the line with the URL like so, `jdbc:mariadb://localhost:3306/MAKE_YOUR_OWN_NAME_PLEASE`
+7. To ensure the changes are in place, finally, run `FLUSH PRIVILEGES;` You can now exit the SQL CLI with `exit;`
+8. Now, make sure you are in the kmusicbot-database directory. From there, in `src/main/resources/`, copy the `hibernate.cfg.xml.example` to `hibernate.cfg.xml` and `liquibase.properties.example` to `liquibase.properties`
+9. Begin with the hibernate file. Adjust the line with the URL like so, `jdbc:mariadb://localhost:3306/MAKE_YOUR_OWN_NAME_PLEASE`
 Next, adjust the user and password accordingly.
-15. Moving onto the liquibase file, do the same!
-16. That was a lot of steps, I know. Your bot will now record user listening activity. You can now continue back from step 7 of the previous directions! 
+10. Moving onto the liquibase file, do the same!
+11. That was a lot of steps, I know. Your bot will now record user listening activity. You can now continue back from step 7 of [Without a Database](#without-a-database).
 
 ## Running the Web API Service
 #### I will not provide assistance with DNS, Port Forwarding, and the like.
