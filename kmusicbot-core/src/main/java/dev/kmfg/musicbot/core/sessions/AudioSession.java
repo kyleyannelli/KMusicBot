@@ -266,6 +266,20 @@ public class AudioSession extends RecommenderSession {
 		return this.discordApi;
 	}
 
+    public void stopAllTracks() {
+        this.getLavaSource().stop();
+        this.skipCurrentPlaying();
+        this.clearSearchHistory();
+        
+        try {
+            Thread.sleep(1500L);
+        }
+        catch(InterruptedException iE) {
+            Logger.error(iE, "Occurred in AudioSession when stopping all tracks.");
+            Thread.currentThread().interrupt();
+        }
+    }
+
 	private void handleDisconnectService() {
 		if(canDisconnectFromVoiceChannel()) {
 			Logger.info("DISCONNECTING \n" + this);
