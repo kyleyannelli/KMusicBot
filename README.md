@@ -3,6 +3,7 @@
 [![CodeQL](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/kyleyannelli/KMusicBot/actions/workflows/codeql-analysis.yml)
 
 ### Table of Contents
+- [API Documentation](API.md)
 1. [Prerequisites](#prerequisites)
 2. [Running the Discord Bot](#running-the-discord-bot)
     1. [Without a Database](#without-a-database)
