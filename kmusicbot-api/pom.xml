@@ -65,7 +65,7 @@
 	<dependency>
 	    <groupId>com.github.SrBalbucio</groupId>
 	    <artifactId>Discord-OAuth2-API</artifactId>
-	    <version>0ef40fbdcc</version>
+	    <version>1.0.6</version>
 	</dependency>   
     <dependency>
       <groupId>com.sparkjava</groupId>
