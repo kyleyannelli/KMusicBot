@@ -101,6 +101,7 @@ public class AudioSession extends RecommenderSession {
 
 	@Override
 	public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
+        if(!this.isRecommending()) return;
 		SecureRandom secureRandom = new SecureRandom();
 
 		int lowerRandomBoundMs = 1000 * 10; // ms, 10 second
@@ -110,6 +111,7 @@ public class AudioSession extends RecommenderSession {
 			int randomVariation = lowerRandomBoundMs + secureRandom.nextInt(upperRandomBoundMs - lowerRandomBoundMs);
 
 			Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
+            if(!this.isRecommending()) return;
 
 			User user = this.audioConnection.getServer().getApi().getYourself();
 			DiscordUser discordUser = new DiscordUser(user.getId(), user.getDiscriminatedName());
@@ -266,7 +268,16 @@ public class AudioSession extends RecommenderSession {
 		return this.discordApi;
 	}
 
+    public void setIsRecommending(boolean is) {
+        this.isRecommendingSongs = is;
+    }
+
+    public boolean isRecommending() {
+        return this.isRecommendingSongs;
+    }
+
     public void stopAllTracks() {
+        this.isRecommendingSongs = false;
         this.getLavaSource().stop();
         this.skipCurrentPlaying();
         this.clearSearchHistory();

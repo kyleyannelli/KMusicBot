@@ -61,6 +61,7 @@ public class SelectMenuChooseListenerHandler implements SelectMenuChooseListener
         DiscordUser discordUser = new DiscordUser(user.getId(), user.getDiscriminatedName());
         QueueResult queueResult = audioSession.queueSearchQuery(discordUser, firstYoutubeUri);
         messageSender.sendQueueResultEmbed(queueResult);
+        audioSession.setIsRecommending(true);
     }
 
     /**

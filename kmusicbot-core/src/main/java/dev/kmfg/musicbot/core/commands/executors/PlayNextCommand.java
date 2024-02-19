@@ -60,5 +60,6 @@ public class PlayNextCommand extends Command {
                 .queueSearchQueryNext(ensuredInteraction.getParameterValue(songParameter), this.discordUser);
 
         this.messageSender.sendQueueResultEmbed(queueResult);
+        ensuredInteraction.getAudioSession().setIsRecommending(true);
     }
 }
