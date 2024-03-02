@@ -57,6 +57,7 @@ public class KMusicBot {
         // login to discord (sync)
         this.discordApi = this.discordApiBuilder.login().join();
         this.discordApiBuilder = null;
+        this.discordApi.setMessageCacheSize(0, 0);
         Logger.info("Bot logged into discord.");
 
         CommandsRegistry commandsRegistry = new CommandsRegistry();
