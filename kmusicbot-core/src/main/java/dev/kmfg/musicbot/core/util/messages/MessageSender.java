@@ -189,6 +189,14 @@ public class MessageSender {
                 .setColor(Color.RED)
                 .send();
     }
+
+    public void sendBadHMS(long ms) {
+        this.embedMessage
+                .setTitle("Bad Parameter(s)!")
+                .setContent("Unable to seek " + (ms * -1000) + " seconds in the song. This is likely longer than the song!")
+                .setColor(Color.RED)
+                .send();
+    }
     
     public void sendBadParameterEmbed(String parameter) {
         this.embedMessage

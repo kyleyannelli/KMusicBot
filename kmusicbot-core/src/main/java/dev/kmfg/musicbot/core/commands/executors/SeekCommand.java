@@ -80,7 +80,7 @@ public class SeekCommand extends Command {
         long seekMs = seekToPositionInNowPlayingTrack(relevantAudioTrack,seconds, minutes, hours);
 
         if(seekMs < 0) {
-            this.messageSender.sendBadParameterEmbed("HMS");
+            this.messageSender.sendBadHMS(seekMs);
             return;
         }
         else {
@@ -94,16 +94,32 @@ public class SeekCommand extends Command {
 
            if(seconds.isPresent()) {
                temp = Long.parseLong(seconds.get());
-               if(temp < 0) throw new NumberFormatException();
+               if(temp < 0) throw new NumberFormatException(
+                       new StringBuilder()
+                       .append("Unable to parse seconds \"")
+                       .append(seconds.get())
+                       .append("\"")
+                       .toString());
            }
 
            if(minutes.isPresent()) {
                temp = Long.parseLong(minutes.get());
-               if(temp < 0) throw new NumberFormatException();
+               if(temp < 0) throw new NumberFormatException(
+                       new StringBuilder()
+                       .append("Unable to parse minutes \"")
+                       .append(minutes.get())
+                       .append("\"")
+                       .toString());
            }
-           if(hours.isPresent()) {
+
+           if(hours.isPresent() && minutes.get() != "") {
                temp = Long.parseLong(hours.get());
-               if(temp < 0) throw new NumberFormatException();
+               if(temp < 0) throw new NumberFormatException(
+                       new StringBuilder()
+                       .append("Unable to parse hours \"")
+                       .append(hours.get())
+                       .append("\"")
+                       .toString());
            }
 
            return false;
@@ -133,7 +149,7 @@ public class SeekCommand extends Command {
             return totalSeekMs;
         }
         else {
-            return -1;
+            return -totalSeekMs;
         }
     }
 }
