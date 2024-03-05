@@ -8,6 +8,7 @@ import org.javacord.api.entity.message.embed.EmbedBuilder;
 import org.javacord.api.entity.user.User;
 import org.javacord.api.interaction.callback.ComponentInteractionOriginalMessageUpdater;
 import org.javacord.api.interaction.callback.InteractionOriginalResponseUpdater;
+import org.tinylog.Logger;
 
 public class EmbedMessage {
 	private static final String YOUTUBE_THUMBNAIL_BEGIN_URI = "https://img.youtube.com/vi/";
@@ -127,11 +128,19 @@ public class EmbedMessage {
 			this.respondLater.thenAccept(acceptance -> {
 				acceptance.addEmbed(embedBuilder);
 				acceptance.update();
-			});
+			}).exceptionally(e -> {
+                Logger.error(e, "Failed to send embed via respond later!");
+                return null;
+            });
 		}
 		else {
 			this.originalMessageUpdater.addEmbed(embedBuilder);
-			this.originalMessageUpdater.update();
+			this.originalMessageUpdater
+                .update()
+                .exceptionally(e -> {
+                    Logger.error(e, "Failed to update embed!");
+                    return null;
+                });
 		}
 	}
 

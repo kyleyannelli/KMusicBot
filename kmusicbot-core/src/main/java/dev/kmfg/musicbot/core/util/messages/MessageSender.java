@@ -8,6 +8,7 @@ import dev.kmfg.musicbot.core.util.sessions.QueueResult;
 import org.javacord.api.entity.message.component.ActionRow;
 import org.javacord.api.entity.message.component.SelectMenu;
 import org.javacord.api.entity.message.component.SelectMenuOption;
+import org.tinylog.Logger;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -70,6 +71,9 @@ public class MessageSender {
        this.embedMessage.getRespondLater().thenAccept(acceptance -> {
            acceptance.addComponents(actionRow);
            acceptance.update();
+       }).exceptionally(e -> {
+           Logger.error(e, "Failed to send Search Result Embed!");
+           return null;
        });
    }
 
