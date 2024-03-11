@@ -17,6 +17,7 @@ public class EmbedMessage {
 	private final CompletableFuture<InteractionOriginalResponseUpdater> respondLater;
 	private final ComponentInteractionOriginalMessageUpdater originalMessageUpdater;
 	private String content;
+	private String[] forcedField = new String[2];
 	private String title;
 	private String forcedTitle;
 	private String author;
@@ -69,8 +70,15 @@ public class EmbedMessage {
 		return this;
 	}
 
-	public void setForcedContent(String content) {
+	public EmbedMessage setForcedContent(String content) {
 		this.forcedContent = content;
+		return this;
+	}
+
+	public EmbedMessage setForcedField(String header, String content) {
+		this.forcedField[0] = header;
+		this.forcedField[1] = content;
+		return this;
 	}
 
 	public EmbedMessage setupAudioTrack(AudioTrack audioTrack) {
@@ -113,7 +121,11 @@ public class EmbedMessage {
 		}
 
 		if(forcedTitle != null) embedBuilder.setTitle(forcedTitle);
-		if(forcedContent != null) {
+		if(forcedContent != null && forcedField[0] != null && forcedField[1] != null) {
+			embedBuilder.removeAllFields();
+			embedBuilder.addField(forcedField[0], forcedField[1]);
+			embedBuilder.addField("", forcedContent);
+		} else if(forcedContent != null) {
 			embedBuilder.removeAllFields();
 			embedBuilder.addField("", forcedContent);
 		}

@@ -67,7 +67,6 @@ public class RemoveCommand extends Command {
         try {
             songPosition = Integer.parseInt(ensuredInteraction.getParameterValue(requiredNumber));
             if(songPosition < 0 || songPosition > audioSession.getAudioQueue().size()) {
-
                 this.messageSender.sendBadParameterEmbed(requiredNumber);
                 return;
             }

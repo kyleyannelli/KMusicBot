@@ -5,6 +5,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.kmfg.musicbot.core.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.musicbot.core.lavaplayer.PositionalAudioTrack;
 import dev.kmfg.musicbot.core.util.sessions.QueueResult;
+
+import org.checkerframework.com.google.errorprone.annotations.Var;
 import org.javacord.api.entity.message.component.ActionRow;
 import org.javacord.api.entity.message.component.SelectMenu;
 import org.javacord.api.entity.message.component.SelectMenuOption;
@@ -249,10 +251,14 @@ public class MessageSender {
     }
 
     public void sendRemovedEmbed(AudioTrackWithUser audioTrackWithUser) {
+        var contentStrBld = new StringBuilder("Originally queued by ")
+                .append("<@").append(audioTrackWithUser.getDiscordUser().getDiscordId()).append(">");
+
         this.embedMessage
-            .setTitle("Removed Song!")
-            .setContent("Removed track \"" + audioTrackWithUser.getAudioTrack().getInfo().title
-                    + " by " + audioTrackWithUser.getAudioTrack().getInfo().author + "\""
-                    + "\n" + "Originally queued by <@" + audioTrackWithUser.getDiscordUser().getDiscordId() + ">");
+                .setForcedContent(contentStrBld.toString())
+                .setForcedTitle("Removed.")
+                .setForcedField(audioTrackWithUser.getAudioTrack().getInfo().title, audioTrackWithUser.getAudioTrack().getInfo().author)
+                .setupAudioTrack(audioTrackWithUser.getAudioTrack())
+                .send();
     }
 }

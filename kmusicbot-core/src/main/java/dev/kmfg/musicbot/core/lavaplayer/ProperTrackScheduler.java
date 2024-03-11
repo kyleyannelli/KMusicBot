@@ -200,10 +200,10 @@ public class ProperTrackScheduler extends AudioEventAdapter {
             i++;
         }
 
-        if(removedTrack != null && position < this.audioQueue.size() - 1) {
+        if(removedTrack != null && position < this.audioQueue.size()) {
             this.audioQueue.remove(removedTrack);
         }
-        else if(removedTrack != null && position < this.getFullAudioQueue().size() - 1) {
+        else if(removedTrack != null && position < this.getFullAudioQueue().size()) {
             this.recommenderAudioQueue.remove(removedTrack);
         }
         else if(removedTrack != null) {
