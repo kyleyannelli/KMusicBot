@@ -7,7 +7,6 @@ import org.javacord.api.DiscordApi;
 import org.javacord.api.entity.server.Server;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
-import org.tinylog.Logger;
 
 import java.util.Optional;
 
@@ -44,6 +43,7 @@ public class StopCommand extends Command {
         if(serverOptional.isPresent() && isInVoiceChannel(serverOptional.get())) {
             EnsuredSlashCommandInteraction ensuredInteraction = getEnsuredInteraction(null);
             ensuredInteraction.getAudioSession().stopAllTracks();
+            this.messageSender.sendStoppedEmbed();
         }
         else {
             this.messageSender.sendNothingPlayingEmbed();

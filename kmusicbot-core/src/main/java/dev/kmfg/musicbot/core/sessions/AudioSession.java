@@ -283,7 +283,7 @@ public class AudioSession extends RecommenderSession {
         this.clearSearchHistory();
         
         try {
-            Thread.sleep(1500L);
+            Thread.sleep(500);
         }
         catch(InterruptedException iE) {
             Logger.error(iE, "Occurred in AudioSession when stopping all tracks.");

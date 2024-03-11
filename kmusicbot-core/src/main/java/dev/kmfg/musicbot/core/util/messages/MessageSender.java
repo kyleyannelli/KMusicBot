@@ -116,7 +116,7 @@ public class MessageSender {
     public void sendStoppedEmbed() {
         this.embedMessage.setColor(Color.BLACK)
                 .setTitle("Stopped.")
-                .setContent("Music has stopped, and bot has left the channel.")
+                .setContent("Music has stopped. The bot will leave the channel when it's ready.")
                 .send();
     }
 
