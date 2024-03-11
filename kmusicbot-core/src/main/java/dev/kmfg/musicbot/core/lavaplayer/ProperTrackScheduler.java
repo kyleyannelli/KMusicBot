@@ -68,16 +68,32 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     }
 
     public void trackIndividualEnd(org.javacord.api.entity.user.User user) {
-        TrackEvent trackEvent = new TrackEndIndividualEvent(this.audioSession,
-                    new AudioTrackWithUser(this.audioPlayer.getPlayingTrack(), trackUserMap.get(this.audioPlayer.getPlayingTrack())),
-                    user);
+        var playingTrack = this.audioPlayer.getPlayingTrack();
+        if(playingTrack == null) return;
+
+        TrackEvent trackEvent = new TrackEndIndividualEvent(
+            this.audioSession,
+            new AudioTrackWithUser(
+                playingTrack, 
+                trackUserMap.get(playingTrack)
+            ),
+            user
+        );
         this.trackStatisticRecorder.onTrackEvent(trackEvent);
     }
 
     public void trackIndividualStart(org.javacord.api.entity.user.User user) {
-        TrackEvent trackEvent = new TrackStartIndividualEvent(this.audioSession,
-                    new AudioTrackWithUser(this.audioPlayer.getPlayingTrack(), trackUserMap.get(this.audioPlayer.getPlayingTrack())),
-                    user);
+        var playingTrack = this.audioPlayer.getPlayingTrack();
+        if(playingTrack == null) return;
+
+        TrackEvent trackEvent = new TrackStartIndividualEvent(
+            this.audioSession,
+            new AudioTrackWithUser(
+                playingTrack,
+                trackUserMap.get(playingTrack)
+            ),
+            user
+        );
         this.trackStatisticRecorder.onTrackEvent(trackEvent);
     }
 
