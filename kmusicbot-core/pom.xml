@@ -52,6 +52,37 @@
                     <mainClass>dev.kmfg.musicbot.core.RunBot</mainClass>
                 </configuration>
             </plugin>
+
+            <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>3.3.0</version>
+            <configuration>
+            <archive>
+            <manifest>
+            <addClasspath>true</addClasspath>
+            <classpathPrefix>lib/</classpathPrefix>
+            <mainClass>dev.kmfg.musicbot.core.RunBot</mainClass>
+            </manifest>
+            </archive>
+            </configuration>
+            </plugin>
+            <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>3.6.1</version>
+            <executions>
+            <execution>
+            <id>copy-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+            <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+            </configuration>
+            </execution>
+            </executions>
+            </plugin>
         </plugins>
     </build>
 
