@@ -5,7 +5,6 @@ import dev.kmfg.musicbot.core.sessions.SessionManager;
 import dev.kmfg.musicbot.core.util.slashcommands.EnsuredSlashCommandInteraction;
 import dev.kmfg.musicbot.core.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.musicbot.core.sessions.AudioSession;
-import dev.kmfg.musicbot.core.sessions.SessionManager;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
@@ -42,12 +41,12 @@ public class RemoveCommand extends Command {
 
     @Override
     public String getCommandName() {
-        return this.COMMAND_NAME;
+        return COMMAND_NAME;
     }
 
     @Override
     public String getCommandDescription() {
-        return this.DESCRIPTION;
+        return DESCRIPTION;
     }
 
     @Override
