@@ -40,6 +40,18 @@ public class UserLeaveVoiceListenerHandler implements ServerVoiceChannelMemberLe
                     .allMatch(User::isBot);
             isEmptyServerVoiceChannel = event.getChannel().getConnectedUsers().isEmpty();
         }
+        else if(event.getUser().isYourself()) {
+            AudioSession session = sessionManager.getAudioSession(event.getServer().getId());
+            if(session != null) {
+                // make sure to clear tracks before disconnecting
+                session.stopAllTracks();
+                // get the server id from the event
+                long relevantServerId = event.getServer().getId();
+                // now disconnect and shutdown the session
+                this.disconnectFromEmptyServerVoiceChannel(relevantServerId, event.getChannel());
+            }
+            return;
+        }
         else {
             return;
         }
