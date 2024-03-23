@@ -101,7 +101,10 @@ public class AudioSession extends RecommenderSession {
 
 	@Override
 	public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
-        if(!this.isRecommending()) return;
+        if(!this.isRecommending()) {
+            this.stopAllTracks();
+            return;
+        }
 		SecureRandom secureRandom = new SecureRandom();
 
 		int lowerRandomBoundMs = 1000 * 10; // ms, 10 second
@@ -111,15 +114,26 @@ public class AudioSession extends RecommenderSession {
 			int randomVariation = lowerRandomBoundMs + secureRandom.nextInt(upperRandomBoundMs - lowerRandomBoundMs);
 
 			Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
-            if(!this.isRecommending()) return;
+
+            if(!this.isRecommending()) {
+                this.stopAllTracks();
+                return;
+            }
 
 			User user = this.audioConnection.getServer().getApi().getYourself();
 			DiscordUser discordUser = new DiscordUser(user.getId(), user.getDiscriminatedName());
 
 			// we want the recommended songs to be on the non priority queue
-			this.lavaSource.queueTrack(title, true, false, discordUser);
+            boolean isDeprioritized = true;
+            boolean playNext = false;
+			this.lavaSource.queueTrack(title, isDeprioritized, playNext, discordUser);
 		}
-	}
+
+        if(!this.isRecommending()) {
+            this.stopAllTracks();
+            return;
+        }
+    }
 
 	public SessionFactory getSessionFactory() {
 		return this.sessionFactory;
