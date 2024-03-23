@@ -61,18 +61,18 @@ public class DiscordOAuthHelper {
     public static void setupCookies(Response res, TokensResponse tokens) throws Exception {
         String[] accessTokenAndSalt = CryptoHelper.encrypt(tokens.getAccessToken());
         String[] refreshTokenAndSalt = CryptoHelper.encrypt(tokens.getRefreshToken());
-        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
-        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
-        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
-        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.COOKIE_URI, "/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.COOKIE_URI, "/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.COOKIE_URI, "/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.COOKIE_URI, "/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
     }
 
     public static void setupCookies(Response res, KMTokens tokens) throws Exception {
         String[] accessTokenAndSalt = CryptoHelper.encrypt(tokens.getAccessToken());
         String[] refreshTokenAndSalt = CryptoHelper.encrypt(tokens.getRefreshToken());
-        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
-        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
-        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
-        res.cookie(ApiV1.CORS_URI, "/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.COOKIE_URI, "/", DiscordOAuthFilter.A_TOKEN, accessTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.COOKIE_URI, "/", DiscordOAuthFilter.R_TOKEN, refreshTokenAndSalt[0], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.COOKIE_URI, "/", DiscordOAuthFilter.A_SALT, accessTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
+        res.cookie(ApiV1.COOKIE_URI, "/", DiscordOAuthFilter.R_SALT, refreshTokenAndSalt[1], COOKIE_EXPIRE_SECONDS, true, true);
     }
 }

@@ -44,6 +44,7 @@ public class ApiV1 {
         .build();
 
     public static final String CORS_URI = Dotenv.load().get("CORS_URI");
+    public static final String COOKIE_URI = Dotenv.load().get("COOKIE_URI");
 
     private final Logger logger = LoggerFactory.getLogger(ApiV1.class);
 
