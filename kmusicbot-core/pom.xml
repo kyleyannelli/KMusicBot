@@ -7,7 +7,7 @@
     <parent>
         <groupId>dev.kmfg.musicbot</groupId>
         <artifactId>KMusicBot</artifactId>
-        <version>3.3.0</version>
+        <version>3.3.2</version>
     </parent>
 
     <artifactId>kmusicbot-core</artifactId>
@@ -101,7 +101,7 @@
         <dependency>
             <groupId>dev.kmfg.musicbot</groupId>
             <artifactId>kmusicbot-database</artifactId>
-            <version>3.3.0</version>
+            <version>3.3.2</version>
         </dependency>
         <dependency>
             <groupId>org.tinylog</groupId>

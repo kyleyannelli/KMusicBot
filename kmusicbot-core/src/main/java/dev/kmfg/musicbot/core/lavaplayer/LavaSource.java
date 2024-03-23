@@ -1,18 +1,13 @@
 package dev.kmfg.musicbot.core.lavaplayer;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import dev.kmfg.musicbot.core.lavaplayer.audioresulthandlers.KAudioResultHandler;
-import dev.kmfg.musicbot.core.lavaplayer.audioresulthandlers.SearchResultAudioHandler;
-import dev.kmfg.musicbot.core.lavaplayer.audioresulthandlers.SingleAudioResultHandler;
-import dev.kmfg.musicbot.core.lavaplayer.audioresulthandlers.YoutubeAudioResultHandler;
-import dev.kmfg.musicbot.core.sessions.AudioSession;
-import dev.kmfg.musicbot.core.spotifyapi.HandleSpotifyLink;
-import dev.kmfg.musicbot.database.models.DiscordUser;
-import dev.kmfg.musicbot.core.exceptions.AlreadyAccessedException;
 import org.apache.hc.core5.http.ParseException;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioSource;
@@ -25,7 +20,15 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 
+import dev.kmfg.musicbot.core.exceptions.AlreadyAccessedException;
+import dev.kmfg.musicbot.core.lavaplayer.audioresulthandlers.KAudioResultHandler;
+import dev.kmfg.musicbot.core.lavaplayer.audioresulthandlers.SearchResultAudioHandler;
+import dev.kmfg.musicbot.core.lavaplayer.audioresulthandlers.SingleAudioResultHandler;
+import dev.kmfg.musicbot.core.lavaplayer.audioresulthandlers.YoutubeAudioResultHandler;
+import dev.kmfg.musicbot.core.sessions.AudioSession;
+import dev.kmfg.musicbot.core.spotifyapi.HandleSpotifyLink;
 import dev.kmfg.musicbot.core.util.sessions.QueueResult;
+import dev.kmfg.musicbot.database.models.DiscordUser;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
 
@@ -199,17 +202,40 @@ public class LavaSource extends AudioSourceBase {
 
         // if given a youtube link
         if(this.isYoutubeLink(searchQuery)) {
-            int indexOfFirstParameter = searchQuery.indexOf('&');
-            // chop off any parameters
-            String parameterlessSearchQuery = indexOfFirstParameter != -1 ?
-                searchQuery.substring(0, indexOfFirstParameter) : searchQuery;
             // setup audiohandler
             kAudioResultHandler = new YoutubeAudioResultHandler(this.trackScheduler, discordUser);
-            if(deprioritizeQueue) kAudioResultHandler.deprioritizeQueue();
-            else kAudioResultHandler.prioritizeQueue();
             kAudioResultHandler.setPlayNext(playNext);
+            if(deprioritizeQueue) {
+                kAudioResultHandler.deprioritizeQueue();
+            }
+            else {
+                kAudioResultHandler.prioritizeQueue();
+            }
+
+            int indexOfQueryParams = searchQuery.indexOf('?');
+            String urlWithOnlyVParam = searchQuery; 
+
+            if(indexOfQueryParams != -1 && searchQuery.length() > indexOfQueryParams + 1) {
+                urlWithOnlyVParam = "https://youtube.com/watch?";
+                String vParam = ""; 
+                for(String keyValue : searchQuery.substring(indexOfQueryParams + 1).split("&")) {
+                    String[] keyValueArr = keyValue.split("=");
+                    if(keyValueArr.length >= 2 && keyValueArr[0].equals("v")) {
+                        System.out.println("We made it! " + keyValue);
+                        vParam = keyValue;
+                        break;
+                    }
+                }
+
+                if(vParam == "") {
+                    Logger.warn("V Param was not found when sanitizing Youtube URL for queueTrack! Given the query \"" + searchQuery + "\"");
+                } else {
+                    urlWithOnlyVParam += vParam;
+                }
+            }
+
             // is success is set by result handler
-            playerManagerFuture = audioPlayerManager.loadItem(parameterlessSearchQuery, kAudioResultHandler);
+            playerManagerFuture = audioPlayerManager.loadItem(urlWithOnlyVParam, kAudioResultHandler);
         }
         // otherwise it will be treated as a text search
         else {

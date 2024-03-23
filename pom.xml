@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>dev.kmfg.musicbot</groupId>
   <artifactId>KMusicBot</artifactId>
-  <version>3.3.0</version>
+  <version>3.3.2</version>
     
   
   <properties>
