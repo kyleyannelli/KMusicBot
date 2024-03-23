@@ -80,6 +80,8 @@ ENCRYPTION_PASS="notSomethingLike1234Please"
 #   You can run into CORS issues here if you put the API on https://api.kyle.city and host the site on https://music.kmfg.dev.
 #   I would recommend keeping the parent domain the same.
 CORS_URI="https://music.kmfg.dev"
+# I'd recommend using your parent domain. For example, my api is served on apiv1.kmfg.dev. This means for the cookie to be valid (browser only) and be accessed by svelte on music.kmfg.dev, the URI needs to be the parent.
+COOKIE_URI="kmfg.dev"
 ```
 3. Make sure the entire project has been compiled, if not, go to the root directory and `mvn clean install`.
 In `kmusicbot-api` run `mvn exec:java`. Your API is now running!
