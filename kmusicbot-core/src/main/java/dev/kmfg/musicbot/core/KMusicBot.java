@@ -2,7 +2,7 @@ package dev.kmfg.musicbot.core;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import dev.kmfg.musicbot.core.commands.intermediates.CommandsRegistry;
 import dev.kmfg.musicbot.core.listenerhandlers.JoinServerListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.SelectMenuChooseListenerHandler;
@@ -153,10 +153,12 @@ public class KMusicBot {
      * This also creates the RecommenderProcessor.
      */
     protected void setupSessionManager() {
-        // Create a player manager
+        // New way to register YT source via lavalink devs
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-        // set Youtube as the audio source
-        playerManager.registerSourceManager(new YoutubeAudioSourceManager());
+        var ytSourceManager = new dev.lavalink.youtube.YoutubeAudioSourceManager();
+        playerManager.registerSourceManager(ytSourceManager);
+        AudioSourceManagers.registerRemoteSources(playerManager,
+                                          com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
         // Create the spotify API object. This is used by the RecommenderProcessor
         SpotifyApi spotifyApi = ClientCreate.clientCredentials_Sync();
         // create the recommender processor for RecommenderSessions (and its child classes)
