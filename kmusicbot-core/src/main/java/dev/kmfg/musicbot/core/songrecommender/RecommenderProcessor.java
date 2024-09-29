@@ -9,7 +9,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
-import org.javacord.api.DiscordApi;
 import org.tinylog.Logger;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -21,20 +20,12 @@ public class RecommenderProcessor {
     private static final int SPOTIFY_MAX_CHAR_SIZE = 100;
     private final ExecutorService executorService;
 
-    // Spotify and Discord API objects are persistent the entire application life
-    // time
-    private final DiscordApi discordApi;
-    private final SpotifyApi spotifyApi;
-
     private final RecommenderRequester recommenderRequester;
 
     private final ConcurrentHashMap<Long, List<FutureTask<Void>>> queuedTasksMap;
 
-    public RecommenderProcessor(DiscordApi discordApi, SpotifyApi spotifyApi, int maxThreads) {
+    public RecommenderProcessor(SpotifyApi spotifyApi, int maxThreads) {
         this.executorService = Executors.newFixedThreadPool(maxThreads);
-
-        this.discordApi = discordApi;
-        this.spotifyApi = spotifyApi;
 
         this.recommenderRequester = new RecommenderRequester(spotifyApi);
         this.queuedTasksMap = new ConcurrentHashMap<>();

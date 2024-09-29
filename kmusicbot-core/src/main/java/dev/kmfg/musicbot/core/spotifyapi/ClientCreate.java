@@ -9,6 +9,7 @@ import se.michaelthelin.spotify.requests.authorization.client_credentials.Client
 import org.apache.hc.core5.http.ParseException;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public class ClientCreate {
     private static final String clientId = Dotenv.load().get("SPOTIFY_CLIENT_ID");
@@ -21,16 +22,16 @@ public class ClientCreate {
     private static final ClientCredentialsRequest clientCredentialsRequest = spotifyApi.clientCredentials()
             .build();
 
-    public static SpotifyApi clientCredentials_Sync() {
+    public static Optional<SpotifyApi> generateClientCredentials() {
         try {
             final ClientCredentials clientCredentials = clientCredentialsRequest.execute();
             // Set access token for further "spotifyApi" object usage
             spotifyApi.setAccessToken(clientCredentials.getAccessToken());
             Logger.info("Created spotify access token, expires in " + clientCredentials.getExpiresIn());
-            return spotifyApi;
+            return Optional.of(spotifyApi);
         } catch (IOException | SpotifyWebApiException | ParseException e) {
-            System.out.println("Error: " + e.getMessage());
-            return null;
+            Logger.error("Error creating spotify API client credentials: " + e.getMessage());
+            return Optional.empty();
         }
     }
 }

@@ -22,18 +22,19 @@ import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.permission.RoleBuilder;
 import org.javacord.api.entity.server.Server;
 import org.tinylog.Logger;
-import se.michaelthelin.spotify.SpotifyApi;
 
 import java.awt.*;
 
 /**
- * KMusicBot fully allows for a music bot to operate. After initializing, calling start() on the object will launch the bot.
+ * KMusicBot fully allows for a music bot to operate. After initializing,
+ * calling start() on the object will launch the bot.
  */
 public class KMusicBot {
     private static final Dotenv dotenv = Dotenv.load();
-    // if the .env file does not have MAX_RECOMMENDER_THREADS, use default value of 10, else, use the .env value
-    protected static final int MAX_RECOMMENDER_THREADS = dotenv.get("MAX_RECOMMENDER_THREADS") == null ?
-            10 : Integer.parseInt(dotenv.get("MAX_RECOMMENDER_THREADS"));
+    // if the .env file does not have MAX_RECOMMENDER_THREADS, use default value of
+    // 10, else, use the .env value
+    protected static final int MAX_RECOMMENDER_THREADS = dotenv.get("MAX_RECOMMENDER_THREADS") == null ? 10
+            : Integer.parseInt(dotenv.get("MAX_RECOMMENDER_THREADS"));
     protected DiscordApiBuilder discordApiBuilder;
     protected DiscordApi discordApi;
     protected SessionManager sessionManager;
@@ -61,16 +62,18 @@ public class KMusicBot {
         Logger.info("Bot logged into discord.");
 
         CommandsRegistry commandsRegistry = new CommandsRegistry();
-        try{
+        try {
             commandsRegistry.registerCommands(this.discordApi);
-            // as this wasn't working properly in previous versions this is an easy log to let viewer know
+            // as this wasn't working properly in previous versions this is an easy log to
+            // let viewer know
             Logger.info("Commands registered successfully.");
-        }
-        catch(Exception e) {
-            Logger.error(e, "Exception occurred while registering slash commands. This is likely a breaking issue and should be reported!");
+        } catch (Exception e) {
+            Logger.error(e,
+                    "Exception occurred while registering slash commands. This is likely a breaking issue and should be reported!");
         }
 
-        // setup session manager, this must be done before setting up the CommandsListener
+        // setup session manager, this must be done before setting up the
+        // CommandsListener
         this.setupSessionManager();
         Logger.info("SessionManager setup.");
         // now we can listen for the commands
@@ -78,8 +81,7 @@ public class KMusicBot {
         Logger.info("CommandsListener setup and listening.");
 
         // Initialize each server the bot is in to create the DJ role
-        for (Server server : this.discordApi.getServers())
-        {
+        for (Server server : this.discordApi.getServers()) {
             if (server.getRolesByName("DJ").isEmpty())
                 this.setupServer(server);
         }
@@ -130,7 +132,8 @@ public class KMusicBot {
     }
 
     /**
-     * Listen for ServerVoiceChannel joins and pass the handling to UserJoinVoiceListenerHandler 
+     * Listen for ServerVoiceChannel joins and pass the handling to
+     * UserJoinVoiceListenerHandler
      */
     protected void listenForServerVoiceChannelJoins() {
         // UserLeaveVoiceListenerHandler will handle the event
@@ -138,18 +141,21 @@ public class KMusicBot {
     }
 
     /**
-     * Listen for ServerVoiceChannel leaves and pass the handling to UserLeaveVoiceListenerHandler
+     * Listen for ServerVoiceChannel leaves and pass the handling to
+     * UserLeaveVoiceListenerHandler
      */
     protected void listenForServerVoiceChannelLeaves() {
         // UserLeaveVoiceListenerHandler will handle the event
-        this.discordApi.addServerVoiceChannelMemberLeaveListener(new UserLeaveVoiceListenerHandler(this.sessionManager));
+        this.discordApi
+                .addServerVoiceChannelMemberLeaveListener(new UserLeaveVoiceListenerHandler(this.sessionManager));
     }
 
     /**
      * This MUST be called after the discordApi has been properly initialized.
      * Sets up the SessionManager.
      * Registers YoutubeAudio as a SourceManager.
-     * Creates the SpotifyApi object used by the SessionManager and RecommenderProcessor.
+     * Creates the SpotifyApi object used by the SessionManager and
+     * RecommenderProcessor.
      * This also creates the RecommenderProcessor.
      */
     protected void setupSessionManager() {
@@ -158,24 +164,43 @@ public class KMusicBot {
         var ytSourceManager = new dev.lavalink.youtube.YoutubeAudioSourceManager();
         playerManager.registerSourceManager(ytSourceManager);
         AudioSourceManagers.registerRemoteSources(playerManager,
-                                          com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
-        // Create the spotify API object. This is used by the RecommenderProcessor
-        SpotifyApi spotifyApi = ClientCreate.clientCredentials_Sync();
-        // create the recommender processor for RecommenderSessions (and its child classes)
-        RecommenderProcessor recommenderProcessor = new RecommenderProcessor(this.discordApi, spotifyApi, MAX_RECOMMENDER_THREADS);
+                com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
+
         // create a hibernate session factory
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
-        // create session manager for AudioSessions
-        this.sessionManager = new SessionManager(sessionFactory, this.discordApi, spotifyApi, playerManager, recommenderProcessor);
+
+        // Create the spotify API object. This is used by the RecommenderProcessor
+        var spotifyApiOpt = ClientCreate.generateClientCredentials();
+        if (spotifyApiOpt.isEmpty()) {
+            Logger.error(
+                    "Spotify Client API is empty while setting up the session manager! Session will be unable to generate recommendations...");
+            System.exit(1);
+            return;
+        }
+        // create session manager with recommender processor
+        else {
+            // create the recommender processor for RecommenderSessions (and its child
+            // classes)
+            RecommenderProcessor recommenderProcessor = new RecommenderProcessor(spotifyApiOpt.get(),
+                    MAX_RECOMMENDER_THREADS);
+            // create session manager for AudioSessions
+            this.sessionManager = new SessionManager(sessionFactory, this.discordApi, spotifyApiOpt.get(),
+                    playerManager,
+                    recommenderProcessor);
+        }
+
         // ready the ActivityUpdaterService
         this.activityUpdaterService = new ActivityUpdaterService(this.discordApi, this.sessionManager);
     }
 
     /**
-     * This MUST be called after the discordApi and sessionManager objects are properly initialized.
-     * Initializes the CommandsListener with the SessionManager, then sets it to listen for the commands.
+     * This MUST be called after the discordApi and sessionManager objects are
+     * properly initialized.
+     * Initializes the CommandsListener with the SessionManager, then sets it to
+     * listen for the commands.
      */
     protected void setupCommandsListener(CommandsRegistry commandsRegistry) {
-        this.discordApi.addSlashCommandCreateListener(new SlashCommandListenerHandler(this.sessionManager, commandsRegistry));
+        this.discordApi
+                .addSlashCommandCreateListener(new SlashCommandListenerHandler(this.sessionManager, commandsRegistry));
     }
 }
