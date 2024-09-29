@@ -17,10 +17,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import se.michaelthelin.spotify.SpotifyApi;
 
 public class RecommenderProcessor {
-
+    // Maximum amount of characters allowed in the spotify request field
+    private static final int SPOTIFY_MAX_CHAR_SIZE = 100;
     private final ExecutorService executorService;
 
-    // Spotify and Discord API objects are persistent the entire application life time
+    // Spotify and Discord API objects are persistent the entire application life
+    // time
     private final DiscordApi discordApi;
     private final SpotifyApi spotifyApi;
 
@@ -48,11 +50,10 @@ public class RecommenderProcessor {
         // first shutdown this executorService
         this.executorService.shutdown();
         try {
-            if(!this.executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+            if (!this.executorService.awaitTermination(60, TimeUnit.SECONDS)) {
                 this.executorService.shutdownNow();
             }
-        }
-        catch(InterruptedException interruptedException) {
+        } catch (InterruptedException interruptedException) {
             this.executorService.shutdownNow();
             Thread.currentThread().interrupt();
         }
@@ -67,21 +68,23 @@ public class RecommenderProcessor {
             String[] spotifyRecommendations = getRecommendationsFromSpotify(session);
             try {
                 session.addRecommendationsToQueue(spotifyRecommendations);
-            }
-            catch(InterruptedException interruptedException) {
+            } catch (InterruptedException interruptedException) {
                 Logger.error(interruptedException, "Failed to automatically add tracks to queue due to interrupt");
                 Thread.currentThread().interrupt();
             }
 
-            if(spotifyRecommendations.length == 0) {
-                Logger.warn("Session " + session.getSessionId() + " belonging to server " + session.getAssociatedServerId() + " received a 0 length recommendation array. Spotify request likely failed!");
-            }
-            else {
+            if (spotifyRecommendations.length == 0) {
+                Logger.warn(
+                        "Session " + session.getSessionId() + " belonging to server " + session.getAssociatedServerId()
+                                + " received a 0 length recommendation array. Spotify request likely failed!");
+            } else {
                 // setup logging info
                 StringBuilder infoTextBuilder = new StringBuilder();
                 infoTextBuilder.append("Added recommendations: ");
-                for(String recommendation : spotifyRecommendations) infoTextBuilder.append("\n\t").append(recommendation);
-                infoTextBuilder.append("\nTo the queue of ").append(session.getSessionId()).append(" belonging to server ").append(session.getAssociatedServerId());
+                for (String recommendation : spotifyRecommendations)
+                    infoTextBuilder.append("\n\t").append(recommendation);
+                infoTextBuilder.append("\nTo the queue of ").append(session.getSessionId())
+                        .append(" belonging to server ").append(session.getAssociatedServerId());
                 Logger.info(infoTextBuilder.toString());
             }
         };
@@ -92,7 +95,7 @@ public class RecommenderProcessor {
     public void cancelTasksBySessionId(long sessionId) {
         List<FutureTask<Void>> taskList = queuedTasksMap.get(sessionId);
 
-        for(FutureTask<Void> fT : taskList) {
+        for (FutureTask<Void> fT : taskList) {
             fT.cancel(true);
         }
 
@@ -100,8 +103,8 @@ public class RecommenderProcessor {
     }
 
     public void cancelAllTasks() {
-        for(Map.Entry<Long, List<FutureTask<Void>>> taskEntry : queuedTasksMap.entrySet()) {
-            for(FutureTask<Void> fT : taskEntry.getValue()) {
+        for (Map.Entry<Long, List<FutureTask<Void>>> taskEntry : queuedTasksMap.entrySet()) {
+            for (FutureTask<Void> fT : taskEntry.getValue()) {
                 fT.cancel(true);
             }
         }
@@ -115,7 +118,7 @@ public class RecommenderProcessor {
             @Override
             protected void done() {
                 List<FutureTask<Void>> taskList = queuedTasksMap.get(sessionId);
-                if(taskList != null) {
+                if (taskList != null) {
                     taskList.remove(this);
                 }
             }
@@ -123,10 +126,9 @@ public class RecommenderProcessor {
         executorService.submit(futureTask);
 
         List<FutureTask<Void>> sessionTasks = new ArrayList<>();
-        if(queuedTasksMap.containsKey(sessionId)) {
+        if (queuedTasksMap.containsKey(sessionId)) {
             sessionTasks = queuedTasksMap.get(sessionId);
-        }
-        else {
+        } else {
             queuedTasksMap.put(sessionId, sessionTasks);
         }
         sessionTasks.add(futureTask);
@@ -140,23 +142,24 @@ public class RecommenderProcessor {
     private ArrayList<String> determineSongsFromYoutube(RecommenderSession session) {
         ArrayList<String> trackNames = new ArrayList<>();
 
-        for(Object song : session.getSearchedSongs()) {
+        for (Object song : session.getSearchedSongs()) {
             String songStr = song.toString();
-            if(songStr.startsWith("https://www.youtube") || songStr.startsWith("https://youtu.be") || songStr.startsWith("https://youtube")) {
+            if (songStr.startsWith("https://www.youtube") || songStr.startsWith("https://youtu.be")
+                    || songStr.startsWith("https://youtube")) {
                 // If it's a YouTube URL, check if it's already in the queue
-                for(AudioTrack track : session.getAudioQueue()) {
-                    if(track.getInfo().uri.equals(songStr)) {
+                for (AudioTrack track : session.getAudioQueue()) {
+                    if (track.getInfo().uri.equals(songStr)) {
                         // ensure it will not exceed 100 character limit
-                        trackNames.add(track.getInfo().title.length() < 100 ?
-                                track.getInfo().title : track.getInfo().title.substring(0, 100));
+                        trackNames.add(track.getInfo().title.length() < 100 ? track.getInfo().title
+                                : track.getInfo().title.substring(0, 100));
                         break;
                     }
                 }
             } else {
                 // If it's not a YouTube URL, simply add it to trackNames
                 // ensure it will not exceed 100 character limit
-                trackNames.add(songStr.length() < 100 ?
-                        songStr : songStr.substring(0, 100));
+                trackNames.add(songStr.length() < SPOTIFY_MAX_CHAR_SIZE ? songStr
+                        : songStr.substring(0, SPOTIFY_MAX_CHAR_SIZE));
             }
         }
         return trackNames;
