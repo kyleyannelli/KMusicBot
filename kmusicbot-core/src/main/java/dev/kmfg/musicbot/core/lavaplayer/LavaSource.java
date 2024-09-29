@@ -280,9 +280,9 @@ public class LavaSource extends AudioSourceBase {
      * @return QueueResult, detailing what was added to the queue.
      */
     public synchronized QueueResult queueTrackAsPriority(String searchQuery, DiscordUser discordUser) {
-        // 2nd parameter states we want to prioritize this query
-        // 3rd parameter states we want to send the track to the tail of the queue
-        return queueTrack(searchQuery, false, false, discordUser);
+        boolean doPrioritizeQuery = false;
+        boolean doQueueAtTail = false;
+        return queueTrack(searchQuery, doPrioritizeQuery, doQueueAtTail, discordUser);
     }
 
     /**
@@ -292,9 +292,9 @@ public class LavaSource extends AudioSourceBase {
      * @return QueueResult, detailing what was added to the queue.
      */
     public synchronized QueueResult queueTrackAsPriorityNext(String searchQuery, DiscordUser discordUser) {
-        // 2nd parameter states we want to prioritize this query
-        // 3rd parameter states we want to send the track to the head of the queue
-        return queueTrack(searchQuery, false, true, discordUser);
+        boolean doPrioritizeQuery = false;
+        boolean doQueueAtTail = false;
+        return queueTrack(searchQuery, doPrioritizeQuery, doQueueAtTail, discordUser);
     }
 
     /**
