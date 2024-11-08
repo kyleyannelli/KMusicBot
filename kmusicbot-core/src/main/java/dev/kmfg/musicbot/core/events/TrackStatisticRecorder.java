@@ -44,8 +44,8 @@ public class TrackStatisticRecorder implements TrackEventListener {
         this.discordUserRepo = new DiscordUserRepo(sessionFactory);
         this.songPlaytimeRepo = new SongPlaytimeRepo(sessionFactory);
         this.executorService = Executors.newFixedThreadPool(
-                Dotenv.load().get("MAX_COMMAND_THREADS") == null ?
-                        DEFAULT_MAX_THREADS : Integer.parseInt(Dotenv.load().get("MAX_COMMAND_THREADS")));
+                Dotenv.load().get("MAX_COMMAND_THREADS") == null ? DEFAULT_MAX_THREADS
+                        : Integer.parseInt(Dotenv.load().get("MAX_COMMAND_THREADS")));
     }
 
     @Override
@@ -56,19 +56,15 @@ public class TrackStatisticRecorder implements TrackEventListener {
     }
 
     private void handleEvents(TrackEvent trackEvent) {
-        if(trackEvent instanceof TrackStartEvent) {
+        if (trackEvent instanceof TrackStartEvent) {
             this.handleTrackStartEvent((TrackStartEvent) trackEvent);
-        }
-        else if(trackEvent instanceof TrackEndEvent) {
+        } else if (trackEvent instanceof TrackEndEvent) {
             this.handleTrackEndEvent((TrackEndEvent) trackEvent);
-        }
-        else if(trackEvent instanceof TrackStartIndividualEvent) {
+        } else if (trackEvent instanceof TrackStartIndividualEvent) {
             this.handleTrackIndividualStartEvent((TrackStartIndividualEvent) trackEvent);
-        }
-        else if(trackEvent instanceof TrackEndIndividualEvent) {
+        } else if (trackEvent instanceof TrackEndIndividualEvent) {
             this.handleTrackIndividualEndEvent((TrackEndIndividualEvent) trackEvent);
-        }
-        else {
+        } else {
             StringBuilder stringBuilder = new StringBuilder()
                     .append(trackEvent.getClass().toString())
                     .append(" was uncaught in TrackStatisticRecorder. It is likely missing from the onTrackEvent method!");
@@ -91,8 +87,13 @@ public class TrackStatisticRecorder implements TrackEventListener {
         AudioSession audioSession = event.getAudioSession();
         DiscordUser discordUser = audioTrackWithUser.getDiscordUser();
         String youtubeUri = audioTrackWithUser.getAudioTrack().getInfo().uri;
-        // generate or get the general song, as of now just a youtubeUri that can be used across different servers.
-        KMusicSong kmusicSong = kmusicSongRepo.saveOrGet(new KMusicSong(youtubeUri));
+        String author = audioTrackWithUser.getAudioTrack().getInfo().author;
+        String title = audioTrackWithUser.getAudioTrack().getInfo().title;
+        // generate or get the general song, as of now just a youtubeUri that can be
+        // used across different servers.
+        // saving and getting because author and title was an added column in later
+        // version. I want to ensure overwrites
+        KMusicSong kmusicSong = kmusicSongRepo.save(new KMusicSong(youtubeUri, author, title)).get();
         // generate or get the server (guild)
         DiscordGuild discordGuild = discordGuildRepo.saveOrGet(new DiscordGuild(audioSession.getAssociatedServerId()));
         // generate or get the discord user
@@ -105,7 +106,8 @@ public class TrackStatisticRecorder implements TrackEventListener {
     protected void handleTrackEndEvent(TrackEndEvent trackEndEvent) {
         TrackedSong trackedSong = this.endSetupGeneralModels(trackEndEvent);
         Timestamp now = Timestamp.from(Instant.now());
-        int incBy = trackedSong.getUpdatedAt().compareTo(now) > 0 ? 0 : (int) (now.getTime() - trackedSong.getUpdatedAt().getTime()) / 1000;
+        int incBy = trackedSong.getUpdatedAt().compareTo(now) > 0 ? 0
+                : (int) (now.getTime() - trackedSong.getUpdatedAt().getTime()) / 1000;
         trackedSong.incrementSecondsPlayed(incBy);
         trackedSong = trackedSongRepo.save(trackedSong).get();
         this.trackIndividualUsersEnd(trackEndEvent.getAudioSession(), trackedSong, now);
@@ -114,20 +116,23 @@ public class TrackStatisticRecorder implements TrackEventListener {
     protected void trackIndividualUsersEnd(AudioSession audioSession, TrackedSong trackedSong, Timestamp now) {
         DiscordGuild discordGuild = trackedSong.getGuild();
         ServerVoiceChannel serverVoiceChannel = audioSession.getDiscordApi()
-            .getServerById(discordGuild.getDiscordId()).get()
-            .getConnectedVoiceChannel(audioSession.getDiscordApi().getYourself())
-            .get();
+                .getServerById(discordGuild.getDiscordId()).get()
+                .getConnectedVoiceChannel(audioSession.getDiscordApi().getYourself())
+                .get();
 
-        for(User connectedUser : serverVoiceChannel.getConnectedUsers()) {
-            if(connectedUser.isYourself()) continue;
+        for (User connectedUser : serverVoiceChannel.getConnectedUsers()) {
+            if (connectedUser.isYourself())
+                continue;
             trackUserEnd(connectedUser, trackedSong, now);
         }
     }
 
     protected void trackUserEnd(User connectedUser, TrackedSong trackedSong, Timestamp now) {
-        DiscordUser discordUser = this.discordUserRepo.saveOrGet(new DiscordUser(connectedUser.getId(), connectedUser.getDiscriminatedName()));
+        DiscordUser discordUser = this.discordUserRepo
+                .saveOrGet(new DiscordUser(connectedUser.getId(), connectedUser.getDiscriminatedName()));
         SongPlaytime songPlaytime = this.songPlaytimeRepo.saveOrGet(new SongPlaytime(discordUser, trackedSong));
-        int incBy = songPlaytime.getUpdatedAt().compareTo(now) > 0 ? 0 : (int) (now.getTime() - songPlaytime.getUpdatedAt().getTime()) / 1000;
+        int incBy = songPlaytime.getUpdatedAt().compareTo(now) > 0 ? 0
+                : (int) (now.getTime() - songPlaytime.getUpdatedAt().getTime()) / 1000;
         songPlaytime.incSecondsListened(incBy);
         songPlaytimeRepo.save(songPlaytime);
     }
@@ -140,18 +145,20 @@ public class TrackStatisticRecorder implements TrackEventListener {
     protected void trackIndividualUsersStart(AudioSession audioSession, TrackedSong trackedSong) {
         DiscordGuild discordGuild = trackedSong.getGuild();
         ServerVoiceChannel serverVoiceChannel = audioSession.getDiscordApi()
-            .getServerById(discordGuild.getDiscordId()).get()
-            .getConnectedVoiceChannel(audioSession.getDiscordApi().getYourself())
-            .get();
+                .getServerById(discordGuild.getDiscordId()).get()
+                .getConnectedVoiceChannel(audioSession.getDiscordApi().getYourself())
+                .get();
 
-        for(User connectedUser : serverVoiceChannel.getConnectedUsers()) {
-            if(connectedUser.isYourself()) continue;
+        for (User connectedUser : serverVoiceChannel.getConnectedUsers()) {
+            if (connectedUser.isYourself())
+                continue;
             trackUserStart(connectedUser, trackedSong);
         }
     }
 
     protected void trackUserStart(User connectedUser, TrackedSong trackedSong) {
-        DiscordUser discordUser = this.discordUserRepo.saveOrGet(new DiscordUser(connectedUser.getId(), connectedUser.getDiscriminatedName()));
+        DiscordUser discordUser = this.discordUserRepo
+                .saveOrGet(new DiscordUser(connectedUser.getId(), connectedUser.getDiscriminatedName()));
         SongPlaytime songPlaytime = this.songPlaytimeRepo.saveOrGet(new SongPlaytime(discordUser, trackedSong));
         songPlaytime.refreshUpdatedAt();
         songPlaytimeRepo.save(songPlaytime);
@@ -162,8 +169,13 @@ public class TrackStatisticRecorder implements TrackEventListener {
         AudioSession audioSession = trackEndEvent.getAudioSession();
         DiscordUser discordUser = audioTrackWithUser.getDiscordUser();
         String youtubeUri = audioTrackWithUser.getAudioTrack().getInfo().uri;
-        // generate or get the general song, as of now just a youtubeUri that can be used across different servers.
-        KMusicSong kmusicSong = kmusicSongRepo.saveOrGet(new KMusicSong(youtubeUri));
+        String author = audioTrackWithUser.getAudioTrack().getInfo().author;
+        String title = audioTrackWithUser.getAudioTrack().getInfo().title;
+        // generate or get the general song, as of now just a youtubeUri that can be
+        // used across different servers.
+        // saving and getting because author and title was an added column in later
+        // version. I want to ensure overwrites
+        KMusicSong kmusicSong = kmusicSongRepo.save(new KMusicSong(youtubeUri, author, title)).get();
         // generate or get the server (guild)
         DiscordGuild discordGuild = discordGuildRepo.saveOrGet(new DiscordGuild(audioSession.getAssociatedServerId()));
         // generate or get the discord user
@@ -178,8 +190,13 @@ public class TrackStatisticRecorder implements TrackEventListener {
         AudioSession audioSession = trackStartEvent.getAudioSession();
         DiscordUser discordUser = audioTrackWithUser.getDiscordUser();
         String youtubeUri = audioTrackWithUser.getAudioTrack().getInfo().uri;
-        // generate or get the general song, as of now just a youtubeUri that can be used across different servers.
-        KMusicSong kmusicSong = kmusicSongRepo.saveOrGet(new KMusicSong(youtubeUri));
+        String author = audioTrackWithUser.getAudioTrack().getInfo().author;
+        String title = audioTrackWithUser.getAudioTrack().getInfo().title;
+        // generate or get the general song, as of now just a youtubeUri that can be
+        // used across different servers.
+        // saving and getting because author and title was an added column in later
+        // version. I want to ensure overwrites
+        KMusicSong kmusicSong = kmusicSongRepo.save(new KMusicSong(youtubeUri, author, title)).get();
         // generate or get the server (guild)
         DiscordGuild discordGuild = discordGuildRepo.saveOrGet(new DiscordGuild(audioSession.getAssociatedServerId()));
         // generate or get the discord user
@@ -189,7 +206,8 @@ public class TrackStatisticRecorder implements TrackEventListener {
         trackedSong.refreshUpdatedAt(); // the updated_at column signifies the last time the track was played.
         trackedSong = trackedSongRepo.save(trackedSong).get();
         // generate or get the initialization
-        SongInitialization songInitialization = songInitializationRepo.saveOrGet(new SongInitialization(trackedSong, discordUser));
+        SongInitialization songInitialization = songInitializationRepo
+                .saveOrGet(new SongInitialization(trackedSong, discordUser));
         songInitialization.incTimesInitialized();
         songInitialization = songInitializationRepo.save(songInitialization).get();
         return trackedSong;
@@ -199,4 +217,3 @@ public class TrackStatisticRecorder implements TrackEventListener {
         this.executorService.shutdown();
     }
 }
-

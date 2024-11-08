@@ -35,7 +35,7 @@
 
 ### `/api/secure/guild/:guildId/tracked-songs`
 - **Method:** GET
-- **Description:** Retrieves tracked songs for a specific guild in paginated JSON format. Optional `page` and `size` parameters (max 20 per page).
+- **Description:** Retrieves tracked songs for a specific guild in paginated JSON format. Optional `page`, `size`, and `search` parameters (max 20 per page). The `search` parameter will look against the songs title & author. Queries over the max character length for title or author, whichever is larger, will be dropped.
 - **Example Response:** (for the empty data array reference tracked-song/:trackedSongId)
   ```json
   {"currentPage": 0, "totalPages": 9, "totalItems": "172", "pageSize": 20, "data": [...]}

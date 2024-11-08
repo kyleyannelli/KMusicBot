@@ -8,5 +8,8 @@
     <changeSet id="1" author="kyannelli">
         <sqlFile path="src/main/resources/db/sql/init-db-0.sql" />
     </changeSet>
+    <changeSet id="2" author="kyannelli">
+        <sqlFile path="src/main/resources/db/sql/add-author-title-to-kmusic-songs-1.sql" />
+    </changeSet>
 </databaseChangeLog>
 
