@@ -29,7 +29,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 import balbucio.discordoauth.model.Guild;
-import balbucio.discordoauth.model.User;
 
 public class ApiV1 {
     private static final SessionFactory SESSION_FACTORY = HibernateUtil.getSessionFactory();
@@ -39,9 +38,9 @@ public class ApiV1 {
     private static final SongPlaytimeRepo SONG_PLAYTIME_REPO = new SongPlaytimeRepo(SESSION_FACTORY);
     private static final SongInitializationRepo SONG_INITIALIZATION_REPO = new SongInitializationRepo(SESSION_FACTORY);
     private static final Cache<String, List<Guild>> apiGuildsCache = Caffeine.newBuilder()
-        .maximumSize(100)
-        .expireAfterWrite(30, TimeUnit.SECONDS)
-        .build();
+            .maximumSize(100)
+            .expireAfterWrite(30, TimeUnit.SECONDS)
+            .build();
 
     public static final String CORS_URI = Dotenv.load().get("CORS_URI");
     public static final String COOKIE_URI = Dotenv.load().get("COOKIE_URI");
@@ -66,7 +65,7 @@ public class ApiV1 {
 
     public static SongPlaytimeRepo getSongPlaytimeRepo() {
         return SONG_PLAYTIME_REPO;
-    } 
+    }
 
     public static SongInitializationRepo getSongInitRepo() {
         return SONG_INITIALIZATION_REPO;
@@ -101,66 +100,61 @@ public class ApiV1 {
         });
 
         Spark.path("/api/secure", () -> {
-            //*****
-            //** TOKEN GETTTTAAAA
-            //*****
+            // *****
+            // ** TOKEN GETTER
+            // *****
             Spark.before("/*", (req, res) -> {
-                // make sure we are responding in json format
                 res.type("application/json");
                 logger.debug("BEFORE FILTER ACTIVATED FOR PATH " + req.pathInfo());
-                Optional<KMTokens> kmTokens = DiscordOAuthFilter.getTokens(req);
-                if(kmTokens.isEmpty()) {
+                Optional<KMTokens> kmTokens = DiscordOAuthFilter.getCombinedTokens(req);
+
+                if (kmTokens.isEmpty()) {
                     Spark.halt(401);
-                    // I think we should just use 401 states instead of redirecting to login
-                    // LoginController.login(req, res, req.pathInfo());
                     return;
-                }
-                else if(!req.pathInfo().toLowerCase().contains("logout")) {
-                    //DiscordOAuthHelper.setupCookies(res, kmTokens.get());
+                } else if (!req.pathInfo().toLowerCase().contains("logout")) {
                     req.attribute("km-tokens", kmTokens.get());
                 }
             });
-            //*****
-            //** TOKEN SETTA
-            //*****
+            // *****
+            // ** TOKEN SETTER
+            // *****
             Spark.after("/*", (req, res) -> {
-                if(req.attribute("areTokensNew") != null && (boolean) req.attribute("areTokensNew")) {
+                if (req.attribute("areTokensNew") != null && (boolean) req.attribute("areTokensNew")) {
                     KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
-                    DiscordOAuthHelper.setupCookies(res, kmTokens);
-                }
-                else if(req.attribute("areTokensNew") == null) {
+                    DiscordOAuthHelper.setupCombinedCookies(res, kmTokens);
+                } else if (req.attribute("areTokensNew") == null) {
                     KMTokens kmTokens = (KMTokens) req.attribute("km-tokens");
-                    DiscordOAuthHelper.setupCookies(res, kmTokens);
+                    DiscordOAuthHelper.setupCombinedCookies(res, kmTokens);
                 }
             });
 
-            //*****
-            //** TRACKED SONG CONTROLLER
-            //*****
+            // *****
+            // ** TRACKED SONG CONTROLLER
+            // *****
             Spark.get("/tracked-song/:trackedSongId", TrackedSongController::get);
 
-            //*****
-            //** GUILD OVERVIEW CONTROLLER
-            //*****
+            // *****
+            // ** GUILD OVERVIEW CONTROLLER
+            // *****
             // get TrackedSongs for a Guild
             Spark.get("/guild/:guildId/tracked-songs", GuildOverviewController::trackedSongs);
             // general stat overview for a Guild
             Spark.get("/guild/:guildId", GuildOverviewController::overview);
 
-            //*****
-            //** LOGIN CONTROLLER
-            //*****
+            // *****
+            // ** LOGIN CONTROLLER
+            // *****
             // log out
             Spark.get("/logout", LoginController::logout);
 
-            //*****
-            //** USER CONTROLLER
-            //*****
+            // *****
+            // ** USER CONTROLLER
+            // *****
             // route to get yourself
             Spark.get("/me", UserController::me);
             // route to get yourself in a specific guild
             Spark.get("/me/:guildId", UserController::meGuild);
-            // route to get guilds you're in 
+            // route to get guilds you're in
             Spark.get("/guilds", UserController::guilds);
         });
     }
