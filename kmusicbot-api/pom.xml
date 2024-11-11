@@ -78,6 +78,11 @@
   </repositories>
 
   <dependencies>
+      <dependency>
+          <groupId>org.java-websocket</groupId>
+          <artifactId>Java-WebSocket</artifactId>
+          <version>1.5.7</version>
+      </dependency>
     <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>

@@ -103,6 +103,16 @@
     </repositories>
     <dependencies>
         <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.java-websocket</groupId>
+            <artifactId>Java-WebSocket</artifactId>
+            <version>1.5.7</version>
+        </dependency>
+        <dependency>
             <groupId>dev.kmfg.musicbot</groupId>
             <artifactId>kmusicbot-database</artifactId>
             <version>3.4.0</version>
