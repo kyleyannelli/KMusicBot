@@ -3,6 +3,7 @@ package dev.kmfg.musicbot.api.sockets;
 import java.io.IOException;
 import java.net.HttpCookie;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,8 @@ import dev.kmfg.musicbot.api.helpers.KMTokens;
 
 @WebSocket
 public class SecureWebsocketHandler {
+    private static final long MAX_SESSION_SECONDS = 60 * 15;
+
     private final char[] key;
     private final ScheduledThreadPoolExecutor messageSendExecutor;
     private final ConcurrentHashMap<Long, NowPlayingResponse> guildsNowPlaying;
@@ -112,7 +115,13 @@ public class SecureWebsocketHandler {
     }
 
     private void sendMessages(Session session, KMTokens tokens) {
+        long createdAt = Instant.now().getEpochSecond();
         ScheduledFuture<?> task = this.messageSendExecutor.scheduleAtFixedRate(() -> {
+            if (Instant.now().minusSeconds(createdAt).getEpochSecond() > MAX_SESSION_SECONDS) {
+                closeAndRemove(tokens);
+                return;
+            }
+
             List<Guild> guilds = null;
 
             try {
