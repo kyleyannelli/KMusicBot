@@ -5,7 +5,7 @@
   <parent>
     <groupId>dev.kmfg.musicbot</groupId>
     <artifactId>KMusicBot</artifactId>
-    <version>3.4.0</version>
+    <version>3.5.0</version>
   </parent>
   <artifactId>kmusicbot-api</artifactId>
   <packaging>jar</packaging>
@@ -126,7 +126,7 @@
     <dependency>
       <groupId>dev.kmfg.musicbot</groupId>
       <artifactId>kmusicbot-database</artifactId>
-      <version>3.4.0</version>
+      <version>3.5.0</version>
     </dependency>
   </dependencies>
 
