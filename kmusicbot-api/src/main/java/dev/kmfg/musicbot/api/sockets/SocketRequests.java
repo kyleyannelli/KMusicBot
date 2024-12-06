@@ -7,8 +7,11 @@ public enum SocketRequests {
     BOT_SHUTDOWN("The bot has shutdown."),
     STALE_CONN("Connection has become stale due to issues with KMusicBot object or the session."),
     CLEANUP("Socket closing due to cleanup. Likely intended."),
+    SESSION_EXPIRED("The current session has exceeded the allowed connection time. Please reconnect."),
     CREATE_BOT("Session has begun. Please provide serialized KMusicBot.");
+
     private final String reason;
+
     SocketRequests(String reason) {
         this.reason = reason;
     }

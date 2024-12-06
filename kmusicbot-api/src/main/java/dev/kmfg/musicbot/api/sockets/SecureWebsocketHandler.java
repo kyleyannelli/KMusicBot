@@ -118,7 +118,7 @@ public class SecureWebsocketHandler {
         long createdAt = Instant.now().getEpochSecond();
         ScheduledFuture<?> task = this.messageSendExecutor.scheduleAtFixedRate(() -> {
             if (Instant.now().minusSeconds(createdAt).getEpochSecond() > MAX_SESSION_SECONDS) {
-                closeAndRemove(tokens);
+                session.close(1000, SocketRequests.SESSION_EXPIRED.toString());
                 return;
             }
 
@@ -147,7 +147,7 @@ public class SecureWebsocketHandler {
                     session.getRemote().sendString(GenericHelpers.provideGson().toJson(guildsNowPlaying));
                 } catch (IOException iE) {
                     Logger.warn(iE, "IOE occurred while trying to send string!");
-                    closeAndRemove(tokens);
+                    session.close(1011, "Internal Server Error");
                     return;
                 }
             } else {
