@@ -8,6 +8,8 @@ import dev.kmfg.musicbot.api.controllers.UserController;
 import dev.kmfg.musicbot.api.filters.DiscordOAuthFilter;
 import dev.kmfg.musicbot.api.helpers.DiscordOAuthHelper;
 import dev.kmfg.musicbot.api.helpers.KMTokens;
+import dev.kmfg.musicbot.api.sockets.NowPlayingResponse;
+import dev.kmfg.musicbot.api.sockets.SecureWebsocketHandler;
 import dev.kmfg.musicbot.database.repositories.DiscordGuildRepo;
 import dev.kmfg.musicbot.database.repositories.KMusicSongRepo;
 import dev.kmfg.musicbot.database.repositories.SongInitializationRepo;
@@ -19,6 +21,7 @@ import spark.Spark;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.SessionFactory;
@@ -46,8 +49,11 @@ public class ApiV1 {
     public static final String COOKIE_URI = Dotenv.load().get("COOKIE_URI");
 
     private final Logger logger = LoggerFactory.getLogger(ApiV1.class);
+    private final ConcurrentHashMap<Long, NowPlayingResponse> guildsNowPlaying;
 
-    public ApiV1(HealthCheckController healthCheckController) {
+    public ApiV1(HealthCheckController healthCheckController,
+            ConcurrentHashMap<Long, NowPlayingResponse> guildsNowPlaying) {
+        this.guildsNowPlaying = guildsNowPlaying;
         this.setupRoutes(healthCheckController);
     }
 
@@ -84,6 +90,8 @@ public class ApiV1 {
     }
 
     private void setupRoutes(HealthCheckController healthCheckController) {
+        Spark.webSocket("/api/secure/ws", new SecureWebsocketHandler(this.guildsNowPlaying));
+
         Spark.before("/*", (req, res) -> {
             res.header("Access-Control-Allow-Origin", CORS_URI);
             res.header("Origin", CORS_URI);

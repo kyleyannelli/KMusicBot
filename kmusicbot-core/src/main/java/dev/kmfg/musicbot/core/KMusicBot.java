@@ -24,6 +24,7 @@ import org.javacord.api.entity.server.Server;
 import org.tinylog.Logger;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * KMusicBot fully allows for a music bot to operate. After initializing,
@@ -91,6 +92,10 @@ public class KMusicBot {
 
         // Start the ActivityUpdaterService
         this.activityUpdaterService.start();
+    }
+
+    public SessionManager getSessionManager() {
+        return this.sessionManager;
     }
 
     /**

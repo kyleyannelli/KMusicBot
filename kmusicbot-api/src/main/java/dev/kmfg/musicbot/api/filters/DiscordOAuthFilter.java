@@ -124,4 +124,49 @@ public class DiscordOAuthFilter {
             return Optional.empty();
         }
     }
+
+    public static Optional<KMTokens> getCombinedTokens(String combinedToken, String combinedSalt) throws Exception {
+        if (combinedToken == null || combinedToken.isEmpty() || combinedSalt == null || combinedSalt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String decryptedTokens;
+        try {
+            decryptedTokens = CryptoHelper.decrypt(combinedToken, combinedSalt);
+        } catch (Exception e) {
+            logger.info("Failed to decrypt combined token!", e);
+            return Optional.empty();
+        }
+
+        String[] tokens = decryptedTokens.split(":");
+        if (tokens.length != 2) {
+            logger.info("Invalid token format after decryption.");
+            return Optional.empty();
+        }
+
+        String accessToken = tokens[0];
+        String refreshToken = tokens[1];
+
+        boolean doRefresh = false;
+
+        try {
+            DiscordAPI discordAPI = new DiscordAPI(accessToken);
+            discordAPI.fetchUser();
+        } catch (IOException ioException) {
+            doRefresh = true;
+        }
+
+        if (!doRefresh) {
+            return Optional.of(new KMTokens(accessToken, refreshToken));
+        }
+
+        try {
+            refreshToken = CryptoHelper.decrypt(refreshToken, combinedSalt);
+            TokensResponse tokensResponse = DiscordOAuthHelper.getOAuth().refreshTokens(refreshToken);
+            return Optional.of(KMTokens.generate(tokensResponse));
+        } catch (IOException ioException) {
+            logger.info("Failed to refresh access token!", ioException);
+            return Optional.empty();
+        }
+    }
 }

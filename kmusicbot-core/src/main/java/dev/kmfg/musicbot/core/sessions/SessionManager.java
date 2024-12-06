@@ -1,5 +1,6 @@
 package dev.kmfg.musicbot.core.sessions;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -39,6 +40,10 @@ public class SessionManager {
         audioSession.setLavaSource(lavaSource);
         this.audioSessions.put(serverId, audioSession);
         return audioSession;
+    }
+
+    public ConcurrentHashMap<Long, AudioSession> getAllAudioSessions() {
+        return this.audioSessions;
     }
 
     public AudioSession getAudioSession(long serverId) {
