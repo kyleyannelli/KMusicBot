@@ -1,6 +1,8 @@
 package dev.kmfg.musicbot.api.controllers;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import dev.kmfg.musicbot.api.helpers.GenericHelpers;
 import dev.kmfg.musicbot.api.helpers.GenericHelpers.Result;
@@ -33,12 +35,31 @@ public class GuildOverviewController {
             return authResult.getFailure();
         }
 
+        List<Long> filterUserIds = new ArrayList<>();
         int size = 20, page = 0;
         String search = null;
+        String order = "DESC";
+
+        if (req.queryParamsValues("order") != null) {
+            order = req.queryParamsValues("order")[0];
+        }
+
+        if (req.queryParamsValues("userId") != null) {
+            for (String userId : req.queryParamsValues("userId")) {
+                if (GenericHelpers.isNotNumber(userId))
+                    continue;
+                filterUserIds.add(Long.parseLong(userId));
+            }
+        }
 
         if (req.queryParamsValues("size") != null && req.queryParamsValues("size")[0] != null
                 && GenericHelpers.isNumber(req.queryParamsValues("size")[0])) {
             size = Integer.valueOf(req.queryParamsValues("size")[0]);
+        }
+
+        if (size > 100 || size < 1) {
+            res.status(400);
+            return "Page size cannot exceed 100 items!";
         }
 
         if (req.queryParamsValues("page") != null && req.queryParamsValues("page")[0] != null
@@ -65,7 +86,9 @@ public class GuildOverviewController {
                                     .findByDiscordGuildId(
                                             authResult.getSuccess().getDiscordId(),
                                             page,
-                                            size));
+                                            size,
+                                            filterUserIds,
+                                            order));
         } else {
             return GenericHelpers
                     .provideGson()
@@ -75,7 +98,9 @@ public class GuildOverviewController {
                                             authResult.getSuccess().getDiscordId(),
                                             page,
                                             size,
-                                            search));
+                                            search,
+                                            filterUserIds,
+                                            order));
         }
     }
 }

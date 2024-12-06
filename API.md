@@ -35,7 +35,9 @@
 
 ### `/api/secure/guild/:guildId/tracked-songs`
 - **Method:** GET
-- **Description:** Retrieves tracked songs for a specific guild in paginated JSON format. Optional `page`, `size`, and `search` parameters (max 20 per page). The `search` parameter will look against the songs title & author. Queries over the max character length for title or author, whichever is larger, will be dropped.
+- **Description:** Retrieves tracked songs for a specific guild in paginated JSON format. Optional `page`, `size`, `userId`, `order`, and `search` parameters (max 100 per page). The `search` parameter will look against the songs title & author. Queries over the max character length for title or author, whichever is larger, will be dropped.
+- Multiple discord user IDs can be filtered for by simply doing `userId=123123&userId=321321321&userId=101011`. This is an OR operation.
+- The `order` parameter is a default of `DESC`. Additionally, you have options `ASC` and `LATEST`. `DESC` and `ASC` refer to the total amount of playtime a track has. `LATEST` refers to the most recently played tracks.
 - **Example Response:** (for the empty data array reference tracked-song/:trackedSongId)
   ```json
   {"currentPage": 0, "totalPages": 9, "totalItems": "172", "pageSize": 20, "data": [...]}

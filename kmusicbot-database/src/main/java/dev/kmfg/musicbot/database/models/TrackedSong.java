@@ -19,61 +19,60 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "tracked_songs")
 public class TrackedSong extends BaseKMusicTable {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     @Expose
-	private int id;
+    private int id;
 
-	@ManyToOne
-	@JoinColumn(name = "discord_guild_id")
+    @ManyToOne
+    @JoinColumn(name = "discord_guild_id")
     @Expose
-	private DiscordGuild discordGuild;
+    private DiscordGuild discordGuild;
 
-	@ManyToOne
-	@JoinColumn(name = "kmusic_song_id")
+    @ManyToOne
+    @JoinColumn(name = "kmusic_song_id")
     @Expose
-	private KMusicSong kmusicSong;
+    private KMusicSong kmusicSong;
 
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "trackedSong")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "trackedSong")
     @Expose
-	Set<SongInitialization> songInitializations = new HashSet<>();
+    Set<SongInitialization> songInitializations = new HashSet<>();
 
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "trackedSong")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "trackedSong")
     @Expose
-	Set<SongPlaytime> songPlaytimes = new HashSet<>();
+    Set<SongPlaytime> songPlaytimes = new HashSet<>();
 
-	@Column(name = "seconds_played")
+    @Column(name = "seconds_played")
     @Expose
-	private int secondsPlayed;
+    private int secondsPlayed;
 
-	public TrackedSong() {
+    public TrackedSong() {
 
-	}
+    }
 
-	public TrackedSong(DiscordGuild discordGuild, KMusicSong kmusicSong) {
-		this.discordGuild = discordGuild;
-		this.kmusicSong = kmusicSong;
-	}
+    public TrackedSong(DiscordGuild discordGuild, KMusicSong kmusicSong) {
+        this.discordGuild = discordGuild;
+        this.kmusicSong = kmusicSong;
+    }
 
-	public void incrementSecondsPlayed(int incBy) {
-		this.secondsPlayed += incBy;
-	}
+    public void incrementSecondsPlayed(int incBy) {
+        this.secondsPlayed += incBy;
+    }
 
-	public int getSecondsPlayed() {
-		return this.secondsPlayed;
-	}
+    public int getSecondsPlayed() {
+        return this.secondsPlayed;
+    }
 
-	public DiscordGuild getGuild() {
-		return this.discordGuild;
-	}
+    public DiscordGuild getGuild() {
+        return this.discordGuild;
+    }
 
-	public KMusicSong getSong() {
-		return this.kmusicSong;
-	}
+    public KMusicSong getSong() {
+        return this.kmusicSong;
+    }
 
-	public int getId() {
-		return this.id;
-	}
+    public int getId() {
+        return this.id;
+    }
 }
-

@@ -1,5 +1,6 @@
 package dev.kmfg.musicbot.database.repositories;
 
+import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.Optional;
 
@@ -120,61 +121,118 @@ public class TrackedSongRepo {
     }
 
     public PaginatedResponse<TrackedSong> findByDiscordGuildIdAndSearchQuery(long discordId, int page, int size,
-            String searchQuery) {
+            String searchQuery, List<Long> filterUserIds, String order) {
         try (Session session = this.sessionFactory.openSession()) {
-            Query countQuery = session.createQuery(
-                    "SELECT COUNT(ts) FROM TrackedSong ts " +
-                            "JOIN ts.kmusicSong km " +
-                            "WHERE ts.discordGuild.discordId = :discordGuildId " +
-                            "AND (LOWER(km.title) LIKE :searchQuery OR LOWER(km.author) LIKE :searchQuery)",
+            if (!(order.equals("DESC") || order.equals("ASC") || order.equals("LATEST"))) {
+                throw new InvalidParameterException("Unrecognized order option \"" + order + "\""); // I do not care
+                                                                                                    // this exception is
+                                                                                                    // not meant for
+                                                                                                    // general use, its
+                                                                                                    // class name fits.
+                                                                                                    // I'm not making a
+                                                                                                    // class for this.
+            }
+
+            boolean haveIdsToFilter = filterUserIds.size() > 0;
+            String queryNoFilter = "SELECT COUNT(ts) FROM TrackedSong ts " +
+                    "JOIN ts.kmusicSong km " +
+                    "WHERE ts.discordGuild.discordId = :discordGuildId " +
+                    "AND (LOWER(km.title) LIKE :searchQuery OR LOWER(km.author) LIKE :searchQuery)";
+
+            String queryWithFilter = "SELECT COUNT(ts) FROM TrackedSong ts " +
+                    "JOIN ts.kmusicSong km " +
+                    "JOIN ts.songPlaytimes sp " +
+                    "WHERE ts.discordGuild.discordId = :discordGuildId " +
+                    "AND sp.listeningDiscordUser.discordId IN :filterUserIds " +
+                    "AND (LOWER(km.title) LIKE :searchQuery OR LOWER(km.author) LIKE :searchQuery)";
+            Query countQuery = session.createQuery(haveIdsToFilter ? queryWithFilter : queryNoFilter,
                     Long.class);
             countQuery.setParameter("discordGuildId", discordId);
+            if (haveIdsToFilter) {
+                countQuery.setParameter("filterUserIds", filterUserIds);
+            }
             countQuery.setParameter("searchQuery", "%" + searchQuery.toLowerCase() + "%");
             long totalItems = (long) countQuery.getSingleResult();
 
-            List<TrackedSong> songs = session
+            String orderLine = "ORDER BY ts.secondsPlayed " + order;
+            if (order.equals("LATEST")) {
+                orderLine = "ORDER BY ts.updatedAt DESC";
+            }
+
+            queryNoFilter = "FROM TrackedSong ts " +
+                    "JOIN FETCH ts.kmusicSong km " +
+                    "WHERE ts.discordGuild.discordId = :discordGuildId " +
+                    "AND (LOWER(km.title) LIKE :searchQuery OR LOWER(km.author) LIKE :searchQuery) " +
+                    orderLine;
+            queryWithFilter = "FROM TrackedSong ts " +
+                    "JOIN FETCH ts.kmusicSong km " +
+                    "JOIN FETCH ts.songPlaytimes sp " +
+                    "WHERE ts.discordGuild.discordId = :discordGuildId " +
+                    "AND sp.listeningDiscordUser.discordId IN :filterUserIds " +
+                    "AND (LOWER(km.title) LIKE :searchQuery OR LOWER(km.author) LIKE :searchQuery) " +
+                    orderLine;
+            Query trackedSongsQuery = session
                     .createQuery(
-                            "FROM TrackedSong ts " +
-                                    "JOIN FETCH ts.kmusicSong km " +
-                                    "WHERE ts.discordGuild.discordId = :discordGuildId " +
-                                    "AND (LOWER(km.title) LIKE :searchQuery OR LOWER(km.author) LIKE :searchQuery) " +
-                                    "ORDER BY ts.secondsPlayed DESC",
+                            haveIdsToFilter ? queryWithFilter : queryNoFilter,
                             TrackedSong.class)
                     .setParameter("discordGuildId", discordId)
                     .setParameter("searchQuery", "%" + searchQuery.toLowerCase() + "%")
                     .setFirstResult(page * size)
-                    .setMaxResults(size)
-                    .getResultList();
+                    .setMaxResults(size);
+            if (haveIdsToFilter) {
+                trackedSongsQuery.setParameter("filterUserIds", filterUserIds);
+            }
+            List<TrackedSong> songs = trackedSongsQuery.getResultList();
 
             int totalPages = (int) Math.ceil((double) totalItems / size);
 
             return new PaginatedResponse<>(songs, page, totalPages, totalItems, size);
 
-        } catch (HibernateException hibernateException) {
+        } catch (HibernateException | InvalidParameterException hibernateException) {
             Logger.error(hibernateException,
                     "Error occurred while finding TrackedSongs by Discord Guild id and search query");
             return new PaginatedResponse<>(null, 0, 0, 0L, 0);
         }
     }
 
-    public PaginatedResponse<TrackedSong> findByDiscordGuildId(long discordId, int page, int size) {
+    public PaginatedResponse<TrackedSong> findByDiscordGuildId(long discordId, int page, int size,
+            List<Long> filterUserIds, String order) {
         try (Session session = this.sessionFactory.openSession()) {
+            if (!(order.equals("DESC") || order.equals("ASC") || order.equals("LATEST"))) {
+                throw new InvalidParameterException("Unrecognized order option \"" + order + "\"");
+            }
+
+            boolean haveIdsToFilter = filterUserIds.size() > 0;
+            String queryNoFilter = "SELECT COUNT(ts) FROM TrackedSong ts WHERE ts.discordGuild.discordId = :discordGuildId";
+            String queryWithFilter = "SELECT COUNT(ts) FROM TrackedSong ts JOIN ts.songPlaytimes sp WHERE ts.discordGuild.discordId = :discordGuildId AND sp.listeningDiscordUser.discordId IN :filterUserIds";
             // Query to find the total number of TrackedSong records
             Query countQuery = session.createQuery(
-                    "SELECT COUNT(ts) FROM TrackedSong ts WHERE ts.discordGuild.discordId = :discordGuildId",
+                    haveIdsToFilter ? queryWithFilter : queryNoFilter,
                     Long.class);
             countQuery.setParameter("discordGuildId", discordId);
+            if (haveIdsToFilter) {
+                countQuery.setParameter("filterUserIds", filterUserIds);
+            }
             long totalItems = (long) countQuery.getSingleResult();
 
+            String orderLine = "ORDER BY ts.secondsPlayed " + order;
+            if (order.equals("LATEST")) {
+                orderLine = "ORDER BY ts.updatedAt DESC";
+            }
+
+            queryNoFilter = "SELECT ts FROM TrackedSong ts WHERE ts.discordGuild.discordId = :discordGuildId "
+                    + orderLine;
+            queryWithFilter = "SELECT ts FROM TrackedSong ts JOIN ts.songPlaytimes sp WHERE ts.discordGuild.discordId = :discordGuildId AND sp.listeningDiscordUser.discordId IN :filterUserIds "
+                    + orderLine;
+            Query trackedSongsQuery = session.createQuery(
+                    haveIdsToFilter ? queryWithFilter : queryNoFilter,
+                    TrackedSong.class);
+            trackedSongsQuery.setParameter("discordGuildId", discordId).setFirstResult(page * size).setMaxResults(size);
+            if (haveIdsToFilter) {
+                trackedSongsQuery.setParameter("filterUserIds", filterUserIds);
+            }
             // Query to get the paginated list of TrackedSong
-            List<TrackedSong> songs = session
-                    .createQuery(
-                            "FROM TrackedSong WHERE discordGuild.discordId = :discordGuildId ORDER BY secondsPlayed DESC",
-                            TrackedSong.class)
-                    .setParameter("discordGuildId", discordId)
-                    .setFirstResult(page * size)
-                    .setMaxResults(size)
-                    .getResultList();
+            List<TrackedSong> songs = trackedSongsQuery.getResultList();
 
             // Calculate the total number of pages
             int totalPages = (int) Math.ceil((double) totalItems / size);
@@ -184,7 +242,7 @@ public class TrackedSongRepo {
                     size);
 
             return response;
-        } catch (HibernateException hibernateException) {
+        } catch (HibernateException | InvalidParameterException hibernateException) {
             Logger.error(hibernateException, "Error occurred while finding TrackedSongs by Discord Guild id");
             return new PaginatedResponse<>(null, 0, 0, 0L, 0);
         }
