@@ -137,7 +137,8 @@ public class MessageSender {
 
         // if the tracks were successfully queued & the size of the queue is greater
         // than 1, just display the # of tracks added.
-        if (queueResult.isSuccess() && queueResult.getQueuedTracks().isPresent()) {
+        if (queueResult.isSuccess() && queueResult.getQueuedTracks().isPresent()
+                && queueResult.getQueuedTracks().get().size() > 1) {
             this.embedMessage
                     .setTitle("Queued!")
                     .setContent("Added " + queueResult.getQueuedTracks().get().size() + " tracks to the queue.");
