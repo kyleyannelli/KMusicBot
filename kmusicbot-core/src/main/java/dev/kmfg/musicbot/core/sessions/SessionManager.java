@@ -1,6 +1,5 @@
 package dev.kmfg.musicbot.core.sessions;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,6 +13,9 @@ import dev.kmfg.musicbot.core.lavaplayer.LavaSource;
 import dev.kmfg.musicbot.core.songrecommender.RecommenderProcessor;
 import se.michaelthelin.spotify.SpotifyApi;
 
+/**
+ * Thread safe handling of creation and closing of {@link AudioSession}'s.
+ */
 public class SessionManager {
     private final ConcurrentHashMap<Long, AudioSession> audioSessions;
     private final RecommenderProcessor recommenderProcessor;
@@ -58,6 +60,9 @@ public class SessionManager {
         return this.audioSessions.size();
     }
 
+    /**
+     * If there is only a single AudioSession, it will be returned. If there are
+     */
     public Optional<AudioSession> getOnlyAudioSession() {
         // if there isn't just one element, we don't want to return anything
         if (this.audioSessions.size() != 1)
@@ -71,6 +76,6 @@ public class SessionManager {
         // remove the audiosession upon shutdown
         long sessionId = this.audioSessions.get(associatedServerId).getSessionId();
         this.audioSessions.remove(associatedServerId);
-        Logger.info("Session " + sessionId + " removed from server " + associatedServerId);
+        Logger.info("Session {} removed from server {}.", sessionId, associatedServerId);
     }
 }

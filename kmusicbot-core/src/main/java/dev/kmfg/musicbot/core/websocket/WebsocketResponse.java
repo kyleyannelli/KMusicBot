@@ -4,6 +4,13 @@ import java.util.List;
 
 import com.google.gson.annotations.Expose;
 
+/**
+ * Standardized DTO for any given error, warning, information, or List of
+ * {@link NowPlayingResponse}'s.
+ *
+ * The ReadonlyClient should be guaranteed the format of { code: code, message:
+ * message?, data: data? }
+ */
 public class WebsocketResponse {
     @Expose
     private final int code;

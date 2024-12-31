@@ -14,11 +14,13 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Handles the /search command by loading in results from SearchResultAudioHandler and passing it to the messageSender object.
+ * Handles the /search command by loading in results from
+ * SearchResultAudioHandler and passing it to the messageSender object.
  */
 public class SearchCommand extends Command {
     public static final String COMMAND_NAME = "search";
     private static final String DESCRIPTION = "Search for a song";
+
     public SearchCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
         super(sessionManager, slashCommandEvent);
     }
@@ -30,11 +32,11 @@ public class SearchCommand extends Command {
     @Override
     public void register(DiscordApi discordApi) {
         SlashCommand.with(COMMAND_NAME, DESCRIPTION,
-                        // create option(s)
-                        Collections.singletonList(
-                                // create option /search <song>
-                                SlashCommandOption.create(SlashCommandOptionType.STRING, "song", "The song to search for", true)
-                        ))
+                // create option(s)
+                Collections.singletonList(
+                        // create option /search <song>
+                        SlashCommandOption.create(SlashCommandOptionType.STRING, "song", "The song to search for",
+                                true)))
                 .createGlobal(discordApi).join();
     }
 
@@ -53,21 +55,23 @@ public class SearchCommand extends Command {
         // create param requirement for song
         ArrayList<String> params = new ArrayList<>(List.of("song"));
         EnsuredSlashCommandInteraction ensuredInteraction = this.getEnsuredInteraction(params);
-        // in the case that it is null, early return. ensured interaction handles the messaging
-        if(ensuredInteraction == null) return;
+        // in the case that it is null, early return. ensured interaction handles the
+        // messaging
+        if (ensuredInteraction == null)
+            return;
 
         String searchQuery = ensuredInteraction.getParameterValue("song");
-        QueueResult searchResults = ensuredInteraction.getAudioSession().getLavaSource().getListQueryResults(this.discordUser, searchQuery);
+        QueueResult searchResults = ensuredInteraction.getAudioSession().getLavaSource()
+                .getListQueryResults(this.discordUser, searchQuery);
 
         // if no tracks were found
-        if(searchResults.getQueuedTracks().isEmpty()) {
+        if (searchResults.getQueuedTracks().isEmpty() || searchResults.getQueuedTracks().get().isEmpty()) {
             this.messageSender.sendNothingFoundEmbed(searchQuery);
             return;
         }
 
         this.messageSender.sendSearchResultEmbed(
-                searchResults.getQueuedTracks(),
-                ensuredInteraction.getAudioSession().getAssociatedServerId()
-        );
+                searchResults.getQueuedTracks().get(),
+                ensuredInteraction.getAudioSession().getAssociatedServerId());
     }
 }

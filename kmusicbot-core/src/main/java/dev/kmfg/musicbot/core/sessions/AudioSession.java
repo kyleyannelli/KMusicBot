@@ -29,6 +29,10 @@ import dev.kmfg.musicbot.database.models.DiscordUser;
 import dev.kmfg.musicbot.core.util.sessions.LimitedQueue;
 import dev.kmfg.musicbot.core.util.sessions.QueueResult;
 
+/**
+ * An AudioSession for a Discord VoiceChannel which encapsulates song tracking,
+ * recommendations, and track queuing.
+ */
 public class AudioSession extends RecommenderSession {
     private static final int MAX_SEARCH_QUEUE_SIZE = 5; // a maximum of 5 items in mostRecentSearches
     private static final int DISCONNECT_DELAY_MS = 300_000; // 300_000 ms aka 5 minutes
@@ -44,7 +48,8 @@ public class AudioSession extends RecommenderSession {
 
     private boolean isRecommendingSongs;
 
-    public AudioSession(SessionFactory sessionFactory, DiscordApi discordApi, RecommenderProcessor recommenderProcessor, LavaSource lavaSource, long associatedServerId, SessionCloseHandler sessionCloseHandler) {
+    public AudioSession(SessionFactory sessionFactory, DiscordApi discordApi, RecommenderProcessor recommenderProcessor,
+            LavaSource lavaSource, long associatedServerId, SessionCloseHandler sessionCloseHandler) {
         super(recommenderProcessor, associatedServerId);
 
         this.mostRecentSearches = new LimitedQueue<>(MAX_SEARCH_QUEUE_SIZE);
@@ -54,14 +59,16 @@ public class AudioSession extends RecommenderSession {
         this.lavaSource = lavaSource;
 
         this.disconnectScheduledService = Executors.newSingleThreadScheduledExecutor();
-        this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS, DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
+        this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS,
+                DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
 
         this.sessionCloseHandler = sessionCloseHandler;
 
         this.discordApi = discordApi;
     }
 
-    public AudioSession(SessionFactory sessionFactory, DiscordApi discordApi, RecommenderProcessor recommenderProcessor, long associatedServerId, SessionCloseHandler sessionCloseHandler) {
+    public AudioSession(SessionFactory sessionFactory, DiscordApi discordApi, RecommenderProcessor recommenderProcessor,
+            long associatedServerId, SessionCloseHandler sessionCloseHandler) {
         super(recommenderProcessor, associatedServerId);
 
         this.mostRecentSearches = new LimitedQueue<>(MAX_SEARCH_QUEUE_SIZE);
@@ -70,7 +77,8 @@ public class AudioSession extends RecommenderSession {
         this.sessionFactory = sessionFactory;
 
         this.disconnectScheduledService = Executors.newSingleThreadScheduledExecutor();
-        this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS, DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
+        this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS,
+                DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
 
         this.sessionCloseHandler = sessionCloseHandler;
 
@@ -78,8 +86,10 @@ public class AudioSession extends RecommenderSession {
     }
 
     /**
-     * Overrides the getSearchedSongs which is used to determine searched songs by the processor.
-     * 	However, in an AudioSession we want to specifically use mostRecentSearches which is a {@link LimitedQueue}
+     * Overrides the getSearchedSongs which is used to determine searched songs by
+     * the processor.
+     * However, in an AudioSession we want to specifically use mostRecentSearches
+     * which is a {@link LimitedQueue}
      *
      * @return {@link ArrayList}
      */
@@ -90,18 +100,21 @@ public class AudioSession extends RecommenderSession {
     }
 
     /**
-     * Checks if the mostRecentSearches (LimitedQueue) is above MAX_SEARCH_QUEUE_SIZE - 1 AND if song recommendations are enabled.
+     * Checks if the mostRecentSearches (LimitedQueue) is above
+     * MAX_SEARCH_QUEUE_SIZE - 1 AND if song recommendations are enabled.
      *
-     * @return true if mostRecentSearches total MAX_SEARCH_QUEUE_SIZE - 1 or greater AND song recommendations are enabled, false otherwise
+     * @return true if mostRecentSearches total MAX_SEARCH_QUEUE_SIZE - 1 or greater
+     *         AND song recommendations are enabled, false otherwise
      */
     @Override
     public boolean canQueueSongs() {
-        return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 2) && isRecommendingSongs && this.getAudioQueue().size() < 15;
+        return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 2) && isRecommendingSongs
+                && this.getAudioQueue().size() < 15;
     }
 
     @Override
     public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
-        if(!this.isRecommending()) {
+        if (!this.isRecommending()) {
             this.stopAllTracks();
             return;
         }
@@ -110,12 +123,12 @@ public class AudioSession extends RecommenderSession {
         int lowerRandomBoundMs = 1000 * 10; // ms, 10 second
         int upperRandomBoundMs = 1000 * 60; // ms, 60 seconds aka 1 minute
 
-        for(String title : recommendedTitles) {
+        for (String title : recommendedTitles) {
             int randomVariation = lowerRandomBoundMs + secureRandom.nextInt(upperRandomBoundMs - lowerRandomBoundMs);
 
             Thread.sleep(YOUTUBE_SEARCH_SLEEP_DURATION_MS + randomVariation);
 
-            if(!this.isRecommending()) {
+            if (!this.isRecommending()) {
                 this.stopAllTracks();
                 return;
             }
@@ -129,7 +142,7 @@ public class AudioSession extends RecommenderSession {
             this.lavaSource.queueTrack(title, isDeprioritized, playNext, discordUser);
         }
 
-        if(!this.isRecommending()) {
+        if (!this.isRecommending()) {
             this.stopAllTracks();
             return;
         }
@@ -148,6 +161,7 @@ public class AudioSession extends RecommenderSession {
 
     /**
      * Toggles the isRecommendingSongs variable and returns new value
+     * 
      * @return boolean, will be of new value
      */
     public boolean toggleIsRecommending() {
@@ -173,14 +187,16 @@ public class AudioSession extends RecommenderSession {
     }
 
     /**
-     * @return QueueResult array, returns the skipped track in [0], returns the new track in [1]
+     * @return QueueResult array, returns the skipped track in [0], returns the new
+     *         track in [1]
      */
     public QueueResult[] skipCurrentPlaying() {
         AudioTrack skippedTrack = this.lavaSource.skipCurrentTrack();
         AudioTrack newTrack = this.lavaSource.getCurrentPlayingAudioTrack();
 
         QueueResult[] queueResults = new QueueResult[2];
-        // only success if something was playing, is not playing now because it was skipped
+        // only success if something was playing, is not playing now because it was
+        // skipped
         queueResults[0] = new QueueResult(skippedTrack != null, false, skippedTrack);
         // if exists, it will play now
         queueResults[1] = new QueueResult(newTrack != null, newTrack != null, newTrack);
@@ -203,14 +219,16 @@ public class AudioSession extends RecommenderSession {
 
         try {
             audioConnection = futureConnect.get();
-        }
-        catch(ExecutionException exeException) {
-            Logger.error(exeException, "ExecutionException while attempting to wait for voice channel connect for server " + serverVoiceChannel.getServer().getId() + "|" + serverVoiceChannel.getServer().getName());
+        } catch (ExecutionException exeException) {
+            Logger.error(exeException,
+                    "ExecutionException while attempting to wait for voice channel connect for server {}|{}",
+                    serverVoiceChannel.getServer().getId(), serverVoiceChannel.getServer().getName());
             this.audioConnection = null;
             return;
-        }
-        catch(InterruptedException interruptedException) {
-            Logger.error(interruptedException, "InterruptedException while attempting to wait for voice channel connect for server " + serverVoiceChannel.getServer().getId() + "|" + serverVoiceChannel.getServer().getName());
+        } catch (InterruptedException interruptedException) {
+            Logger.error(interruptedException,
+                    "InterruptedException while attempting to wait for voice channel connect for server {}|{}",
+                    serverVoiceChannel.getServer().getId(), serverVoiceChannel.getServer().getName());
             Thread.currentThread().interrupt();
             this.audioConnection = null;
             return;
@@ -225,25 +243,32 @@ public class AudioSession extends RecommenderSession {
     }
 
     /**
-     * Checks if user is in server voice channel and if it is the same server voice channel as the bot.
+     * Checks if user is in server voice channel and if it is the same server voice
+     * channel as the bot.
+     * 
      * @param user, the user we are checking
-     * @return boolean, true if user is in same voice channel (or voice channel at all), false if not
+     * @return boolean, true if user is in same voice channel (or voice channel at
+     *         all), false if not
      */
     public boolean isUserInSameServerVoiceChannel(User user) {
         ServerVoiceChannel botConnectedServerVoiceChannel = this.audioConnection.getChannel();
 
-        Optional<ServerVoiceChannel> userConnectedServerVoiceChannel = user.getConnectedVoiceChannel(botConnectedServerVoiceChannel.getServer());
+        Optional<ServerVoiceChannel> userConnectedServerVoiceChannel = user
+                .getConnectedVoiceChannel(botConnectedServerVoiceChannel.getServer());
 
-        return userConnectedServerVoiceChannel.isPresent() && userConnectedServerVoiceChannel.get().getId() == botConnectedServerVoiceChannel.getId();
+        return userConnectedServerVoiceChannel.isPresent()
+                && userConnectedServerVoiceChannel.get().getId() == botConnectedServerVoiceChannel.getId();
     }
 
     @Override
     public String toString() {
-        String first = "\tAudioSession | ID: " + this.getSessionId() + " | SERVER ID: " + this.getAssociatedServerId() + " |\n";
-        String second = "\tCurrent Playing Track: " + this.lavaSource.getCurrentPlayingTrack() + "\n";
-        String third = "\t" + (this.lavaSource.getAudioQueue() == null ? 0 : this.lavaSource.getAudioQueue().size()) + " tracks in the queue.";
-
-        return first + second + third;
+        StringBuilder sb = new StringBuilder();
+        sb.append("\tAudioSession | ID: ").append(getSessionId())
+                .append(" | SERVER ID: ").append(getAssociatedServerId()).append(" |\n")
+                .append("\tCurrent Playing Track: ").append(lavaSource.getCurrentPlayingTrack()).append("\n")
+                .append("\t").append(lavaSource.getAudioQueue() == null ? 0 : lavaSource.getAudioQueue().size())
+                .append(" tracks in the queue.");
+        return sb.toString();
     }
 
     @Override
@@ -253,8 +278,7 @@ public class AudioSession extends RecommenderSession {
         this.skipCurrentPlaying();
         try {
             Thread.sleep(1500);
-        }
-        catch(InterruptedException iE) {
+        } catch (InterruptedException iE) {
             Logger.error(iE, "AudioSession shutdown was interrupted!");
             Thread.currentThread().interrupt();
         }
@@ -267,7 +291,7 @@ public class AudioSession extends RecommenderSession {
 
         this.sessionCloseHandler.handle(this.getAssociatedServerId());
 
-        Logger.info("SHUTDOWN \n" + this);
+        Logger.info("SHUTDOWN \n{}", this);
     }
 
     public Optional<AudioTrackWithUser> remove(int position) {
@@ -298,20 +322,18 @@ public class AudioSession extends RecommenderSession {
 
         try {
             Thread.sleep(500);
-        }
-        catch(InterruptedException iE) {
+        } catch (InterruptedException iE) {
             Logger.error(iE, "Occurred in AudioSession when stopping all tracks.");
             Thread.currentThread().interrupt();
         }
     }
 
     private void handleDisconnectService() {
-        if(canDisconnectFromVoiceChannel()) {
-            Logger.info("DISCONNECTING \n" + this);
+        if (canDisconnectFromVoiceChannel()) {
+            Logger.info("DISCONNECTING \n{}", this);
             this.properlyDisconnectFromVoiceChannel();
-        }
-        else {
-            Logger.info("Did NOT Disconnect: \n" + this);
+        } else {
+            Logger.info("Did NOT Disconnect: \n{}", this);
         }
     }
 

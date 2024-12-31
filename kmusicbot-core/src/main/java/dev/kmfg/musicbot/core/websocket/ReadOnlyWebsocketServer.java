@@ -27,6 +27,10 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 import java.lang.reflect.Type;
 
+/**
+ * Connects to only one client. Every 250ms, this websocket server sends
+ * {@link NowPlayingResponse}'s for every guild which is currently playing.
+ */
 public class ReadOnlyWebsocketServer extends WebSocketServer {
     private static class SafeTypeAdapter implements JsonSerializer<Long> {
         @Override
@@ -40,10 +44,12 @@ public class ReadOnlyWebsocketServer extends WebSocketServer {
             .excludeFieldsWithoutExposeAnnotation()
             .create();
 
+    private static final int MAX_CONNECTION_COUNT = 1;
+    private static final String TOKEN_TYPE = "Bearer ";
+
     private final KMusicBot bot;
     private final Dotenv dotenv;
     private final String WEBSOCKET_AUTH_HEADER;
-    private final int MAX_CONNECTION_COUNT = 1;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(MAX_CONNECTION_COUNT);
     private final ConcurrentHashMap<WebSocket, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
 
@@ -55,7 +61,6 @@ public class ReadOnlyWebsocketServer extends WebSocketServer {
         this.bot = bot;
         this.dotenv = Dotenv.load();
 
-        final String TOKEN_TYPE = "Bearer ";
         this.WEBSOCKET_AUTH_HEADER = TOKEN_TYPE + this.dotenv.get("WEBSOCKET_TOKEN");
         if (WEBSOCKET_AUTH_HEADER.length() <= TOKEN_TYPE.length()) {
             throw new Exception("Websocket password is empty. Cannot start websocket!");
@@ -65,7 +70,8 @@ public class ReadOnlyWebsocketServer extends WebSocketServer {
     @Override
     public void onClose(WebSocket ws, int arg1, String arg2, boolean arg3) {
         stopScheduledTask(ws);
-        this.connectionCount.set(Math.max(0, this.connectionCount.get() - 1));
+        this.connectionCount.set(Math.max(0, this.connectionCount.get() - 1)); // is this a band-aid, or ensuring
+                                                                               // correct behavior?
     }
 
     @Override

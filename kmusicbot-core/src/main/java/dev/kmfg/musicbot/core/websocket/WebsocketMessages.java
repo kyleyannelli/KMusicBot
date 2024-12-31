@@ -2,6 +2,12 @@ package dev.kmfg.musicbot.core.websocket;
 
 import com.google.gson.annotations.Expose;
 
+/**
+ * Non-conventional error messages describing the exact behavior occurring in
+ * the bot.
+ * Mainly intended for the ReadonlyClient to understand what is going on if
+ * needed.
+ */
 public enum WebsocketMessages {
     ERROR(500, "An error occurred on the server."),
     NOT_AUTHENTICATED(401, "You failed to provide the proper authentication."),

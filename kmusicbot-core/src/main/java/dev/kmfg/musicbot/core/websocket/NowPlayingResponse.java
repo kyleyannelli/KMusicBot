@@ -6,6 +6,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 
 import dev.kmfg.musicbot.core.sessions.AudioSession;
 
+/**
+ * Simple DTO for a track which is playing in an {@link AudioSession}.
+ */
 public class NowPlayingResponse {
     @Expose
     public final long guildId;
@@ -25,6 +28,11 @@ public class NowPlayingResponse {
     @Expose
     public final long lengthMs;
 
+    /**
+     * Gets the current {@link AudioTrack} for the given {@link AudioSession}.
+     * If there is no present current {@link AudioTrack}, all String fields are set
+     * to "", and all numbers are set to -1.
+     */
     public NowPlayingResponse(long guildId, AudioSession audioSession) {
         AudioTrack audioTrack = audioSession.getLavaSource().getCurrentPlayingAudioTrack();
 

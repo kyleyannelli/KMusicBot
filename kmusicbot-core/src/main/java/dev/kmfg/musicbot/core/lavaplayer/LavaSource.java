@@ -18,6 +18,7 @@ import org.tinylog.Logger;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 
 import dev.kmfg.musicbot.core.exceptions.AlreadyAccessedException;
@@ -244,8 +245,9 @@ public class LavaSource extends AudioSourceBase {
                 }
 
                 if (vParam == "") {
-                    Logger.warn("V Param was not found when sanitizing Youtube URL for queueTrack! Given the query \""
-                            + searchQuery + "\"");
+                    Logger.warn(
+                            "V Param was not found when sanitizing Youtube URL for queueTrack! Given the query \"{}\"",
+                            searchQuery);
                 } else {
                     urlWithOnlyVParam += vParam;
                 }
@@ -382,11 +384,11 @@ public class LavaSource extends AudioSourceBase {
      * @return String, contains the title, author, and uri.
      */
     public String getCurrentPlayingTrack() {
-        return this.hasCurrentPlayingTrack()
-                ? this.audioPlayer.getPlayingTrack().getInfo().title + " | "
-                        + this.audioPlayer.getPlayingTrack().getInfo().author + " | "
-                        + this.audioPlayer.getPlayingTrack().getInfo().uri
-                : "!Nothing Playing!";
+        if (!this.hasCurrentPlayingTrack()) {
+            return "!Nothing Playing!";
+        }
+        AudioTrackInfo trackInfo = this.audioPlayer.getPlayingTrack().getInfo();
+        return String.format("%s | %s | %s", trackInfo.title, trackInfo.author, trackInfo.uri);
     }
 
     public Optional<AudioTrackWithUser> remove(int position) {
@@ -455,10 +457,11 @@ public class LavaSource extends AudioSourceBase {
 
     /**
      * @TODO Function hasn't been implemented yet. Do I still want to support
-     *       Spotify links?
+     *       Spotify links? NO. Spotify killed off their Web API!
      * @param spotifyLink
      * @return
      */
+    @Deprecated
     private Optional<List<String>> getTracksFromSpotifyLink(String spotifyLink) {
         Optional<List<String>> trackNamesFromSpotify = Optional.empty();
 

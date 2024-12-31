@@ -16,15 +16,14 @@ import dev.kmfg.musicbot.core.spotifyapi.ClientCreate;
 import dev.kmfg.musicbot.database.util.HibernateUtil;
 import io.github.cdimascio.dotenv.Dotenv;
 
+import java.awt.Color;
+
 import org.hibernate.SessionFactory;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.DiscordApiBuilder;
 import org.javacord.api.entity.permission.RoleBuilder;
 import org.javacord.api.entity.server.Server;
 import org.tinylog.Logger;
-
-import java.awt.*;
-import java.util.ArrayList;
 
 /**
  * KMusicBot fully allows for a music bot to operate. After initializing,

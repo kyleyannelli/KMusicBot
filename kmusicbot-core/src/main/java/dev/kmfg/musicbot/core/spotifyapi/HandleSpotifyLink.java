@@ -13,6 +13,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Optional;
 
+/**
+ * Given that the Spotify Web API was abruptly discontinued, these classes are
+ * deprecated.
+ */
+@Deprecated
 public class HandleSpotifyLink {
     public static ArrayList<String> getCollectionFromSpotifyLink(SpotifyApi spotifyApi, String link)
             throws IOException, ParseException, SpotifyWebApiException {

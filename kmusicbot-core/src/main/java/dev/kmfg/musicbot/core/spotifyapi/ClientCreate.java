@@ -11,6 +11,11 @@ import org.apache.hc.core5.http.ParseException;
 import java.io.IOException;
 import java.util.Optional;
 
+/**
+ * Given that the Spotify Web API was abruptly discontinued, these classes are
+ * deprecated.
+ */
+@Deprecated
 public class ClientCreate {
     private static final String clientId = Dotenv.load().get("SPOTIFY_CLIENT_ID");
     private static final String clientSecret = Dotenv.load().get("SPOTIFY_SECRET_ID");

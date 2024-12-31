@@ -2,6 +2,10 @@ package dev.kmfg.musicbot.core.lavaplayer;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
+/**
+ * DTO to help determine statistics for a
+ * {@link dev.kmfg.musicbot.database.models.TrackedSong}.
+ */
 public class PositionalAudioTrack {
     private final boolean isQueuedByUser;
     private final AudioTrack audioTrack;

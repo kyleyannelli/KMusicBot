@@ -15,6 +15,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import se.michaelthelin.spotify.SpotifyApi;
 
+/**
+ * An executor service that adds tracks based on the history of a
+ * {@link RecommenderSession}. While these RecommendX classes are not going to
+ * be deprecated, their deriving methods and classes have been. A new source of
+ * recommendations needs to be created.
+ */
 public class RecommenderProcessor {
     // Maximum amount of characters allowed in the spotify request field
     private static final int SPOTIFY_MAX_CHAR_SIZE = 100;
@@ -54,7 +60,7 @@ public class RecommenderProcessor {
     }
 
     public void addRecommendedSongsFromSpotify(RecommenderSession session) {
-        Logger.info("RecommenderProcessor invoked from Session ID: " + session.getSessionId());
+        Logger.info("RecommenderProcessor invoked from Session ID: {}", session.getSessionId());
         Runnable runnable = () -> {
             String[] spotifyRecommendations = getRecommendationsFromSpotify(session);
             try {
@@ -66,16 +72,24 @@ public class RecommenderProcessor {
 
             if (spotifyRecommendations.length == 0) {
                 Logger.warn(
-                        "Session " + session.getSessionId() + " belonging to server " + session.getAssociatedServerId()
-                                + " received a 0 length recommendation array. Spotify request likely failed!");
+                        "Session {} belonging to server {} received a 0 length recommendation array. Spotify request likely failed!",
+                        session.getSessionId(), session.getAssociatedServerId());
             } else {
                 // setup logging info
                 StringBuilder infoTextBuilder = new StringBuilder();
-                infoTextBuilder.append("Added recommendations: ");
-                for (String recommendation : spotifyRecommendations)
-                    infoTextBuilder.append("\n\t").append(recommendation);
-                infoTextBuilder.append("\nTo the queue of ").append(session.getSessionId())
-                        .append(" belonging to server ").append(session.getAssociatedServerId());
+                infoTextBuilder
+                        .append("Added recommendations: ");
+                for (String recommendation : spotifyRecommendations) {
+                    infoTextBuilder
+                            .append("\n\t")
+                            .append(recommendation);
+                }
+
+                infoTextBuilder
+                        .append("\nTo the queue of ")
+                        .append(session.getSessionId())
+                        .append(" belonging to server ")
+                        .append(session.getAssociatedServerId());
                 Logger.info(infoTextBuilder.toString());
             }
         };
@@ -127,7 +141,7 @@ public class RecommenderProcessor {
 
     private String[] getRecommendationsFromSpotify(RecommenderSession session) {
         ArrayList<String> songsFromYoutube = determineSongsFromYoutube(session);
-        return recommenderRequester.getSongsFromSpotify(songsFromYoutube).getRecommendedSongs();
+        return recommenderRequester.getSongsFromSpotify(songsFromYoutube);
     }
 
     private ArrayList<String> determineSongsFromYoutube(RecommenderSession session) {
