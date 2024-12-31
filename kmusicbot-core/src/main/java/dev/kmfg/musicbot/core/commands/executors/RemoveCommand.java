@@ -15,13 +15,15 @@ import org.tinylog.Logger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 public class RemoveCommand extends Command {
     public static final String COMMAND_NAME = "remove";
     private static final String DESCRIPTION = "By number, removes specified song from queue.";
 
-    public RemoveCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
-        super(sessionManager, slashCommandEvent);
+    public RemoveCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
+            ExecutorService executorService) {
+        super(sessionManager, slashCommandEvent, executorService);
     }
 
     public RemoveCommand() {
@@ -33,10 +35,10 @@ public class RemoveCommand extends Command {
         SlashCommand.with(COMMAND_NAME, DESCRIPTION,
                 // create option(s)
                 Collections.singletonList(
-                    // create option /play <song>
-                    SlashCommandOption.create(SlashCommandOptionType.LONG, "position", "The song by position in queue to remove.", true)
-                    ))
-            .createGlobal(discordApi).join();
+                        // create option /play <song>
+                        SlashCommandOption.create(SlashCommandOptionType.LONG, "position",
+                                "The song by position in queue to remove.", true)))
+                .createGlobal(discordApi).join();
     }
 
     @Override
@@ -51,39 +53,34 @@ public class RemoveCommand extends Command {
 
     @Override
     public void execute() {
+        super.execute();
         String requiredNumber = "position";
         ArrayList<String> params = new ArrayList<>();
         params.add(requiredNumber);
-
 
         EnsuredSlashCommandInteraction ensuredInteraction = this.getEnsuredInteraction(params);
 
         AudioSession audioSession = ensuredInteraction.getAudioSession();
 
-
-
-        int songPosition ;
+        int songPosition;
 
         try {
             songPosition = Integer.parseInt(ensuredInteraction.getParameterValue(requiredNumber));
-            if(songPosition < 0 || songPosition > audioSession.getAudioQueue().size()) {
+            if (songPosition < 0 || songPosition > audioSession.getAudioQueue().size()) {
                 this.messageSender.sendBadParameterEmbed(requiredNumber);
                 return;
             }
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             Logger.warn(e, "Error occurred while attempting to remove song by position. Parameter failed to parse!");
             this.messageSender.sendBadParameterEmbed(requiredNumber);
             return;
         }
 
-
         Optional<AudioTrackWithUser> audioTrackWithUser = audioSession.remove(songPosition);
 
         AudioTrackWithUser removedTrack;
 
-
-        if(audioTrackWithUser.isEmpty()) {
+        if (audioTrackWithUser.isEmpty()) {
             Logger.warn("Audio Track empty during attempted remove!");
             this.messageSender.sendNothingFoundEmbed("" + songPosition);
             return;
@@ -95,4 +92,3 @@ public class RemoveCommand extends Command {
         return;
     }
 }
-

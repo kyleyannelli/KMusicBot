@@ -17,6 +17,7 @@ import dev.kmfg.musicbot.database.util.HibernateUtil;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.awt.Color;
+import java.util.concurrent.Executors;
 
 import org.hibernate.SessionFactory;
 import org.javacord.api.DiscordApi;
@@ -61,7 +62,8 @@ public class KMusicBot {
         this.discordApi.setMessageCacheSize(0, 0);
         Logger.info("Bot logged into discord.");
 
-        CommandsRegistry commandsRegistry = new CommandsRegistry();
+        CommandsRegistry commandsRegistry = new CommandsRegistry(
+                Executors.newFixedThreadPool(SlashCommandListenerHandler.DEFAULT_MAX_COMMAND_THREADS));
         try {
             commandsRegistry.registerCommands(this.discordApi);
             // as this wasn't working properly in previous versions this is an easy log to

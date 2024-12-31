@@ -16,11 +16,12 @@ import org.javacord.api.listener.interaction.SlashCommandCreateListener;
 import org.tinylog.Logger;
 
 public class SlashCommandListenerHandler implements SlashCommandCreateListener {
-    // by default allow 10 threads for the pool
-    private final static int DEFAULT_MAX_COMMAND_THREADS = 10;
     private final SessionManager sessionManager;
     private final CommandsRegistry commandsRegistry;
     private final ExecutorService commandExecutorService;
+
+    // by default allow 10 threads for the pool
+    public final static int DEFAULT_MAX_COMMAND_THREADS = 10;
 
     public SlashCommandListenerHandler(SessionManager sessionManager, CommandsRegistry commandsRegistry) {
         this.sessionManager = sessionManager;

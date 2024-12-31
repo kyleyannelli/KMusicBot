@@ -12,6 +12,7 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Handles the /search command by loading in results from
@@ -21,8 +22,9 @@ public class SearchCommand extends Command {
     public static final String COMMAND_NAME = "search";
     private static final String DESCRIPTION = "Search for a song";
 
-    public SearchCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
-        super(sessionManager, slashCommandEvent);
+    public SearchCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
+            ExecutorService executorService) {
+        super(sessionManager, slashCommandEvent, executorService);
     }
 
     public SearchCommand() {
@@ -52,6 +54,7 @@ public class SearchCommand extends Command {
 
     @Override
     public void execute() {
+        super.execute();
         // create param requirement for song
         ArrayList<String> params = new ArrayList<>(List.of("song"));
         EnsuredSlashCommandInteraction ensuredInteraction = this.getEnsuredInteraction(params);

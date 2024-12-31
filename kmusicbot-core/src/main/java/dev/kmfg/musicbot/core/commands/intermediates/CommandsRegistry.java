@@ -9,15 +9,22 @@ import org.tinylog.Logger;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Holds the registry of available commands to execute
  */
 public class CommandsRegistry {
     private final ConcurrentHashMap<String, Class<? extends Command>> commandsMap;
+    private final ExecutorService statisticsExecutorService;
 
-    public CommandsRegistry() {
+    /**
+     * @param statisticsExecutorService should mirror the number of available
+     *                                  threads in the command executor pool.
+     */
+    public CommandsRegistry(ExecutorService statisticsExecutorService) {
         this.commandsMap = new ConcurrentHashMap<>();
+        this.statisticsExecutorService = statisticsExecutorService;
         // register all the commands
         this.commandsMap.put(PlayCommand.COMMAND_NAME, PlayCommand.class);
         this.commandsMap.put(PlayNextCommand.COMMAND_NAME, PlayNextCommand.class);
@@ -32,8 +39,9 @@ public class CommandsRegistry {
         this.commandsMap.put(RemoveCommand.COMMAND_NAME, RemoveCommand.class);
     }
 
-    public void registerCommands(DiscordApi discordApi) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
-        for(Class<? extends Command> commandClass : commandsMap.values()) {
+    public void registerCommands(DiscordApi discordApi)
+            throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        for (Class<? extends Command> commandClass : commandsMap.values()) {
             Constructor<? extends Command> constructor = commandClass.getDeclaredConstructor();
             constructor.setAccessible(true);
             Command command = constructor.newInstance();
@@ -45,23 +53,24 @@ public class CommandsRegistry {
         Class<? extends Command> commandClass = commandsMap.get(commandName);
         if (commandClass != null) {
             try {
-                Constructor<? extends Command> constructor = commandClass.getConstructor(SessionManager.class, SlashCommandCreateEvent.class);
-                return constructor.newInstance(sessionManager, event);
-            }
-            catch(NoSuchMethodException noSuchMethodException) {
-                Logger.error(noSuchMethodException, "This shouldn't happen! NoSuchMethod exception while constructing a command!");
-            }
-            catch(InstantiationException instantiationException) {
-                Logger.error(instantiationException, "This shouldn't happen! Instantiation exception while constructing a command!");
-            }
-            catch(IllegalAccessException illegalAccessException) {
-                Logger.error(illegalAccessException, "This shouldn't happen! IllegalAccess exception while constructing a command!");
-            }
-            catch(IllegalArgumentException illegalArgumentException) {
-                Logger.error(illegalArgumentException, "This shouldn't happen! IllegalArgument exception while constructing a command!");
-            }
-            catch(InvocationTargetException invocationTargetException) {
-                Logger.error(invocationTargetException, "This shouldn't happen! InvocationTarget exception while constructing a command!");
+                Constructor<? extends Command> constructor = commandClass.getConstructor(SessionManager.class,
+                        SlashCommandCreateEvent.class, ExecutorService.class);
+                return constructor.newInstance(sessionManager, event, statisticsExecutorService);
+            } catch (NoSuchMethodException noSuchMethodException) {
+                Logger.error(noSuchMethodException,
+                        "This shouldn't happen! NoSuchMethod exception while constructing a command!");
+            } catch (InstantiationException instantiationException) {
+                Logger.error(instantiationException,
+                        "This shouldn't happen! Instantiation exception while constructing a command!");
+            } catch (IllegalAccessException illegalAccessException) {
+                Logger.error(illegalAccessException,
+                        "This shouldn't happen! IllegalAccess exception while constructing a command!");
+            } catch (IllegalArgumentException illegalArgumentException) {
+                Logger.error(illegalArgumentException,
+                        "This shouldn't happen! IllegalArgument exception while constructing a command!");
+            } catch (InvocationTargetException invocationTargetException) {
+                Logger.error(invocationTargetException,
+                        "This shouldn't happen! InvocationTarget exception while constructing a command!");
             }
         }
         return null;

@@ -11,12 +11,15 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.ExecutorService;
 
 public class PlayNextCommand extends Command {
     public static final String COMMAND_NAME = "playnext";
     private static final String DESCRIPTION = "Play a song, but, if there is a queue it will be added to the front.";
-    public PlayNextCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
-        super(sessionManager, slashCommandEvent);
+
+    public PlayNextCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
+            ExecutorService executorService) {
+        super(sessionManager, slashCommandEvent, executorService);
     }
 
     public PlayNextCommand() {
@@ -26,11 +29,10 @@ public class PlayNextCommand extends Command {
     @Override
     public void register(DiscordApi discordApi) {
         SlashCommand.with(COMMAND_NAME, DESCRIPTION,
-                        // create option(s)
-                        Collections.singletonList(
-                                // create option /play <song>
-                                SlashCommandOption.create(SlashCommandOptionType.STRING, "song", "The song to play", true)
-                        ))
+                // create option(s)
+                Collections.singletonList(
+                        // create option /play <song>
+                        SlashCommandOption.create(SlashCommandOptionType.STRING, "song", "The song to play", true)))
                 .createGlobal(discordApi).join();
     }
 
@@ -46,14 +48,17 @@ public class PlayNextCommand extends Command {
 
     @Override
     public void execute() {
+        super.execute();
         // begin ensured interaction setup
         String songParameter = "song";
         ArrayList<String> requiredParameters = new ArrayList<>();
         requiredParameters.add(songParameter);
 
         EnsuredSlashCommandInteraction ensuredInteraction = getEnsuredInteraction(requiredParameters);
-        // Above method will handle sending messages, stop execution here if we don't get an EnsuredInteraction.
-        if(ensuredInteraction == null) return;
+        // Above method will handle sending messages, stop execution here if we don't
+        // get an EnsuredInteraction.
+        if (ensuredInteraction == null)
+            return;
 
         QueueResult queueResult = ensuredInteraction
                 .getAudioSession()

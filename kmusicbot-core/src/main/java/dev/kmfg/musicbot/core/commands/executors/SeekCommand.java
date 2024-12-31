@@ -12,12 +12,15 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 public class SeekCommand extends Command {
     public static final String COMMAND_NAME = "seek";
     private static final String DESCRIPTION = "Seek to a specific position in the current playing song. Just one of three options is required.";
-    public SeekCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent) {
-        super(sessionManager, slashCommandEvent);
+
+    public SeekCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
+            ExecutorService executorService) {
+        super(sessionManager, slashCommandEvent, executorService);
     }
 
     public SeekCommand() {
@@ -49,106 +52,111 @@ public class SeekCommand extends Command {
 
     @Override
     public void execute() {
+        super.execute();
         EnsuredSlashCommandInteraction ensuredInteraction = this.getEnsuredInteraction(null);
-        if(ensuredInteraction == null) return;
+        if (ensuredInteraction == null)
+            return;
 
         Optional<String> seconds = this.slashCommandEvent
-            .getSlashCommandInteraction()
-            .getArgumentStringRepresentationValueByName("seconds");
+                .getSlashCommandInteraction()
+                .getArgumentStringRepresentationValueByName("seconds");
 
         Optional<String> minutes = this.slashCommandEvent
-            .getSlashCommandInteraction()
-            .getArgumentStringRepresentationValueByName("minutes");
+                .getSlashCommandInteraction()
+                .getArgumentStringRepresentationValueByName("minutes");
 
         Optional<String> hours = this.slashCommandEvent
-            .getSlashCommandInteraction()
-            .getArgumentStringRepresentationValueByName("hours");
+                .getSlashCommandInteraction()
+                .getArgumentStringRepresentationValueByName("hours");
 
         // ensure at least one value is present
-        if(seconds.isEmpty() && minutes.isEmpty() && hours.isEmpty()) {
+        if (seconds.isEmpty() && minutes.isEmpty() && hours.isEmpty()) {
             this.messageSender.sendEmptyParameterEmbed("HMS");
         }
 
         // ensure we can parse present values
-        if(presentOptionalsArentParseable(seconds, minutes, hours)) {
+        if (presentOptionalsArentParseable(seconds, minutes, hours)) {
             this.messageSender.sendBadParameterEmbed("HMS");
             return;
         }
 
-        AudioTrack relevantAudioTrack = ensuredInteraction.getAudioSession().getLavaSource().getCurrentPlayingAudioTrack();
+        AudioTrack relevantAudioTrack = ensuredInteraction.getAudioSession().getLavaSource()
+                .getCurrentPlayingAudioTrack();
 
-        long seekMs = seekToPositionInNowPlayingTrack(relevantAudioTrack,seconds, minutes, hours);
+        long seekMs = seekToPositionInNowPlayingTrack(relevantAudioTrack, seconds, minutes, hours);
 
-        if(seekMs < 0) {
+        if (seekMs < 0) {
             this.messageSender.sendBadHMS(seekMs);
             return;
-        }
-        else {
+        } else {
             this.messageSender.sendSeekEmbed(relevantAudioTrack, seekMs);
         }
     }
 
-    private boolean presentOptionalsArentParseable(Optional<String> seconds, Optional<String> minutes, Optional<String> hours) {
-       try {
-           long temp = 0;
+    private boolean presentOptionalsArentParseable(Optional<String> seconds, Optional<String> minutes,
+            Optional<String> hours) {
+        try {
+            long temp = 0;
 
-           if(seconds.isPresent()) {
-               temp = Long.parseLong(seconds.get());
-               if(temp < 0) throw new NumberFormatException(
-                       new StringBuilder()
-                       .append("Unable to parse seconds \"")
-                       .append(seconds.get())
-                       .append("\"")
-                       .toString());
-           }
+            if (seconds.isPresent()) {
+                temp = Long.parseLong(seconds.get());
+                if (temp < 0)
+                    throw new NumberFormatException(
+                            new StringBuilder()
+                                    .append("Unable to parse seconds \"")
+                                    .append(seconds.get())
+                                    .append("\"")
+                                    .toString());
+            }
 
-           if(minutes.isPresent()) {
-               temp = Long.parseLong(minutes.get());
-               if(temp < 0) throw new NumberFormatException(
-                       new StringBuilder()
-                       .append("Unable to parse minutes \"")
-                       .append(minutes.get())
-                       .append("\"")
-                       .toString());
-           }
+            if (minutes.isPresent()) {
+                temp = Long.parseLong(minutes.get());
+                if (temp < 0)
+                    throw new NumberFormatException(
+                            new StringBuilder()
+                                    .append("Unable to parse minutes \"")
+                                    .append(minutes.get())
+                                    .append("\"")
+                                    .toString());
+            }
 
-           if(hours.isPresent() && minutes.get() != "") {
-               temp = Long.parseLong(hours.get());
-               if(temp < 0) throw new NumberFormatException(
-                       new StringBuilder()
-                       .append("Unable to parse hours \"")
-                       .append(hours.get())
-                       .append("\"")
-                       .toString());
-           }
+            if (hours.isPresent() && minutes.get() != "") {
+                temp = Long.parseLong(hours.get());
+                if (temp < 0)
+                    throw new NumberFormatException(
+                            new StringBuilder()
+                                    .append("Unable to parse hours \"")
+                                    .append(hours.get())
+                                    .append("\"")
+                                    .toString());
+            }
 
-           return false;
-       }
-       catch(NumberFormatException numberFormatException) {
-           org.tinylog.Logger.error(numberFormatException, "Bad parameter in /seek command interaction");
-           return true;
-       }
+            return false;
+        } catch (NumberFormatException numberFormatException) {
+            org.tinylog.Logger.error(numberFormatException, "Bad parameter in /seek command interaction");
+            return true;
+        }
     }
 
-    private long seekToPositionInNowPlayingTrack(AudioTrack audioTrack, Optional<String> seconds, Optional<String> minutes, Optional<String> hours) {
+    private long seekToPositionInNowPlayingTrack(AudioTrack audioTrack, Optional<String> seconds,
+            Optional<String> minutes, Optional<String> hours) {
         long totalSeekMs = 0;
         long trackDuration = audioTrack.getDuration();
 
-        if(seconds.isPresent()) {
-            totalSeekMs += Long.parseLong(seconds.get()) * 1000; 
+        if (seconds.isPresent()) {
+            totalSeekMs += Long.parseLong(seconds.get()) * 1000;
         }
-        if(minutes.isPresent()) {
+        if (minutes.isPresent()) {
             totalSeekMs += Long.parseLong(minutes.get()) * 1000 * 60;
         }
-        if(hours.isPresent()) {
+        if (hours.isPresent()) {
             totalSeekMs += Long.parseLong(hours.get()) * 1000 * 60 * 60;
         }
 
-        if(totalSeekMs < trackDuration) {
+        if (totalSeekMs < trackDuration) {
             audioTrack.setPosition(totalSeekMs);
             return totalSeekMs;
-        }
-        else {
+        } else {
             return -totalSeekMs;
         }
     }

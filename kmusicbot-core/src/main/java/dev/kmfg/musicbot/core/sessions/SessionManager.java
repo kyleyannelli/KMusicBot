@@ -60,6 +60,10 @@ public class SessionManager {
         return this.audioSessions.size();
     }
 
+    public SessionFactory getSessionFactory() {
+        return this.sessionFactory;
+    }
+
     /**
      * If there is only a single AudioSession, it will be returned. If there are
      */
