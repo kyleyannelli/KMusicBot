@@ -33,6 +33,9 @@ DISCORD_BOT_TOKEN="YOUR_BOT_TOKEN"
 SPOTIFY_CLIENT_ID="YOUR_SPOTIFY_CLIENT_ID"
 SPOTIFY_SECRET_ID="YOUR_SPOTIFY_SECRET_ID"
 
+# The token to allow a websocket connection to core. Please note, while having a static authentication token is inherently less secure, this is entirely read-only, and non-sensitive data. However, you should still proxy the connection when going across a network.
+WEBSOCKET_TOKEN="GenerateAToken"
+
 # The following are for number of threads for the bot's services.
 #   If you are unsure about this, leave it as 10 (default)
 #   If you are CERTAIN this will run in only one server, or you are tight on resources, set each to 1
@@ -82,6 +85,11 @@ ENCRYPTION_PASS="notSomethingLike1234Please"
 CORS_URI="https://music.kmfg.dev"
 # I'd recommend using your parent domain. For example, my api is served on apiv1.kmfg.dev. This means for the cookie to be valid (browser only) and be accessed by svelte on music.kmfg.dev, the URI needs to be the parent.
 COOKIE_URI="kmfg.dev"
+
+# This is the address kmusicbot-core is running on. The port will always be 30106
+WEBSOCKET_URI="ws://10.1.0.70:30106"
+# This is the token for the websocket you set in the core .env
+WEBSOCKET_TOKEN="GenerateAToken"
 ```
 3. Make sure the entire project has been compiled, if not, go to the root directory and `mvn clean install`.
 In `kmusicbot-api` run `mvn exec:java`. Your API is now running!
