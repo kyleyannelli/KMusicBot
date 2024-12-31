@@ -19,7 +19,8 @@ idea/
 .classpath
 .factorypath
 .project
-.settings
+.settings/*.prefs
+!.settings/org.eclipse.jdt.core.prefs
 .springBeans
 .sts4-cache
 

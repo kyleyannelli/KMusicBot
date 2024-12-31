@@ -1,0 +1,5 @@
+{
+  "java.configuration.compiler.compliance": "11",
+  "java.configuration.compiler.source": "11",
+  "java.configuration.compiler.target": "11"
+}
