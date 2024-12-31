@@ -78,7 +78,11 @@ public class SessionManager {
 
     private void handleAudioSessionShutdown(long associatedServerId) {
         // remove the audiosession upon shutdown
-        long sessionId = this.audioSessions.get(associatedServerId).getSessionId();
+        AudioSession session = this.audioSessions.get(associatedServerId);
+        if (session == null) {
+            return;
+        }
+        long sessionId = session.getAssociatedServerId();
         this.audioSessions.remove(associatedServerId);
         Logger.info("Session {} removed from server {}.", sessionId, associatedServerId);
     }
