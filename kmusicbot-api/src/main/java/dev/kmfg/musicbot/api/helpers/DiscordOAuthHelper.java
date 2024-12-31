@@ -52,7 +52,7 @@ public class DiscordOAuthHelper {
         SecureRandom secureRandom = new SecureRandom();
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < STATE_STR_LEN; i++) {
-            char c = (char) secureRandom.nextInt(33, 126);
+            char c = (char) (33 + secureRandom.nextInt(126 - 33));
             stringBuilder.append(c);
         }
         return stringBuilder.toString();
