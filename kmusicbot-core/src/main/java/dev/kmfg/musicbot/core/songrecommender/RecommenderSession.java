@@ -53,8 +53,10 @@ public class RecommenderSession {
 
         // every AUTO_QUEUE_RATE minutes autoqueue
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
-        this.scheduler.scheduleAtFixedRate(this::loadRecommendedTracks, INITIAL_AUTO_QUEUE_DELAY, AUTO_QUEUE_RATE,
-                TimeUnit.MINUTES);
+        // the below will remain disabled until Spotify Web API gets replaced
+        // this.scheduler.scheduleAtFixedRate(this::loadRecommendedTracks,
+        // INITIAL_AUTO_QUEUE_DELAY, AUTO_QUEUE_RATE,
+        // TimeUnit.MINUTES);
     }
 
     public void addSearchToSearchedSongs(String searchQuery) {
