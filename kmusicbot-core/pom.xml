@@ -7,7 +7,7 @@
     <parent>
         <groupId>dev.kmfg.musicbot</groupId>
         <artifactId>KMusicBot</artifactId>
-        <version>3.6.0</version>
+        <version>3.6.1</version>
     </parent>
 
     <artifactId>kmusicbot-core</artifactId>
@@ -115,7 +115,7 @@
         <dependency>
             <groupId>dev.kmfg.musicbot</groupId>
             <artifactId>kmusicbot-database</artifactId>
-            <version>3.6.0</version>
+            <version>3.6.1</version>
         </dependency>
         <dependency>
             <groupId>org.tinylog</groupId>
@@ -155,7 +155,7 @@
         <dependency>
             <groupId>dev.lavalink.youtube</groupId>
             <artifactId>common</artifactId>
-            <version>1.8.3</version>
+            <version>1.11.4</version>
         </dependency>
         <dependency>
             <groupId>se.michaelthelin.spotify</groupId>
