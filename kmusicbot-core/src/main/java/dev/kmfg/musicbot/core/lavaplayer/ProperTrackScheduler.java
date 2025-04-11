@@ -137,6 +137,8 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
         this.handleTrackEndStatistics(track);
         Logger.error(exception, "{} Track unexpectedly stopped.", getSessionIdString());
+        // I want to be able to update the YouTube source if this is happening
+        System.exit(4); // maybe determine a better way to do this?
     }
 
     @Override
