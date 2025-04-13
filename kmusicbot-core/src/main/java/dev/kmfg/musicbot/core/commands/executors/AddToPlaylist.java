@@ -9,8 +9,10 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 import org.javacord.api.DiscordApi;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
@@ -21,6 +23,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import dev.kmfg.musicbot.core.sessions.SessionManager;
 import dev.kmfg.musicbot.core.util.slashcommands.EnsuredSlashCommandInteraction;
 import dev.kmfg.musicbot.database.models.DiscordGuild;
 import dev.kmfg.musicbot.database.models.KMusicSong;
@@ -35,6 +38,15 @@ public class AddToPlaylist extends Command {
 
     private static final String VIDEO_DETAIL_API_FORMAT = "https://www.youtube.com/oembed?url=%s&format=json";
     private static final String YOUTUBE_VIDEO_URL = "https://www.youtube.com/v=%s";
+
+    public AddToPlaylist(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
+            ExecutorService executorService) {
+        super(sessionManager, slashCommandEvent, executorService);
+    }
+
+    public AddToPlaylist() {
+        super();
+    }
 
     @Override
     public void register(DiscordApi discordApi) {
