@@ -5,6 +5,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.kmfg.musicbot.core.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.musicbot.core.lavaplayer.PositionalAudioTrack;
 import dev.kmfg.musicbot.core.util.sessions.QueueResult;
+import dev.kmfg.musicbot.database.models.KMusicSong;
+import dev.kmfg.musicbot.database.models.Playlist;
 
 import org.javacord.api.entity.message.component.ActionRow;
 import org.javacord.api.entity.message.component.SelectMenu;
@@ -14,6 +16,7 @@ import org.tinylog.Logger;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -256,6 +259,40 @@ public class MessageSender {
                 .setContent("Nothing was found from \"" + searchQuery + "\"")
                 .setColor(Color.BLACK)
                 .send();
+    }
+
+    public void sendAddToPlaylistEmbed(KMusicSong song, List<Playlist> playlists) {
+        if (playlists == null || playlists.isEmpty()) {
+            sendGuildHasNoPlaylistsEmbed();
+            return;
+        }
+        List<SelectMenuOption> availablePlaylists = new ArrayList<>();
+        for (Playlist playlist : playlists) {
+            String label = String.format(
+                    "%d Songs | %s",
+                    playlist.getSongs().size(),
+                    playlist.getName());
+            // make sure label does not exceed length of 100
+            label = label.length() > 100 ? label.substring(0, 100) : label;
+            SelectMenuOption selectMenuOption = SelectMenuOption
+                    .create(label, playlist.getName());
+            availablePlaylists.add(selectMenuOption);
+        }
+        int hashId = 7;
+        hashId *= 31 * song.getId();
+        hashId *= 31 * playlists.get(0).getGuild().getDiscordId();
+        SelectMenu selectMenu = SelectMenu.createStringMenu("" + hashId, availablePlaylists);
+        ActionRow actionRow = ActionRow.of(selectMenu);
+        this.embedMessage.getRespondLater().thenAccept(acceptance -> {
+            acceptance.addComponents(actionRow);
+            acceptance.update();
+        }).exceptionally(e -> {
+            Logger.error(e, "Failed to send add to playlist embed!");
+            return null;
+        });
+    }
+
+    private void sendGuildHasNoPlaylistsEmbed() {
     }
 
     public void sendNothingFoundEmbed() {
