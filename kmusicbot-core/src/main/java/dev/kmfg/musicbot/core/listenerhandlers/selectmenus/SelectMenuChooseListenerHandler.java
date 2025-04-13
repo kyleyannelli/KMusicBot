@@ -1,4 +1,4 @@
-package dev.kmfg.musicbot.core.listenerhandlers;
+package dev.kmfg.musicbot.core.listenerhandlers.selectmenus;
 
 import dev.kmfg.musicbot.core.sessions.AudioSession;
 import dev.kmfg.musicbot.core.sessions.SessionManager;
@@ -41,7 +41,54 @@ public class SelectMenuChooseListenerHandler implements SelectMenuChooseListener
         SelectMenuInteraction selectMenuInteraction = event.getSelectMenuInteraction();
 
         MessageSender messageSender = this.setupMessageSender(selectMenuInteraction);
-        long audioSessionId = this.parseString(selectMenuInteraction.getCustomId());
+        final String idStr = selectMenuInteraction.getChosenOptions()
+                .stream()
+                .map(SelectMenuOption::getValue)
+                .findFirst()
+                .orElseGet(() -> "");
+
+        final String[] idSplit = idStr.split(ActionType.SEPARATOR);
+        // handle classic song search
+        if(idSplit.length == 1) {
+            handleSongSearch(selectMenuInteraction.getCustomId(), messageSender, selectMenuInteraction, event);
+            return;
+        }
+
+        if(idSplit[0].length() != 1) {
+            Logger.error("Expected an ActionType ID but received \"%s\"", idSplit[0]);
+            messageSender.sendInternalError();
+            return;
+        }
+
+        if(selectMenuInteraction.getServer().isEmpty()) {
+            messageSender.sendInternalError();
+            return;
+        }
+
+        final long guildId = selectMenuInteraction.getServer().get().getId();
+        final char actionTypeId = idSplit[0].charAt(0);
+        final ActionType actionType = ActionType.fromChar(actionTypeId);
+
+        switch (actionType) {
+            default:
+                Logger.error("Could not resolve ActionType ID \"%s\"", idSplit[0]);
+                messageSender.sendInternalError();
+                break;
+            case ADD_TO_PLAYLIST:
+                final String playlistName = idSplit[1];
+                final String youtubeUrl = idSplit[2];
+                AddToPlaylistAction.addLinkToPlaylist(messageSender, guildId, playlistName, youtubeUrl);
+                break;
+        }
+    }
+
+    private void handleSongSearch(
+            String idStr,
+            MessageSender messageSender,
+            SelectMenuInteraction selectMenuInteraction,
+            SelectMenuChooseEvent event
+    ) {
+        long audioSessionId = this.parseString(idStr);
         if (audioSessionId == -1) {
             messageSender.sendTooOldEmbed();
             return;

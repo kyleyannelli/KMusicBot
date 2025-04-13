@@ -37,7 +37,7 @@ public class AddToPlaylist extends Command {
     public static final String DESCRIPTION = "Add a YouTube link to a playlist.";
 
     private static final String VIDEO_DETAIL_API_FORMAT = "https://www.youtube.com/oembed?url=%s&format=json";
-    private static final String YOUTUBE_VIDEO_URL = "https://www.youtube.com/v=%s";
+    private static final String YOUTUBE_VIDEO_URL = "https://www.youtube.com/watch?v=%s";
 
     public AddToPlaylist(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
             ExecutorService executorService) {
@@ -148,7 +148,7 @@ public class AddToPlaylist extends Command {
             Logger.error("Add to playlist received valid response but title is null or blank!");
             return Optional.empty();
         }
-        final String author = rootNode.get("author").asText();
+        final String author = rootNode.get("author_name").asText();
         if (author == null || author.isBlank()) {
             Logger.error("Add to playlist received valid response but author is null or blank!");
             return Optional.empty();

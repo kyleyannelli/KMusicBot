@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import dev.kmfg.musicbot.core.lavaplayer.AudioTrackWithUser;
 import dev.kmfg.musicbot.core.lavaplayer.PositionalAudioTrack;
+import dev.kmfg.musicbot.core.listenerhandlers.selectmenus.ActionType;
 import dev.kmfg.musicbot.core.util.sessions.QueueResult;
 import dev.kmfg.musicbot.database.models.KMusicSong;
 import dev.kmfg.musicbot.database.models.Playlist;
@@ -16,7 +17,6 @@ import org.tinylog.Logger;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -253,6 +253,20 @@ public class MessageSender {
                 .send();
     }
 
+    public void sendSongAddedToPlaylist(Playlist playlist, KMusicSong song) {
+        final String msg = String.format(
+                "Added \"%s\" (%s) to %s",
+                song.getTitle().orElse("Title Unavailable"),
+                song.getYoutubeUrl(),
+                playlist.getName()
+        );
+        this.embedMessage
+                .setTitle("Added to Playlist")
+                .setContent(msg)
+                .setColor(Color.BLUE)
+                .send();
+    }
+
     public void sendNothingFoundEmbed(String searchQuery) {
         this.embedMessage
                 .setTitle("Nothing Found!")
@@ -275,7 +289,17 @@ public class MessageSender {
             // make sure label does not exceed length of 100
             label = label.length() > 100 ? label.substring(0, 100) : label;
             SelectMenuOption selectMenuOption = SelectMenuOption
-                    .create(label, playlist.getName());
+                    .create(
+                            label,
+                            String.format(
+                                    "%s%s%s%s%s",
+                                    ActionType.ADD_TO_PLAYLIST.value,
+                                    ActionType.SEPARATOR,
+                                    playlist.getName(),
+                                    ActionType.SEPARATOR,
+                                    song.getYoutubeUrl()
+                            )
+                    );
             availablePlaylists.add(selectMenuOption);
         }
         int hashId = 7;
@@ -293,6 +317,29 @@ public class MessageSender {
     }
 
     private void sendGuildHasNoPlaylistsEmbed() {
+    }
+
+    public void sendInternalError() {
+        this.embedMessage
+                .setTitle("Internal Error")
+                .setContent(
+                        "The bot caught an internal error that prevented it from handling the interaction properly.")
+                .setColor(Color.RED)
+                .send();
+    }
+
+    public void sendPlaylistHasSong(Playlist playlist, KMusicSong song) {
+        final String msg = String.format(
+                "Playlist \"%s\" already contains \"%s\" (%s)",
+                playlist.getName(),
+                song.getTitle(),
+                song.getYoutubeUrl()
+        );
+        this.embedMessage
+                .setTitle("Playlist Already Contains Track")
+                .setContent(msg)
+                .setColor(Color.BLACK)
+                .send();
     }
 
     public void sendNothingFoundEmbed() {

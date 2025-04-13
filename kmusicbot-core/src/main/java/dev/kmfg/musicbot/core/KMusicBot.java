@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import dev.kmfg.musicbot.core.commands.intermediates.CommandsRegistry;
 import dev.kmfg.musicbot.core.listenerhandlers.JoinServerListenerHandler;
-import dev.kmfg.musicbot.core.listenerhandlers.SelectMenuChooseListenerHandler;
+import dev.kmfg.musicbot.core.listenerhandlers.selectmenus.SelectMenuChooseListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.SlashCommandListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.UserJoinVoiceListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.UserLeaveVoiceListenerHandler;

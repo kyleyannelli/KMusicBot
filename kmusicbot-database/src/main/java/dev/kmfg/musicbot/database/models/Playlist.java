@@ -4,19 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
-@Table(name = "playlist")
+@Table(name = "playlists")
 public class Playlist extends BaseKMusicTable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,16 +17,20 @@ public class Playlist extends BaseKMusicTable {
     @Column(name = "name")
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "discord_guild_id")
     private DiscordGuild guild;
 
-    @ManyToMany
-    @JoinTable(name = "kmusic_songs_playlists")
+    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(
+            name = "kmusic_songs_playlists",
+            joinColumns = @JoinColumn(name = "playlist_id"),
+            inverseJoinColumns = @JoinColumn(name = "kmusic_song_id")
+    )
     private Set<KMusicSong> songs;
 
     public Playlist setName(String name) {
-        this.name = name;
+        this.name = name.replace(':', ' ');
         return this;
     }
 

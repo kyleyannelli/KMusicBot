@@ -31,6 +31,21 @@ public class PlaylistRepo {
         }
     }
 
+    public Optional<Playlist> findByGuildAndName(long guildId, String playlistName) {
+        try (Session session = this.sessionFactory.openSession()) {
+            return session
+                    .createQuery(
+                            "FROM Playlist WHERE guild.discordId = :discordGuildId AND name = :playlistName",
+                            Playlist.class)
+                    .setParameter("discordGuildId", guildId)
+                    .setParameter("playlistName", playlistName)
+                    .uniqueResultOptional();
+        } catch (HibernateException hibernateException) {
+            Logger.error(hibernateException, "Error occurred while finding playlist by guild id and playlist name.");
+            return Optional.empty();
+        }
+    }
+
     public List<Playlist> findByGuild(DiscordGuild guild) {
         try (Session session = this.sessionFactory.openSession()) {
             return session
@@ -67,7 +82,7 @@ public class PlaylistRepo {
             transaction.commit();
             return Optional.ofNullable(playlist);
         } catch (HibernateException hibernateException) {
-            Logger.error(hibernateException, "Error occured while saving SongPlaytime");
+            Logger.error(hibernateException, "Error occurred while saving SongPlaytime");
             return Optional.empty();
         }
     }

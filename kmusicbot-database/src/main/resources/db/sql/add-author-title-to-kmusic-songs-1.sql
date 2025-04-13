@@ -1,6 +1,6 @@
 CREATE TABLE `playlists` (
     `id` integer PRIMARY KEY AUTO_INCREMENT,
-    `guild_id` bigint NOT NULL,
+    `discord_guild_id` bigint NOT NULL,
     `name` VARCHAR(30) NOT NULL,
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
