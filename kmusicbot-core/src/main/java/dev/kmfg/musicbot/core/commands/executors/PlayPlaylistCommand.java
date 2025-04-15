@@ -68,14 +68,16 @@ public class PlayPlaylistCommand extends Command {
         if (ensuredInteraction == null)
             return;
 
+        final String playlistName = ensuredInteraction.getParameterValue(playlistNameParameter);
+
         final PlaylistRepo playlistRepo = new PlaylistRepo(HibernateUtil.getSessionFactory());
         final Optional<Playlist> playlistOpt = playlistRepo.findByGuildAndName(
                 ensuredInteraction.getServer().getId(),
-                playlistNameParameter
+                playlistName
         );
 
         if(playlistOpt.isEmpty()) {
-            messageSender.sendNothingFoundEmbed(playlistNameParameter);
+            messageSender.sendNothingFoundEmbed(playlistName);
             return;
         }
 
@@ -92,6 +94,6 @@ public class PlayPlaylistCommand extends Command {
         }
 
         final int totalTracks = playlistOpt.get().getSongs().size();
-        messageSender.sendPlaylistQueueResult(playlistNameParameter, successes, totalTracks);
+        messageSender.sendPlaylistQueueResult(playlistName, successes, totalTracks);
     }
 }

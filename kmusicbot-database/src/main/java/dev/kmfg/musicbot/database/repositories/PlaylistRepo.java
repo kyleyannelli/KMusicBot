@@ -35,7 +35,7 @@ public class PlaylistRepo {
         try (Session session = this.sessionFactory.openSession()) {
             return session
                     .createQuery(
-                            "FROM Playlist WHERE guild.discordId = :discordGuildId AND name = :playlistName",
+                            "FROM Playlist WHERE guild.discordId = :discordGuildId AND LOWER(name) = LOWER(:playlistName)",
                             Playlist.class)
                     .setParameter("discordGuildId", guildId)
                     .setParameter("playlistName", playlistName)
