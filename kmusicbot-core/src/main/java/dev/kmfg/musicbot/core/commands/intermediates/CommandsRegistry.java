@@ -26,7 +26,8 @@ public class CommandsRegistry {
         this.commandsMap = new ConcurrentHashMap<>();
         this.statisticsExecutorService = statisticsExecutorService;
         // register all the commands
-        this.commandsMap.put(AddToPlaylist.COMMAND_NAME, AddToPlaylist.class);
+        this.commandsMap.put(AddToPlaylistCommand.COMMAND_NAME, AddToPlaylistCommand.class);
+        this.commandsMap.put(PlayPlaylistCommand.COMMAND_NAME, PlayPlaylistCommand.class);
         this.commandsMap.put(PlayCommand.COMMAND_NAME, PlayCommand.class);
         this.commandsMap.put(PlayNextCommand.COMMAND_NAME, PlayNextCommand.class);
         this.commandsMap.put(InviteCommand.COMMAND_NAME, InviteCommand.class);

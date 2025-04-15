@@ -32,19 +32,19 @@ import dev.kmfg.musicbot.database.repositories.KMusicSongRepo;
 import dev.kmfg.musicbot.database.repositories.PlaylistRepo;
 import dev.kmfg.musicbot.database.util.HibernateUtil;
 
-public class AddToPlaylist extends Command {
+public class AddToPlaylistCommand extends Command {
     public static final String COMMAND_NAME = "add";
     public static final String DESCRIPTION = "Add a YouTube link to a playlist.";
 
     private static final String VIDEO_DETAIL_API_FORMAT = "https://www.youtube.com/oembed?url=%s&format=json";
     private static final String YOUTUBE_VIDEO_URL = "https://www.youtube.com/watch?v=%s";
 
-    public AddToPlaylist(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
-            ExecutorService executorService) {
+    public AddToPlaylistCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
+                                ExecutorService executorService) {
         super(sessionManager, slashCommandEvent, executorService);
     }
 
-    public AddToPlaylist() {
+    public AddToPlaylistCommand() {
         super();
     }
 
@@ -130,9 +130,6 @@ public class AddToPlaylist extends Command {
         JsonNode rootNode = null;
         try {
             rootNode = mapper.readTree(responseBody);
-        } catch (JsonMappingException jme) {
-            Logger.error(jme, "Add to playlist could not parse response body\n\t%s!", responseBody);
-            return Optional.empty();
         } catch (JsonProcessingException jpe) {
             Logger.error(jpe, "Add to playlist could not parse response body\n\t%s!", responseBody);
             return Optional.empty();

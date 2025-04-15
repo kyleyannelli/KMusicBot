@@ -129,6 +129,29 @@ public class MessageSender {
                 .send();
     }
 
+    public void sendPlaylistQueueResult(final String playlistName, final int successes, final int expected) {
+        if(successes != expected) {
+            this.embedMessage.setColor(Color.BLACK)
+                    .setTitle("Queued - Warning")
+                    .setContent(String.format(
+                            "Queued %d tracks from %s, but expected %d.",
+                            successes,
+                            playlistName,
+                            expected
+                    ))
+                    .send();
+        } else {
+            this.embedMessage.setColor(Color.BLUE)
+                    .setTitle("Queued")
+                    .setContent(String.format(
+                            "Queued %d tracks from %s",
+                            successes,
+                            playlistName
+                    ))
+                    .send();
+        }
+    }
+
     public void sendQueueResultEmbed(QueueResult queueResult) {
         if (queueResult == null) {
             this.sendNothingFoundEmbed();
