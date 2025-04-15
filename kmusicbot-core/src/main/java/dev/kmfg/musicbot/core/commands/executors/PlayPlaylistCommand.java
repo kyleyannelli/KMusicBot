@@ -1,11 +1,13 @@
 package dev.kmfg.musicbot.core.commands.executors;
 
+import dev.kmfg.musicbot.core.sessions.SessionManager;
 import dev.kmfg.musicbot.core.util.slashcommands.EnsuredSlashCommandInteraction;
 import dev.kmfg.musicbot.database.models.KMusicSong;
 import dev.kmfg.musicbot.database.models.Playlist;
 import dev.kmfg.musicbot.database.repositories.PlaylistRepo;
 import dev.kmfg.musicbot.database.util.HibernateUtil;
 import org.javacord.api.DiscordApi;
+import org.javacord.api.event.interaction.SlashCommandCreateEvent;
 import org.javacord.api.interaction.SlashCommand;
 import org.javacord.api.interaction.SlashCommandOption;
 import org.javacord.api.interaction.SlashCommandOptionType;
@@ -13,10 +15,20 @@ import org.javacord.api.interaction.SlashCommandOptionType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 public class PlayPlaylistCommand extends Command {
     public static final String COMMAND_NAME = "playlist";
     public static final String DESCRIPTION = "Play a playlist by it's name.";
+
+    public PlayPlaylistCommand(SessionManager sessionManager, SlashCommandCreateEvent slashCommandEvent,
+                                ExecutorService executorService) {
+        super(sessionManager, slashCommandEvent, executorService);
+    }
+
+    public PlayPlaylistCommand() {
+        super();
+    }
 
     @Override
     public void register(DiscordApi discordApi) {
