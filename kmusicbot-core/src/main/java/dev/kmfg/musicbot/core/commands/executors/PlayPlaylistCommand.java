@@ -89,8 +89,7 @@ public class PlayPlaylistCommand extends Command {
                     .getAudioSession()
                     .queueSearchQuery(
                             this.discordUser,
-                            song.getYoutubeUrl(),
-                            false
+                            song.getYoutubeUrl()
                     ).isSuccess() ? 1 : 0;
         }
 
