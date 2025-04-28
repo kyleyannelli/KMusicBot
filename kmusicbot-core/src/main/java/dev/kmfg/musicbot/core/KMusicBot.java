@@ -3,7 +3,6 @@ package dev.kmfg.musicbot.core;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
-import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
 import dev.kmfg.musicbot.core.commands.intermediates.CommandsRegistry;
 import dev.kmfg.musicbot.core.listenerhandlers.JoinServerListenerHandler;
 import dev.kmfg.musicbot.core.listenerhandlers.selectmenus.SelectMenuChooseListenerHandler;
@@ -172,9 +171,6 @@ public class KMusicBot {
         playerManager.registerSourceManager(ytSourceManager);
         AudioSourceManagers.registerRemoteSources(playerManager,
                 com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
-
-        // fallback
-        playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
 
         // create a hibernate session factory
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();

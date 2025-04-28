@@ -73,11 +73,6 @@ public class EmbedMessage {
         return this;
     }
 
-    public EmbedMessage appendToTitle(String addedText) {
-        this.title += addedText;
-        return this;
-    }
-
     public EmbedMessage setForcedContent(String content) {
         this.forcedContent = content;
         return this;

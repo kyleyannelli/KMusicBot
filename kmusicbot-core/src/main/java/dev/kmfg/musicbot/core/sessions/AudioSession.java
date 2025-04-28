@@ -139,7 +139,7 @@ public class AudioSession extends RecommenderSession {
             // we want the recommended songs to be on the non priority queue
             boolean isDeprioritized = true;
             boolean playNext = false;
-            this.lavaSource.queueTrack(title, isDeprioritized, playNext, discordUser, false);
+            this.lavaSource.queueTrack(title, isDeprioritized, playNext, discordUser);
         }
 
         if (!this.isRecommending()) {
@@ -176,14 +176,14 @@ public class AudioSession extends RecommenderSession {
         this.lavaSource = lavaSource;
     }
 
-    public QueueResult queueSearchQuery(DiscordUser discordUser, String searchQuery, boolean useFallback) {
+    public QueueResult queueSearchQuery(DiscordUser discordUser, String searchQuery) {
         mostRecentSearches.add(searchQuery);
-        return lavaSource.queueTrackAsPriority(searchQuery, discordUser, useFallback);
+        return lavaSource.queueTrackAsPriority(searchQuery, discordUser);
     }
 
-    public QueueResult queueSearchQueryNext(String searchQuery, DiscordUser discordUser, boolean useFallback) {
+    public QueueResult queueSearchQueryNext(String searchQuery, DiscordUser discordUser) {
         mostRecentSearches.add(searchQuery);
-        return lavaSource.queueTrackAsPriorityNext(searchQuery, discordUser, useFallback);
+        return lavaSource.queueTrackAsPriorityNext(searchQuery, discordUser);
     }
 
     /**
