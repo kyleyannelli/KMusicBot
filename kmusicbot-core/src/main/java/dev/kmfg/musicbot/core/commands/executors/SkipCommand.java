@@ -54,12 +54,12 @@ public class SkipCommand extends Command {
 
         // if [1] is success, that means a new track is going to play
         if (queueResults[1].isSuccess()) {
-            this.messageSender.sendQueueResultEmbed(queueResults[1]);
+            this.messageSender.sendQueueResultEmbed(queueResults[1], false);
         }
         // else if a track was skipped
         else if (queueResults[0].isSuccess()) {
             this.messageSender.setForcedTitle("Stopped.");
-            this.messageSender.sendQueueResultEmbed(queueResults[0]);
+            this.messageSender.sendQueueResultEmbed(queueResults[0], false);
         }
         // else nothing was playing and nothing was skipped!
         else {

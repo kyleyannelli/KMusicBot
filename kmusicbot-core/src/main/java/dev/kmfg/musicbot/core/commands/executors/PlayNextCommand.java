@@ -62,9 +62,9 @@ public class PlayNextCommand extends Command {
 
         QueueResult queueResult = ensuredInteraction
                 .getAudioSession()
-                .queueSearchQueryNext(ensuredInteraction.getParameterValue(songParameter), this.discordUser);
+                .queueSearchQueryNext(ensuredInteraction.getParameterValue(songParameter), this.discordUser, false);
 
-        this.messageSender.sendQueueResultEmbed(queueResult);
+        this.messageSender.sendQueueResultEmbed(queueResult, false);
         ensuredInteraction.getAudioSession().setIsRecommending(true);
     }
 }
