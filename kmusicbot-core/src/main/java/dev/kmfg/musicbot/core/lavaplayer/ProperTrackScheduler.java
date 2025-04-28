@@ -28,6 +28,7 @@ import java.util.Optional;
 public class ProperTrackScheduler extends AudioEventAdapter {
     private static final int MAX_RETRIES = 2; // maximum amount of times a track will attempt to be played.
     private int currentRetries = 0;
+    private int totalFailures = 0;
     private final AudioSession audioSession;
     private final AudioPlayer audioPlayer;
     private final TrackStatisticRecorder trackStatisticRecorder;
@@ -137,8 +138,9 @@ public class ProperTrackScheduler extends AudioEventAdapter {
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
         this.handleTrackEndStatistics(track);
         Logger.error(exception, "{} Track unexpectedly stopped.", getSessionIdString());
-        // I want to be able to update the YouTube source if this is happening
-        System.exit(4); // maybe determine a better way to do this?
+        if(totalFailures++ >= 1) {
+            System.exit(4); // maybe determine a better way to do this?
+        }
     }
 
     @Override

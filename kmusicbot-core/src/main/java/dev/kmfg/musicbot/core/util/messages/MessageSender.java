@@ -152,7 +152,7 @@ public class MessageSender {
         }
     }
 
-    public void sendQueueResultEmbed(QueueResult queueResult) {
+    public void sendQueueResultEmbed(QueueResult queueResult, boolean usedFallback) {
         if (queueResult == null) {
             this.sendNothingFoundEmbed();
             // early return
@@ -195,6 +195,9 @@ public class MessageSender {
                     audioTracksStatus, audioTrackStatus, queueStatus);
         }
 
+        if(usedFallback) {
+            this.embedMessage.appendToTitle(" WARN: Used Fallback Audio Source");
+        }
         this.embedMessage.send();
     }
 
@@ -213,7 +216,7 @@ public class MessageSender {
         // format as a will play now
         QueueResult mockQueueResult = new QueueResult(true, true, audioTrack);
         // use the existing function
-        this.sendQueueResultEmbed(mockQueueResult);
+        this.sendQueueResultEmbed(mockQueueResult, false);
     }
 
     public void sendNotInServerVoiceChannelEmbed() {

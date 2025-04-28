@@ -60,11 +60,26 @@ public class PlayCommand extends Command {
         if (ensuredInteraction == null)
             return;
 
+        boolean useFallback = false;
         QueueResult queueResult = ensuredInteraction
                 .getAudioSession()
-                .queueSearchQuery(this.discordUser, ensuredInteraction.getParameterValue(songParameter));
+                .queueSearchQuery(
+                        this.discordUser,
+                        ensuredInteraction.getParameterValue(songParameter),
+                        useFallback
+                );
+        useFallback = !queueResult.isSuccess();
+        if(useFallback) {
+            queueResult = ensuredInteraction
+                    .getAudioSession()
+                    .queueSearchQuery(
+                            this.discordUser,
+                            ensuredInteraction.getParameterValue(songParameter),
+                            useFallback
+                    );
+        }
 
-        this.messageSender.sendQueueResultEmbed(queueResult);
+        this.messageSender.sendQueueResultEmbed(queueResult, useFallback);
         ensuredInteraction.getAudioSession().setIsRecommending(true);
     }
 }

@@ -212,7 +212,7 @@ public class LavaSource extends AudioSourceBase {
      * @return QueueResult, detailing what tracks were added.
      */
     public synchronized QueueResult queueTrack(String searchQuery, boolean deprioritizeQueue, boolean playNext,
-            DiscordUser discordUser) {
+            DiscordUser discordUser, boolean useFallback) {
         boolean willPlayNow = this.audioPlayer.getPlayingTrack() == null;
 
         Future<Void> playerManagerFuture = null;
@@ -220,7 +220,7 @@ public class LavaSource extends AudioSourceBase {
         KAudioResultHandler kAudioResultHandler;
 
         // if given a youtube link
-        if (this.isYoutubeLink(searchQuery)) {
+        if (this.isYoutubeLink(searchQuery) && !useFallback) {
             // setup audiohandler
             kAudioResultHandler = new YoutubeAudioResultHandler(this.trackScheduler, discordUser);
             kAudioResultHandler.setPlayNext(playNext);
@@ -256,7 +256,14 @@ public class LavaSource extends AudioSourceBase {
             // is success is set by result handler
             playerManagerFuture = audioPlayerManager.loadItem(urlWithOnlyVParam, kAudioResultHandler);
         }
-        // otherwise it will be treated as a text search
+        else if(useFallback) {
+            searchQuery = "scsearch:" + searchQuery;
+            kAudioResultHandler = new SingleAudioResultHandler(this.trackScheduler, discordUser);
+            kAudioResultHandler.setDeprioritizeQueue(deprioritizeQueue);
+            kAudioResultHandler.setPlayNext(playNext);
+            playerManagerFuture = audioPlayerManager.loadItem(searchQuery, kAudioResultHandler);
+        }
+        // otherwise it will be treated as a text search on youtube
         else {
             // update search query to use ytsearch
             searchQuery = "ytsearch:" + searchQuery;
@@ -281,10 +288,10 @@ public class LavaSource extends AudioSourceBase {
      * @param searchQuery The track you would like to find
      * @return QueueResult, detailing what was added to the queue.
      */
-    public synchronized QueueResult queueTrackAsPriority(String searchQuery, DiscordUser discordUser) {
+    public synchronized QueueResult queueTrackAsPriority(String searchQuery, DiscordUser discordUser, boolean useFallback) {
         boolean doPrioritizeQuery = false;
         boolean doQueueAtTail = false;
-        return queueTrack(searchQuery, doPrioritizeQuery, doQueueAtTail, discordUser);
+        return queueTrack(searchQuery, doPrioritizeQuery, doQueueAtTail, discordUser, useFallback);
     }
 
     /**
@@ -293,10 +300,10 @@ public class LavaSource extends AudioSourceBase {
      * @param searchQuery the track you want to search for
      * @return QueueResult, detailing what was added to the queue.
      */
-    public synchronized QueueResult queueTrackAsPriorityNext(String searchQuery, DiscordUser discordUser) {
+    public synchronized QueueResult queueTrackAsPriorityNext(String searchQuery, DiscordUser discordUser, boolean useFallback) {
         boolean doPrioritizeQuery = false;
         boolean doQueueAtTail = false;
-        return queueTrack(searchQuery, doPrioritizeQuery, doQueueAtTail, discordUser);
+        return queueTrack(searchQuery, doPrioritizeQuery, doQueueAtTail, discordUser, useFallback);
     }
 
     /**

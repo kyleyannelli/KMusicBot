@@ -75,6 +75,14 @@ public abstract class KAudioResultHandler implements AudioLoadResultHandler {
     }
 
     /**
+     * Set the handler to queue in priority (false), or non priority (true)
+     * @param deprioritizeQueue non priority (true) or priority (false)
+     */
+    public void setDeprioritizeQueue(boolean deprioritizeQueue) {
+        this.deprioritizeQueue = deprioritizeQueue;
+    }
+
+    /**
      * Sets the handler to queue any tracks into the prioritized queue.
      * This queue is currently used for songs added by the end user, although, it could have other uses.
      */
