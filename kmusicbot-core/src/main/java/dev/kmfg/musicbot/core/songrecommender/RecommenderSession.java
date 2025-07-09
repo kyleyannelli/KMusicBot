@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -18,7 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * way to agnostically find recommendations based on a given List<String> of
  * tracks.
  */
-public class RecommenderSession {
+public abstract class RecommenderSession {
     public static final int MINIMUM_AUTO_QUEUE_DURATION_SECONDS = 900; // 900 seconds == 15 minutes
     public static final int MINIMUM_QUEUE_SIZE = 4; // at the least 4 songs must be queued
     public static final int MAXIMUM_QUEUE_SIZE = 25; // at the most 25 songs are queued
@@ -31,7 +30,7 @@ public class RecommenderSession {
     private final RecommenderProcessor recommenderProcessor;
 
     private ArrayList<AudioTrack> audioQueue; // audio queue for the voice channel session
-    private final ArrayList<String> searchedSongs;
+    private final ArrayList<AudioTrack> searchedSongs;
 
     private final long id;
     private final long associatedServerId;
@@ -59,11 +58,11 @@ public class RecommenderSession {
         // TimeUnit.MINUTES);
     }
 
-    public void addSearchToSearchedSongs(String searchQuery) {
-        this.searchedSongs.add(searchQuery);
+    public void addSearchToSearchedSongs(AudioTrack audioTrack) {
+        this.searchedSongs.add(audioTrack);
     }
 
-    public ArrayList<String> getSearchedSongs() {
+    public ArrayList<AudioTrack> getSearchedSongs() {
         return searchedSongs;
     }
 
@@ -79,10 +78,7 @@ public class RecommenderSession {
         this.recommenderProcessor.cancelTasksBySessionId(this.id);
     }
 
-    @Deprecated
-    public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
-
-    }
+    public abstract void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException;
 
     public long getSessionId() {
         return id;
@@ -115,7 +111,7 @@ public class RecommenderSession {
     private void loadRecommendedTracks() {
         if (canQueueSongs()) {
             // Process the songs from searched songs list
-            this.recommenderProcessor.addRecommendedSongsFromSpotify(this);
+            this.recommenderProcessor.addRecommendedSongs(this);
         }
     }
 }

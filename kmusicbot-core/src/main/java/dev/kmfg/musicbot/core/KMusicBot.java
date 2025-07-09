@@ -12,6 +12,8 @@ import dev.kmfg.musicbot.core.listenerhandlers.UserLeaveVoiceListenerHandler;
 import dev.kmfg.musicbot.core.services.ActivityUpdaterService;
 import dev.kmfg.musicbot.core.sessions.SessionManager;
 import dev.kmfg.musicbot.core.songrecommender.RecommenderProcessor;
+import dev.kmfg.musicbot.core.songrecommender.RecommenderThirdParty;
+import dev.kmfg.musicbot.core.songrecommender.youtubeapi.RecommenderYoutubeScraper;
 import dev.kmfg.musicbot.core.spotifyapi.ClientCreate;
 import dev.kmfg.musicbot.database.util.HibernateUtil;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -175,25 +177,20 @@ public class KMusicBot {
         // create a hibernate session factory
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
-        // Create the spotify API object. This is used by the RecommenderProcessor
-        var spotifyApiOpt = ClientCreate.generateClientCredentials();
-        if (spotifyApiOpt.isEmpty()) {
-            Logger.error(
-                    "Spotify Client API is empty while setting up the session manager! Session will be unable to generate recommendations...");
-            System.exit(1);
-            return;
-        }
-        // create session manager with recommender processor
-        else {
-            // create the recommender processor for RecommenderSessions (and its child
-            // classes)
-            RecommenderProcessor recommenderProcessor = new RecommenderProcessor(spotifyApiOpt.get(),
-                    MAX_RECOMMENDER_THREADS);
-            // create session manager for AudioSessions
-            this.sessionManager = new SessionManager(sessionFactory, this.discordApi, spotifyApiOpt.get(),
-                    playerManager,
-                    recommenderProcessor);
-        }
+        final RecommenderThirdParty recommenderThirdParty = new RecommenderYoutubeScraper();
+        // create the recommender processor for RecommenderSessions (and its child
+        // classes)
+        RecommenderProcessor recommenderProcessor = new RecommenderProcessor(
+                recommenderThirdParty,
+                MAX_RECOMMENDER_THREADS
+        );
+        // create session manager for AudioSessions
+        this.sessionManager = new SessionManager(
+                sessionFactory,
+                this.discordApi,
+                recommenderThirdParty,
+                playerManager,
+                recommenderProcessor);
 
         // ready the ActivityUpdaterService
         this.activityUpdaterService = new ActivityUpdaterService(this.discordApi, this.sessionManager);
