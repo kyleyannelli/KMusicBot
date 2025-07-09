@@ -18,9 +18,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * way to agnostically find recommendations based on a given List<String> of
  * tracks.
  */
-public class RecommenderSession {
+public abstract class RecommenderSession {
     public static final int MINIMUM_AUTO_QUEUE_DURATION_SECONDS = 900; // 900 seconds == 15 minutes
-    public static final int MINIMUM_QUEUE_SIZE = 4; // at the least 4 songs must be queued
+    public static final int MINIMUM_QUEUE_SIZE = 2; // at the least 4 songs must be queued
     public static final int MAXIMUM_QUEUE_SIZE = 25; // at the most 25 songs are queued
     public static final int YOUTUBE_SEARCH_SLEEP_DURATION_MS = 1000;
     public static final int AUTO_QUEUE_RATE = 5; // unit in minutes
@@ -30,13 +30,12 @@ public class RecommenderSession {
     // the processor handles all sessions via an executor service
     private final RecommenderProcessor recommenderProcessor;
 
-    private ArrayList<AudioTrack> audioQueue; // audio queue for the voice channel session
-    private final ArrayList<String> searchedSongs;
-
     private final long id;
     private final long associatedServerId;
 
     private final ScheduledExecutorService scheduler;
+
+    private ArrayList<AudioTrack> searchedSongs;
 
     public RecommenderSession(RecommenderProcessor recommenderProcessor, long associatedServerId) {
         this.recommenderProcessor = recommenderProcessor;
@@ -54,35 +53,35 @@ public class RecommenderSession {
         // every AUTO_QUEUE_RATE minutes autoqueue
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         // the below will remain disabled until Spotify Web API gets replaced
-        // this.scheduler.scheduleAtFixedRate(this::loadRecommendedTracks,
-        // INITIAL_AUTO_QUEUE_DELAY, AUTO_QUEUE_RATE,
-        // TimeUnit.MINUTES);
+        this.scheduler.scheduleAtFixedRate(
+                this::loadRecommendedTracks,
+                INITIAL_AUTO_QUEUE_DELAY,
+                AUTO_QUEUE_RATE,
+                TimeUnit.MINUTES
+        );
     }
 
-    public void addSearchToSearchedSongs(String searchQuery) {
-        this.searchedSongs.add(searchQuery);
+    public void addSearchToSearchedSongs(AudioTrack audioTrack) {
+        this.searchedSongs.add(audioTrack);
     }
 
-    public ArrayList<String> getSearchedSongs() {
+    public ArrayList<AudioTrack> getSearchedSongs() {
         return searchedSongs;
     }
 
     public ArrayList<AudioTrack> getAudioQueue() {
-        return audioQueue;
+        return searchedSongs;
     }
 
     public void setAudioQueue(ArrayList<AudioTrack> audioQueue) {
-        this.audioQueue = audioQueue;
+        this.searchedSongs = audioQueue;
     }
 
     public void cancelAllOperations() {
         this.recommenderProcessor.cancelTasksBySessionId(this.id);
     }
 
-    @Deprecated
-    public void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException {
-
-    }
+    public abstract void addRecommendationsToQueue(String[] recommendedTitles) throws InterruptedException;
 
     public long getSessionId() {
         return id;
@@ -97,25 +96,25 @@ public class RecommenderSession {
     }
 
     public void clearSearchHistory() {
-        this.audioQueue = new ArrayList<>();
+        this.searchedSongs = new ArrayList<>();
     }
 
     public boolean canQueueSongs() {
         // Calculate the total duration of all songs in the queue
         AtomicLong totalDuration = new AtomicLong();
         // for each AudioTrack (song) in the queue add their duration
-        audioQueue.forEach(song -> totalDuration.addAndGet(song.getDuration()));
+        searchedSongs.forEach(song -> totalDuration.addAndGet(song.getDuration()));
 
         // the total duration of tracks is over 15 MINIMUM_AUTO_QUEUE_DURATION_SECONDS
         // OR the queue is 4 through 15 songs long
-        return (totalDuration.get() > MINIMUM_AUTO_QUEUE_DURATION_SECONDS && audioQueue.size() <= MAXIMUM_QUEUE_SIZE)
-                || (audioQueue.size() >= MINIMUM_QUEUE_SIZE && audioQueue.size() <= MAXIMUM_QUEUE_SIZE);
+        return (totalDuration.get() > MINIMUM_AUTO_QUEUE_DURATION_SECONDS && searchedSongs.size() <= MAXIMUM_QUEUE_SIZE)
+                || (searchedSongs.size() >= MINIMUM_QUEUE_SIZE && searchedSongs.size() <= MAXIMUM_QUEUE_SIZE);
     }
 
     private void loadRecommendedTracks() {
         if (canQueueSongs()) {
             // Process the songs from searched songs list
-            this.recommenderProcessor.addRecommendedSongsFromSpotify(this);
+            this.recommenderProcessor.addRecommendedSongs(this);
         }
     }
 }

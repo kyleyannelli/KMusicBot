@@ -30,10 +30,10 @@ public class RecommenderProcessor {
 
     private final ConcurrentHashMap<Long, List<FutureTask<Void>>> queuedTasksMap;
 
-    public RecommenderProcessor(SpotifyApi spotifyApi, int maxThreads) {
+    public RecommenderProcessor(RecommenderThirdParty recommenderThirdParty, int maxThreads) {
         this.executorService = Executors.newFixedThreadPool(maxThreads);
 
-        this.recommenderRequester = new RecommenderRequester(spotifyApi);
+        this.recommenderRequester = new RecommenderRequester(recommenderThirdParty);
         this.queuedTasksMap = new ConcurrentHashMap<>();
 
         // make sure to properly handle a shutdown
@@ -59,27 +59,27 @@ public class RecommenderProcessor {
         recommenderRequester.shutdown();
     }
 
-    public void addRecommendedSongsFromSpotify(RecommenderSession session) {
+    public void addRecommendedSongs(RecommenderSession session) {
         Logger.info("RecommenderProcessor invoked from Session ID: {}", session.getSessionId());
         Runnable runnable = () -> {
-            String[] spotifyRecommendations = getRecommendationsFromSpotify(session);
+            String[] songRecommendations = getRecommendations(session);
             try {
-                session.addRecommendationsToQueue(spotifyRecommendations);
+                session.addRecommendationsToQueue(songRecommendations);
             } catch (InterruptedException interruptedException) {
                 Logger.error(interruptedException, "Failed to automatically add tracks to queue due to interrupt");
                 Thread.currentThread().interrupt();
             }
 
-            if (spotifyRecommendations.length == 0) {
+            if (songRecommendations.length == 0) {
                 Logger.warn(
-                        "Session {} belonging to server {} received a 0 length recommendation array. Spotify request likely failed!",
+                        "Session {} belonging to server {} received a 0 length recommendation array. Third party request likely failed!",
                         session.getSessionId(), session.getAssociatedServerId());
             } else {
                 // setup logging info
                 StringBuilder infoTextBuilder = new StringBuilder();
                 infoTextBuilder
                         .append("Added recommendations: ");
-                for (String recommendation : spotifyRecommendations) {
+                for (String recommendation : songRecommendations) {
                     infoTextBuilder
                             .append("\n\t")
                             .append(recommendation);
@@ -139,9 +139,8 @@ public class RecommenderProcessor {
         sessionTasks.add(futureTask);
     }
 
-    private String[] getRecommendationsFromSpotify(RecommenderSession session) {
-        ArrayList<String> songsFromYoutube = determineSongsFromYoutube(session);
-        return recommenderRequester.getSongsFromSpotify(songsFromYoutube);
+    private String[] getRecommendations(RecommenderSession session) {
+        return recommenderRequester.getSongsFromThirdParty(session.getSearchedSongs());
     }
 
     private ArrayList<String> determineSongsFromYoutube(RecommenderSession session) {

@@ -131,7 +131,7 @@ public class AddToPlaylistCommand extends Command {
         try {
             rootNode = mapper.readTree(responseBody);
         } catch (JsonProcessingException jpe) {
-            Logger.error(jpe, "Add to playlist could not parse response body\n\t%s!", responseBody);
+            Logger.error(jpe, "Add to playlist could not parse response body\n\t{}!", responseBody);
             return Optional.empty();
         }
 

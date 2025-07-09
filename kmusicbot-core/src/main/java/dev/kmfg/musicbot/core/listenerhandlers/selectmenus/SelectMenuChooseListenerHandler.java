@@ -55,7 +55,7 @@ public class SelectMenuChooseListenerHandler implements SelectMenuChooseListener
         }
 
         if(idSplit[0].length() != 1) {
-            Logger.error("Expected an ActionType ID but received \"%s\"", idSplit[0]);
+            Logger.error("Expected an ActionType ID but received \"{}\"", idSplit[0]);
             messageSender.sendInternalError();
             return;
         }
@@ -71,7 +71,7 @@ public class SelectMenuChooseListenerHandler implements SelectMenuChooseListener
 
         switch (actionType) {
             default:
-                Logger.error("Could not resolve ActionType ID \"%s\"", idSplit[0]);
+                Logger.error("Could not resolve ActionType ID \"{}\"", idSplit[0]);
                 messageSender.sendInternalError();
                 break;
             case ADD_TO_PLAYLIST:
