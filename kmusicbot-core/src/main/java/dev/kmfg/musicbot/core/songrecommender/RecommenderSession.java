@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -19,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public abstract class RecommenderSession {
     public static final int MINIMUM_AUTO_QUEUE_DURATION_SECONDS = 900; // 900 seconds == 15 minutes
-    public static final int MINIMUM_QUEUE_SIZE = 4; // at the least 4 songs must be queued
+    public static final int MINIMUM_QUEUE_SIZE = 2; // at the least 4 songs must be queued
     public static final int MAXIMUM_QUEUE_SIZE = 25; // at the most 25 songs are queued
     public static final int YOUTUBE_SEARCH_SLEEP_DURATION_MS = 1000;
     public static final int AUTO_QUEUE_RATE = 5; // unit in minutes
@@ -53,9 +54,12 @@ public abstract class RecommenderSession {
         // every AUTO_QUEUE_RATE minutes autoqueue
         this.scheduler = Executors.newSingleThreadScheduledExecutor();
         // the below will remain disabled until Spotify Web API gets replaced
-        // this.scheduler.scheduleAtFixedRate(this::loadRecommendedTracks,
-        // INITIAL_AUTO_QUEUE_DELAY, AUTO_QUEUE_RATE,
-        // TimeUnit.MINUTES);
+        this.scheduler.scheduleAtFixedRate(
+                this::loadRecommendedTracks,
+                INITIAL_AUTO_QUEUE_DELAY,
+                AUTO_QUEUE_RATE,
+                TimeUnit.MINUTES
+        );
     }
 
     public void addSearchToSearchedSongs(AudioTrack audioTrack) {
