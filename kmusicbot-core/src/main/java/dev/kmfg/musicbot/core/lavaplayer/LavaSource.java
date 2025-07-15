@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
+import dev.kmfg.musicbot.core.songrecommender.RecommenderThirdParty;
 import org.apache.hc.core5.http.ParseException;
 import org.javacord.api.DiscordApi;
 import org.javacord.api.audio.AudioSource;
@@ -47,15 +48,13 @@ public class LavaSource extends AudioSourceBase {
     private final ProperTrackScheduler trackScheduler;
     private AudioFrame lastFrame;
 
-    private final SpotifyApi spotifyApi;
     private final DiscordApi discordApi;
     private final AudioSession audioSession;
 
-    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager,
-            long associatedSessionId, AudioSession audioSession) {
+    public LavaSource(DiscordApi discordApi, AudioPlayerManager audioPlayerManager,
+                      long associatedSessionId, AudioSession audioSession) {
         super(discordApi);
 
-        this.spotifyApi = spotifyApi;
         this.discordApi = discordApi;
 
         this.audioPlayerManager = audioPlayerManager;
@@ -66,11 +65,10 @@ public class LavaSource extends AudioSourceBase {
         this.ASSOCIATED_SESSION_ID = associatedSessionId;
     }
 
-    public LavaSource(DiscordApi discordApi, SpotifyApi spotifyApi, AudioPlayerManager audioPlayerManager,
+    public LavaSource(DiscordApi discordApi, AudioPlayerManager audioPlayerManager,
             AudioPlayer audioPlayer, long associatedSessionId, AudioSession audioSession) {
         super(discordApi);
 
-        this.spotifyApi = spotifyApi;
         this.discordApi = discordApi;
 
         this.audioPlayerManager = audioPlayerManager;
@@ -141,7 +139,7 @@ public class LavaSource extends AudioSourceBase {
      */
     @Override
     public AudioSource copy() {
-        return new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioPlayer, ASSOCIATED_SESSION_ID,
+        return new LavaSource(discordApi, audioPlayerManager, audioPlayer, ASSOCIATED_SESSION_ID,
                 this.audioSession);
     }
 
@@ -405,8 +403,6 @@ public class LavaSource extends AudioSourceBase {
      * it fails (this is detailed by the QueueResult)
      * 
      * @param playerManagerFuture The future from the audioPlayerManager
-     * @param isYouTubeLink       Whether it is a youtube link, this is relevant to
-     *                            the QueueResult
      * @param willPlayNow         Whether it will play now or got put in the queue,
      *                            this is relevant to the QueueResult
      * @return QueueResult, detailing what was loaded.
@@ -434,8 +430,6 @@ public class LavaSource extends AudioSourceBase {
      * Generates a QueueResult from the loaded track. Will return null if the result
      * handler has an already accessed value.
      * 
-     * @param isYouTubeLink Whether its a youtube link. This determines what result
-     *                      handler gets pulled from.
      * @param willPlayNow   Whether it will play now or got put in the queue. This
      *                      is relevant to the QueueResult.
      * @return QueueResult, detailing what was loaded.
@@ -453,30 +447,5 @@ public class LavaSource extends AudioSourceBase {
             Logger.error(nullPointerException, "Null Pointer for generate queue. Likely no results found.");
             return null;
         }
-    }
-
-    /**
-     * @TODO Function hasn't been implemented yet. Do I still want to support
-     *       Spotify links? NO. Spotify killed off their Web API!
-     * @param spotifyLink
-     * @return
-     */
-    @Deprecated
-    private Optional<List<String>> getTracksFromSpotifyLink(String spotifyLink) {
-        Optional<List<String>> trackNamesFromSpotify = Optional.empty();
-
-        try {
-            trackNamesFromSpotify = Optional
-                    .ofNullable(HandleSpotifyLink.getCollectionFromSpotifyLink(spotifyApi, spotifyLink));
-        } catch (IOException ioException) {
-            Logger.error(ioException, "IOException occurred while loading a spotify link " + spotifyLink);
-        } catch (ParseException parseException) {
-            Logger.error(parseException, "ParseException occurred while loading a spotify link " + spotifyLink);
-        } catch (SpotifyWebApiException spotifyWebApiException) {
-            Logger.error(spotifyWebApiException,
-                    "SpotifyWebApiException occurred while loading a spotify link " + spotifyLink);
-        }
-
-        return trackNamesFromSpotify;
     }
 }

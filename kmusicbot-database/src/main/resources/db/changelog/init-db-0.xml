@@ -11,5 +11,8 @@
     <changeSet id="2" author="kyannelli">
         <sqlFile path="src/main/resources/db/sql/add-author-title-to-kmusic-songs-1.sql" />
     </changeSet>
+    <changeSet id="3" author="kyannelli">
+        <sqlFile path="src/main/resources/db/sql/create-playlist-table-2.sql" />
+    </changeSet>
 </databaseChangeLog>
 

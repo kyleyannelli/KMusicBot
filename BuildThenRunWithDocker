@@ -2,7 +2,7 @@
 docker build -t kmusic_bot .
 # check if script was run with -d flag
 if [[ $1 == "-d" ]]; then
-    docker run -d --name KMusic-v3.6.1 --restart always kmusic_bot
+    docker run -d --name KMusic-v3.7.0 --restart always kmusic_bot
 else
     docker run kmusic_bot
 fi

@@ -3,6 +3,8 @@ package dev.kmfg.musicbot.core.sessions;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import dev.kmfg.musicbot.core.songrecommender.RecommenderThirdParty;
+import dev.kmfg.musicbot.core.songrecommender.youtubeapi.RecommenderYoutubeScraper;
 import org.javacord.api.DiscordApi;
 import org.tinylog.Logger;
 
@@ -20,24 +22,22 @@ public class SessionManager {
     private final ConcurrentHashMap<Long, AudioSession> audioSessions;
     private final RecommenderProcessor recommenderProcessor;
     private final DiscordApi discordApi;
-    private final SpotifyApi spotifyApi;
     private final AudioPlayerManager audioPlayerManager;
     private final SessionFactory sessionFactory;
 
-    public SessionManager(SessionFactory sessionFactory, DiscordApi discordApi, SpotifyApi spotifyApi,
+    public SessionManager(SessionFactory sessionFactory, DiscordApi discordApi, RecommenderThirdParty recommenderThirdParty,
             AudioPlayerManager audioPlayerManager, RecommenderProcessor recommenderProcessor) {
         this.audioSessions = new ConcurrentHashMap<>();
         this.recommenderProcessor = recommenderProcessor;
         this.audioPlayerManager = audioPlayerManager;
         this.sessionFactory = sessionFactory;
         this.discordApi = discordApi;
-        this.spotifyApi = spotifyApi;
     }
 
     public AudioSession createAudioSession(long serverId) {
         AudioSession audioSession = new AudioSession(this.sessionFactory, this.discordApi, this.recommenderProcessor,
                 serverId, this::handleAudioSessionShutdown);
-        LavaSource lavaSource = new LavaSource(discordApi, spotifyApi, audioPlayerManager, audioSession.getSessionId(),
+        LavaSource lavaSource = new LavaSource(discordApi, audioPlayerManager, audioSession.getSessionId(),
                 audioSession);
         audioSession.setLavaSource(lavaSource);
         this.audioSessions.put(serverId, audioSession);

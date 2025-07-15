@@ -34,10 +34,10 @@ import dev.kmfg.musicbot.core.util.sessions.QueueResult;
  * recommendations, and track queuing.
  */
 public class AudioSession extends RecommenderSession {
-    private static final int MAX_SEARCH_QUEUE_SIZE = 5; // a maximum of 5 items in mostRecentSearches
+    private static final int MAX_SEARCH_QUEUE_SIZE = 4; // a maximum of 5 items in mostRecentSearches
     private static final int DISCONNECT_DELAY_MS = 300_000; // 300_000 ms aka 5 minutes
 
-    private final LimitedQueue<String> mostRecentSearches;
+    private final LimitedQueue<AudioTrack> mostRecentSearches;
     private final ScheduledExecutorService disconnectScheduledService;
     private final SessionCloseHandler sessionCloseHandler;
     private final DiscordApi discordApi;
@@ -59,8 +59,12 @@ public class AudioSession extends RecommenderSession {
         this.lavaSource = lavaSource;
 
         this.disconnectScheduledService = Executors.newSingleThreadScheduledExecutor();
-        this.disconnectScheduledService.scheduleAtFixedRate(this::handleDisconnectService, DISCONNECT_DELAY_MS,
-                DISCONNECT_DELAY_MS, TimeUnit.MILLISECONDS);
+        this.disconnectScheduledService.scheduleAtFixedRate(
+                this::handleDisconnectService,
+                DISCONNECT_DELAY_MS,
+                DISCONNECT_DELAY_MS,
+                TimeUnit.MILLISECONDS
+        );
 
         this.sessionCloseHandler = sessionCloseHandler;
 
@@ -94,7 +98,7 @@ public class AudioSession extends RecommenderSession {
      * @return {@link ArrayList}
      */
     @Override
-    public ArrayList<String> getSearchedSongs() {
+    public ArrayList<AudioTrack> getSearchedSongs() {
         // LimitedQueue extends LinkedBlockingDeque which is an AbstractCollection
         return new ArrayList<>(mostRecentSearches);
     }
@@ -109,7 +113,7 @@ public class AudioSession extends RecommenderSession {
     @Override
     public boolean canQueueSongs() {
         return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 2) && isRecommendingSongs
-                && this.getAudioQueue().size() < 15;
+                && this.mostRecentSearches.size() < 15;
     }
 
     @Override
@@ -176,14 +180,30 @@ public class AudioSession extends RecommenderSession {
         this.lavaSource = lavaSource;
     }
 
+    private void recordResult(QueueResult qr) {
+        if(qr == null) {
+            Logger.warn("Received null queue result and cannot record track! QueueResult should never be empty. This is likely a bug.");
+            return;
+        }
+
+        if(!qr.getQueueTrack().isEmpty()) {
+            mostRecentSearches.add(qr.getQueueTrack().get());
+        } else if(!qr.getQueuedTracks().isEmpty()
+                && !qr.getQueuedTracks().get().isEmpty()) {
+            mostRecentSearches.add(qr.getQueuedTracks().get().get(0));
+        }
+    }
+
     public QueueResult queueSearchQuery(DiscordUser discordUser, String searchQuery) {
-        mostRecentSearches.add(searchQuery);
-        return lavaSource.queueTrackAsPriority(searchQuery, discordUser);
+        final QueueResult qr = lavaSource.queueTrackAsPriority(searchQuery, discordUser);
+        recordResult(qr);
+        return qr;
     }
 
     public QueueResult queueSearchQueryNext(String searchQuery, DiscordUser discordUser) {
-        mostRecentSearches.add(searchQuery);
-        return lavaSource.queueTrackAsPriorityNext(searchQuery, discordUser);
+        final QueueResult qr = lavaSource.queueTrackAsPriorityNext(searchQuery, discordUser);
+        recordResult(qr);
+        return qr;
     }
 
     /**
