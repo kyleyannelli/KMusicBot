@@ -113,7 +113,7 @@ public class AudioSession extends RecommenderSession {
     @Override
     public boolean canQueueSongs() {
         return (mostRecentSearches.size() >= MAX_SEARCH_QUEUE_SIZE - 2) && isRecommendingSongs
-                && this.mostRecentSearches.size() < 15;
+                && this.lavaSource.getAudioQueue().size() < MAXIMUM_QUEUE_SIZE;
     }
 
     @Override
