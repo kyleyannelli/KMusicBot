@@ -132,9 +132,9 @@
             <version>9.1.0</version>
         </dependency>
         <dependency>
-            <groupId>org.javacord</groupId>
+            <groupId>com.github.kyleyannelli.javacord</groupId>
             <artifactId>javacord</artifactId>
-            <version>3.8.0</version>
+            <version>voice-v8-SNAPSHOT</version>
             <type>pom</type>
         </dependency>
         <dependency>
@@ -155,7 +155,7 @@
         <dependency>
             <groupId>dev.lavalink.youtube</groupId>
             <artifactId>common</artifactId>
-            <version>1.11.4</version>
+            <version>1.13.2</version>
         </dependency>
         <dependency>
             <groupId>se.michaelthelin.spotify</groupId>
