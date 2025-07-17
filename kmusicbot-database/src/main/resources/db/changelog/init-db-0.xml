@@ -14,5 +14,8 @@
     <changeSet id="3" author="kyannelli">
         <sqlFile path="src/main/resources/db/sql/create-playlist-table-2.sql" />
     </changeSet>
+    <changeSet id="4" author="kyannelli">
+        <sqlFile path="src/main/resources/db/sql/create-hops.sql" />
+    </changeSet>
 </databaseChangeLog>
 
