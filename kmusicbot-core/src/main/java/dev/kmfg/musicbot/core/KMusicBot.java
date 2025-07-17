@@ -177,7 +177,7 @@ public class KMusicBot {
         // create a hibernate session factory
         SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
-        final RecommenderThirdParty recommenderThirdParty = new RecommenderYoutubeScraper();
+        final RecommenderThirdParty recommenderThirdParty = new RecommenderYoutubeScraper(sessionFactory);
         // create the recommender processor for RecommenderSessions (and its child
         // classes)
         RecommenderProcessor recommenderProcessor = new RecommenderProcessor(

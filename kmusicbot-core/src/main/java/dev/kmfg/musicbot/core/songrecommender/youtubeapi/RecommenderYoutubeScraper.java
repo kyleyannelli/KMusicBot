@@ -2,6 +2,9 @@ package dev.kmfg.musicbot.core.songrecommender.youtubeapi;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import dev.kmfg.musicbot.core.songrecommender.RecommenderThirdParty;
+import dev.kmfg.musicbot.database.models.VIdRelationship;
+import dev.kmfg.musicbot.database.repositories.VIdRelationshipRepo;
+import org.hibernate.SessionFactory;
 import org.tinylog.Logger;
 
 import java.io.*;
@@ -20,6 +23,12 @@ public class RecommenderYoutubeScraper implements RecommenderThirdParty {
     private static final String VIDEO_ID_REGEX = "[?&]v=([^&#]*)";
     private static final Pattern VIDEO_ID_PATTERN = Pattern.compile(VIDEO_ID_REGEX);
 
+    private final VIdRelationshipRepo vIdRelationshipRepo;
+
+    public RecommenderYoutubeScraper(SessionFactory sessionFactory) {
+        this.vIdRelationshipRepo = new VIdRelationshipRepo(sessionFactory);
+    }
+
     @Override
     public String[] recommend(AudioTrack starterSong) {
         final String youtubeUri = starterSong.getInfo().uri;
@@ -31,7 +40,16 @@ public class RecommenderYoutubeScraper implements RecommenderThirdParty {
         }
 
         final String videoId = videoIdMatcher.group(1);
-        return runRecommendationScript(videoId);
+        final String[] recommendedVIds = runRecommendationScript(videoId);
+
+        // I could consider moving this to its own queue thread, but the recommendations don't need to come fast. Seems like a waste.
+        for(String recommendedVId : recommendedVIds) {
+            final VIdRelationship relation = new VIdRelationship(youtubeUri, recommendedVId);
+            vIdRelationshipRepo.save(relation);
+            Logger.info("Saved {} to relationship database.", relation.toString());
+        }
+
+        return recommendedVIds;
     }
 
     @Override
