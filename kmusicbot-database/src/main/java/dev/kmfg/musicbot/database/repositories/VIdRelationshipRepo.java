@@ -26,7 +26,12 @@ public class VIdRelationshipRepo {
         Transaction transaction = null;
         try (Session session = sessionFactory.openSession()) {
             transaction = session.beginTransaction();
-            session.persist(relationship);
+            session.createNativeQuery(
+                            "INSERT IGNORE INTO v_id_relationships (v_id, related_v_id) VALUES (:vId, :relatedVId)"
+                    )
+                    .setParameter("vId", relationship.getVId())
+                    .setParameter("relatedVId", relationship.getRelatedVId())
+                    .executeUpdate();
             transaction.commit();
         } catch (ConstraintViolationException e) {
             if (transaction != null) transaction.rollback();
